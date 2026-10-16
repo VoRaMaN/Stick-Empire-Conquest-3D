@@ -27,9 +27,12 @@
       </div>
     </div>
     <canvas id="minimap" class="minimap" width="400" height="56" aria-label="Battlefield map: tap or drag to move the camera"></canvas>
+    <!-- online battle: who is connected, the link to the host, notices and warnings -->
+    <div id="netbar" class="netbar" hidden role="status" aria-live="polite"><i class="dot"></i><span id="netTxt">Online</span><span class="nn" id="netNote"></span><span class="np" id="netPlayers"></span></div>
   </div>
 
   <div id="callouts" aria-hidden="true"></div>
+  <div id="netWait" class="netwait" hidden role="status" aria-live="polite"><b id="netWaitH">Waiting for the host…</b><span id="netWaitS"></span><button id="netWaitLeave" class="mm small">Leave</button></div>
   <div id="follow" class="follow" hidden><span id="followT">Following</span><button id="unfollow">Release</button></div>
 
   <!-- building panel: tap one of your castle's buildings -->
@@ -119,6 +122,7 @@
       </div>
       <button id="mmContinue" class="mm primary" hidden><span>Continue campaign</span><small id="mmContinueSub">Turn 1</small></button>
       <button id="mmSkirmish" class="mm"><span>Skirmish</span><small>One battle, your rules</small></button>
+      <button id="mmOnline" class="mm"><span>Online Multiplayer</span><small>1v1 or 2v2 against real players</small></button>
       <button id="mmCampaign" class="mm"><span>Campaign</span><small id="mmCampaignSub">Conquer eight territories</small></button>
       <button id="mmTraining" class="mm"><span>Training</span><small>Learn to command in two minutes</small></button>
       <button id="mmLab" class="mm"><span>Finisher Lab</span><small>140 finishers, 130 charges, every move</small></button>
@@ -138,6 +142,12 @@
       </div>
       <button id="skStart" class="mm primary"><span>Start battle</span></button>
       <button id="skBack" class="mm small">Back</button>
+    </div>
+    <!-- online multiplayer: home (quick match, create, join) and the room lobby; drawn by 49b-net-lobby.js -->
+    <div class="menu-panel online" id="menuOnline" hidden>
+      <div class="on-head"><h2 class="panel-h" id="onTitle">Online Multiplayer</h2><span class="on-conn" id="onConn" data-s="off">Offline</span></div>
+      <div id="onBody"></div>
+      <p class="on-msg" id="onMsg" role="status" aria-live="polite"></p>
     </div>
     <div class="menu-panel" id="menuInstall" hidden>
       <h2 class="panel-h">Install on your iPhone or iPad</h2>

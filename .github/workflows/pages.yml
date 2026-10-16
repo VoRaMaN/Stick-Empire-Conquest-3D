@@ -1,5 +1,8 @@
-# Builds the game and publishes dist/web to GitHub Pages on every push to main.
+# Tests, builds and publishes the game (dist/web) to GitHub Pages on every push to main.
 # One-time setup in the repository: Settings → Pages → Build and deployment → Source: GitHub Actions.
+# Online play: the build reads the public Supabase configuration from the repository variables SUPABASE_URL and
+# SUPABASE_PUBLISHABLE_KEY (Settings → Secrets and variables → Actions → Variables) and otherwise from
+# online.config.json. Both values are browser-visible by design; build.mjs refuses a secret or service_role key.
 name: Deploy to GitHub Pages
 on:
   push:
@@ -15,6 +18,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,7 +29,16 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run build
+      - name: Test (simulation regression suite + online protocol, no network)
+        run: npm test
+      - name: Build the web game
+        run: npm run build
+      - name: Check the published page references its scripts by relative path
+        run: |
+          grep -q 'src="online-config.js"' dist/web/index.html
+          grep -q 'src="vendor/supabase\.' dist/web/index.html
+          test -f dist/web/online-config.js
+          if grep -q 'service_role\|sb_secret_' dist/web/online-config.js; then echo "a secret key would be published"; exit 1; fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist/web

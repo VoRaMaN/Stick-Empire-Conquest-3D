@@ -4,9 +4,9 @@ function showBanner(t,s,dur){ $('#bannerT').textContent=t; $('#bannerS').textCon
 function renderChips(){
   const box=$('#chips'); box.innerHTML='';
   const lab=game.mode==='duel'||game.mode==='viewer';
-  for(const t of (lab?ORDER.concat(CHAOS):FAC(0).roster)){ const T=TYPES[t]; const b=document.createElement('button'); b.className='chip'+(T.chaos?' chaos':''); b.id='chip-'+t;
+  for(const t of (lab?ORDER.concat(CHAOS):FAC(myTeam()).roster)){ const T=TYPES[t]; const b=document.createElement('button'); b.className='chip'+(T.chaos?' chaos':''); b.id='chip-'+t;
     const mc=game.mode==='battle'&&!game.classicMix?(MANA_COST[t]||0):0;
-    b.innerHTML='<span class="n">'+T.name+'</span><span class="s">'+(game.mode==='battle'?T.cost+' '+money(0)+(mc?' · '+mc+' mana':''):game.mode==='viewer'?((UNIT_INFO[t]||{}).role||''):(FINS[t]?FINS[t].length:10)+' finishers · '+(CHG[t]?CHG[t].length:10)+' charges')+'</span><span class="qn"></span>';
+    b.innerHTML='<span class="n">'+T.name+'</span><span class="s">'+(game.mode==='battle'?T.cost+' '+money(myTeam())+(mc?' · '+mc+' mana':''):game.mode==='viewer'?((UNIT_INFO[t]||{}).role||''):(FINS[t]?FINS[t].length:10)+' finishers · '+(CHG[t]?CHG[t].length:10)+' charges')+'</span><span class="qn"></span>';
     if(lab) b.setAttribute('aria-pressed',game.duelSel===t);
     b.addEventListener('click',()=>{
       if(game.mode==='battle'){ if(!buyUnit(t)){ b.classList.remove('no'); void b.offsetWidth; b.classList.add('no'); } }
@@ -18,14 +18,14 @@ function renderChips(){
 }
 const FINL=['Off','Sometimes','Always'];
 // an army-wide order calls every regiment back under the general's command
-const armyOrder=st=>{ for(const r of regs) if(r.team===0) r.order={kind:'army'}; setStance(0,st); };
-$('#oDefend').onclick=()=>{ sfx('order'); armyOrder('defend'); showBanner('Defend','form up by the statue',1); narrate('defend',2); };
-$('#oHold').onclick=()=>{ sfx('order'); armyOrder('hold'); showBanner('Hold the line','form up where the army stands',1); narrate('hold',2); };
-$('#oCharge').onclick=()=>{ sfx('horn'); sfx('warcry'); armyOrder('charge'); showBanner('Charge!','',1); narrate('charge',2); };
-function setAutoSpawn(on){ game.auto[0]=on; settings.auto=on; saveSettings(); syncBattleButtons(); }
+const armyOrder=(st,team)=>{ team=team===undefined?myTeam():team; for(const r of regs) if(r.team===team) r.order={kind:'army'}; setStance(team,st); };
+$('#oDefend').onclick=()=>{ sfx('order'); issue('stance',{st:'defend'}); showBanner('Defend','form up by the statue',1); narrate('defend',2); };
+$('#oHold').onclick=()=>{ sfx('order'); issue('stance',{st:'hold'}); showBanner('Hold the line','form up where the army stands',1); narrate('hold',2); };
+$('#oCharge').onclick=()=>{ sfx('horn'); sfx('warcry'); issue('stance',{st:'charge'}); showBanner('Charge!','',1); narrate('charge',2); };
+function setAutoSpawn(on){ if(NET.on){ issue('auto',{on}); return; } game.auto[0]=on; settings.auto=on; saveSettings(); syncBattleButtons(); }
 function setFinMode(m){ game.finMode=m; settings.finMode=m; saveSettings(); syncBattleButtons(); }
-function syncBattleButtons(){ $('#bAuto').textContent='Auto-spawn: '+(game.auto[0]?'On':'Off'); $('#bFin').textContent='Finishers: '+FINL[game.finMode]; if(typeof syncSettingsUI==='function') syncSettingsUI(); }
-$('#bAuto').onclick=()=>{ sfx('ui'); setAutoSpawn(!game.auto[0]); };
+function syncBattleButtons(){ $('#bAuto').textContent='Auto-spawn: '+(game.auto[myTeam()]?'On':'Off'); $('#bFin').hidden=NET.on; $('#bFin').textContent='Finishers: '+FINL[game.finMode]; if(typeof syncSettingsUI==='function') syncSettingsUI(); }
+$('#bAuto').onclick=()=>{ sfx('ui'); setAutoSpawn(!game.auto[myTeam()]); };
 $('#bFin').onclick=()=>{ sfx('ui'); setFinMode((game.finMode+1)%3); };
 $('#dView').onclick=()=>{ sfx('ui'); setMode('viewer'); };
 $('#dChg').onclick=()=>duelDo('charge'); $('#dFin').onclick=()=>duelDo('fin'); $('#dIdle').onclick=()=>duelDo('idle'); $('#dAtk').onclick=()=>duelDo('atk'); $('#dWalk').onclick=()=>duelDo('walk');
@@ -36,9 +36,9 @@ $('#mCamp').onclick=()=>{ setTab('camp'); openCampaign(); };
 $('#cClose').onclick=()=>{ closeCampaign(); setTab(game.mode==='duel'?'duel':(game.campFight?'camp':'battle')); };
 $('#cGo').onclick=()=>campGo(); $('#cReset').onclick=()=>{ const b=$('#cReset'); if(!b.dataset.armed){ b.dataset.armed='1'; b.textContent='Tap again to restart'; return; } delete b.dataset.armed; b.textContent='New campaign'; campNew(); renderCampaign(); };
 $('#rgClose').onclick=()=>selectReg(null);
-$('#rgHold').onclick=()=>{ if(selReg){ orderHold(selReg); updateRegbar(); } };
-$('#rgCharge').onclick=()=>{ if(selReg){ selReg.order={kind:'charge'}; updateRegbar(); } };
-$('#rgRelease').onclick=()=>{ if(selReg){ selReg.order={kind:'army'}; updateRegbar(); } };
+$('#rgHold').onclick=()=>{ if(selReg){ issue('reg',{r:selReg.id,k:'hold'}); updateRegbar(); } };
+$('#rgCharge').onclick=()=>{ if(selReg){ issue('reg',{r:selReg.id,k:'charge'}); updateRegbar(); } };
+$('#rgRelease').onclick=()=>{ if(selReg){ issue('reg',{r:selReg.id,k:'army'}); updateRegbar(); } };
 $('#rgFollow').onclick=()=>{ if(selReg){ const b=regAlive(selReg)[0]; if(b){ cam.follow=b; cam.dGoal=Math.min(cam.dGoal,b.s>1.5?14:10); updateFollowUI(); } } };
 $('#mDuel').onclick=()=>{ game.spent=false; closeCampaign(); if(game.mode!=='duel'){ game.campFight=null; setTerrain('skirmish'); setMode('duel'); } };
 for(const [id,key] of [['Step','step'],['Bob','bob'],['Lean','lean'],['Spring','spring'],['Speed','speed']]){

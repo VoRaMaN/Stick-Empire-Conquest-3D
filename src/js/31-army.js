@@ -39,12 +39,14 @@ function syncMines(){
 }
 function hitStatue(st,dmg){
   if(game.mode!=='battle'||st.hp<=0||game.over>0) return;
+  if(NET.guest){ puff(new V3(st.pos.x,st.pos.y+2.5,st.pos.z),2,.35,2,'#d9cdb6'); sfx('stone',st.pos,.6); return; }   // the host's snapshot carries the statue's health
   st.hp-=dmg; puff(new V3(st.pos.x,st.pos.y+2.5,st.pos.z),2,.35,2,'#d9cdb6'); sfx('stone',st.pos,.8);
-  if(st.team===0) narrate('underAttack',30); else if(st.hp<st.max*.3&&!st.crumbleSaid){ st.crumbleSaid=true; narrate('enemyCrumbling'); }
+  if(st.team===myTeam()) narrate('underAttack',30); else if(st.hp<st.max*.3&&!st.crumbleSaid){ st.crumbleSaid=true; narrate('enemyCrumbling'); }
   if(st.hp<=0){ st.hp=0;
+    if(NET.host) netCapOver(1-st.team,'statue_destroyed');
     const fig=st.fig; fig.av.set(0,0,0); toRagdoll(fig,new V3(st.team===0?-3:3,4,rand(-1,1)),{}); fig.rag.keep=true;
     puff(st.pos,14,.9,4,'#cbbd9f'); shakeAt(st.pos,.5);
-    game.over=game.demo?4:2.6; game.winner=1-st.team; sfx('crumble',st.pos,1.4); narrate(st.team===0?'defeat':'victory'); showBanner(TEAM[1-st.team].name+' wins','statue destroyed',2.4); }
+    game.over=game.demo?4:2.6; game.winner=1-st.team; sfx('crumble',st.pos,1.4); narrate(st.team===myTeam()?'defeat':'victory'); showBanner(teamName(1-st.team)+' wins','statue destroyed',2.4); }
 }
 
 /* ---------------- spawning / AI ---------------- */
@@ -94,7 +96,7 @@ function setStance(team,st){
   if(st==='hold'){ const xs=units.filter(u=>u.alive&&u.team===team&&u.isUnit&&!u.T.worker).map(u=>u.pos.x);
     game.holdX[team]=xs.length?clamp(xs.reduce((a,b)=>a+b,0)/xs.length+DIRX[team]*2.5,-28,28):BASE_X[team]+DIRX[team]*10; }
   game.stance[team]=st;
-  if(team===0) for(const [id,v] of [['oDefend','defend'],['oHold','hold'],['oCharge','charge']]) $('#'+id).setAttribute('aria-pressed',st===v);
+  if(team===myTeam()) for(const [id,v] of [['oDefend','defend'],['oHold','hold'],['oCharge','charge']]) $('#'+id).setAttribute('aria-pressed',st===v);
   assignSlots(team);
 }
 function lineX(team){ return game.stance[team]==='hold'?game.holdX[team]:BASE_X[team]+DIRX[team]*9; }

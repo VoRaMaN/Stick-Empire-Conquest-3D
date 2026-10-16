@@ -1,7 +1,7 @@
 /* ---------------- unit update ---------------- */
 function updateUnit(u,dt){
   if(!u.desired) u.desired=new V3();
-  u.cdT-=dt; moraleTick(u,dt); if(u.st) updateStatus(u,dt); if(!u.alive) return;
+  u.cdT-=dt; if(!NET.guest) moraleTick(u,dt); if(u.st) updateStatus(u,dt); if(!u.alive) return;
   if(u.defQ){ u.defQ.t-=dt; if(u.defQ.t<=0){ const q=u.defQ; u.defQ=null;
       if((!u.action||u.action.c.idle)&&u.state!=='stunned'&&q.from.alive){ play(u,q.kind); u.fwdScale=1; u.atkTarget=q.from; u.faceGoal=Math.atan2(q.from.pos.x-u.pos.x,q.from.pos.z-u.pos.z); } } }
   if(u.state==='stunned'){ u.desired.set(0,0,0); if(u.stunBy) u.faceGoal=Math.atan2(u.stunBy.pos.x-u.pos.x,u.stunBy.pos.z-u.pos.z); if(!u.stunBy||!u.stunBy.alive||!u.stunBy.fin) unstun(u); }
@@ -12,7 +12,7 @@ function updateUnit(u,dt){
     u.idleT=(u.idleT===undefined?rand(1.5,6):u.idleT)-dt;
     if(u.idleT<=0){ u.idleT=rand(4,10); if(!nearestEnemy(u,9)&&!(game.mode==='duel'&&game.duel&&game.duel.q)){ const L=IDLES[u.type]; play(u,L[Math.floor(Math.random()*L.length)]); u.fwdScale=0; } }
   }
-  if(u.type==='sword'&&!game.classicMix&&game.mode==='battle') rageTick(u,dt);
+  if(u.type==='sword'&&!game.classicMix&&game.mode==='battle'&&!NET.guest) rageTick(u,dt);
   if(u.T.crawler) crawlerTick(u,dt);   // Rage research (never in the classic battle)
   if(u.T.chaos) chaosTick(u,dt);       // Infernal Regeneration, glows
   const acc=u.T.acc||(u.type==='giant'?3:9);
@@ -25,6 +25,7 @@ function updateUnit(u,dt){
   u.turnV=lerp(u.turnV||0,step/Math.max(dt,1e-4),.2);
   updateAction(u,dt);
   if(!u.alive) return;
+  if(NET.guest&&u.net) netPuppetCorrect(u,dt);   // keep a replicated soldier on the host's track
   updateFinAim(u,dt); updateCharge(u,dt);
   if(!u.inCastle&&!u.garrison){ u.pos.x=clamp(u.pos.x,-42,42); u.pos.z=clamp(u.pos.z,-15,15); } u.pos.y=groundAt(u,u.pos.x,u.pos.z);
   const rv=_tmp.subVectors(u.pos,u.last).multiplyScalar(1/Math.max(dt,1e-4)); rv.y=0;

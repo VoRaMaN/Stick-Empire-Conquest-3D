@@ -148,6 +148,110 @@ Fire is drawn as glowing billboard flames: a soft alpha-blended body under an ad
 from white-hot to orange to dark red as each flame rises, sways and burns out, trailing a little smoke. Burning
 units, bombs, Hades' hellfire and Cerberus' breath and mane all use it, and bloom makes it glow further.
 
+## Online multiplayer
+
+**Online Multiplayer** on the title screen plays real people: **1v1**, or **2v2** where teammates share one army and
+one treasury. Pick 1v1 or 2v2, then:
+
+- **Quick match** takes a seat in the oldest open public room of that mode, or opens one and waits for players.
+- **Create private room** gives a 6-character code (no 0/O, 1/I/L) with a copy button. Friends use **Join room**.
+- In the **lobby** every player sees the seats of both teams, names, Ready marks and who is connected. Each team picks
+  its faction. Players can change their name, switch to a free seat on the other team, ready up, or leave. The host
+  can **Start** once every seat is filled and everyone is ready. If the host leaves the lobby, the next player becomes
+  host; if everyone leaves, the room closes.
+- A player whose page reloads during a battle gets **Rejoin battle** on the online menu.
+
+### How it works
+
+| Piece | Used for |
+| --- | --- |
+| Supabase Auth, anonymous sign-in | A player identity per browser tab (no account; a reload keeps it) |
+| Supabase PostgreSQL (`se3d_*` tables) | Rooms, seats, ready states, match status and results. Changed only through `se3d_*` RPC functions |
+| Supabase Realtime, private channel `se3d:match:<match uuid>` | The battle itself: commands, snapshots, events, presence |
+| GitHub Pages | The static game (`dist/web`), built and deployed by GitHub Actions |
+
+**Host-authoritative.** The player who created the room is the simulation host: their browser runs the real battle
+with the AI general switched off. Every player, the host included, changes the battle only with **commands**: buy,
+research, army stance, regiment move / attack / hold / charge / rejoin, auto-spawn, surrender. The host validates each
+one before applying it: the sender holds a seat, the seat's team owns the regiment or castle, the sequence number is
+newer, the command id is unseen, the payload is well-formed, the unit is in that faction's roster, and gold or souls,
+mana and population allow it. Then the host applies it or refuses it with a reason the sender sees. Teammates' commands
+are applied in the order the host receives them, so two purchases can never spend the same gold.
+
+About 10 times a second (8 in 2v2) the host broadcasts a **snapshot** of each soldier: id, type, team, position,
+facing, health, status flags, regiment and charge style. It also carries regiments and their orders, both treasuries
+and mana, stances, castle queues, research and garrisons, and statue health, plus the **events** since the last
+snapshot: an animation started (with its target), a finisher, a death with its impulse, a unit walking out of a door
+or climbing out of the Hellpit, research finished, and the end of the battle. A Normal battle's snapshot is about
+1–3 KB.
+
+Guests run the same engine for looks only. Soldiers are puppets built from the real models. They follow the
+host's snapshots about 0.2 s behind, interpolated (never extrapolated far), so legs, IK and lean animate as offline.
+They play the host's attack and finisher animations, and become the guest's own cosmetic ragdolls when the host
+reports a death. A guest never deals damage, kills, spends, spawns or decides the winner. Its arrows and spells are
+visual only.
+
+**Every Realtime message is signed.** Each player's browser makes an ECDSA P-256 key pair and registers the public half
+on its seat (`se3d_set_key`); the private half never leaves the page. A message counts only if it verifies against the
+seat of the member it claims to be from, so guests accept snapshots only from the host's key and the host accepts
+commands only from seated players. Realtime Authorization adds that only current members can join a match's channel.
+
+**Disconnections.**
+- Connection bar: every battle screen shows the link to the host, who is connected, and notices such as "Bravo lost
+  connection".
+- Guest side: a guest whose snapshots stop sees a warning after 2.5 s and a "connection lost" screen after 8 s.
+- Host gone: if the host is still gone after 30 s, the guest asks the server to end the match. The server checks the
+  host's last heartbeat itself and refuses while the host is alive. The match then ends with **no winner**.
+- Host side: when a team has nobody connected for 60 s, the host ends the match with no winner. A dropped connection
+  never hands out a victory.
+- Deliberate leaving: a 1v1 guest who leaves surrenders. A 2v2 guest who leaves leaves their ally to fight on.
+- Server cleanup: a `pg_cron` job closes abandoned lobbies, stuck starts and battles whose host vanished, even when no
+  client is left to notice.
+
+### Database
+
+The migrations are in `supabase/migrations/`, one file per step, matching the project's migration history:
+
+- **Tables:** `se3d_matches` (code, mode, host, status, seed, configuration, expiry), `se3d_match_players` (one row per
+  seat taken: team, slot, ready, public key, heartbeat; a player who leaves keeps the row with `left_at` set) and
+  `se3d_match_results`.
+- **Uniqueness:** the active-room code, one seat per player and one player per slot are enforced by unique indexes.
+  Two players joining at the same moment can never share a seat.
+- **Status:** changes are checked by a trigger: WAITING ↔ READY → STARTING → PLAYING → FINISHED, and any open state →
+  CANCELLED. Nothing else is allowed.
+- **Access:** RLS lets members read only their own rooms. No client can write any table directly. Every change is a
+  `SECURITY DEFINER` RPC that checks `auth.uid()`, membership, host role and room state inside one transaction.
+
+`se3d_match_players_draft_unused` is an empty first draft of the seat table, kept only because removing a table needs
+a destructive statement. It is safe to drop.
+
+### Configuration
+
+The game needs the project URL and the **publishable** key, both browser-visible by design. `build.mjs` reads
+`SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` from the environment (GitHub Actions repository variables), and falls
+back to `online.config.json`. It refuses a secret or `service_role` key. Without a configuration the game builds with
+online play switched off and says so on the online menu; everything else still works.
+
+In the Supabase project:
+
+- **Authentication → Sign In / Providers → Allow anonymous sign-ins** must be on. The game explains this if it isn't.
+- Recommended: **Realtime → Settings → turn off "Allow public access"**, so only private channels exist.
+
+### Limits
+
+- **Trust.** A browser host is not a dedicated server. The host's own player could modify their copy of the game, and
+  if the host closes the page the battle can't continue. There is no host migration: the match ends with no winner.
+  Signed messages and server-side checks stop guests from impersonating others or reporting results; they can't make
+  the host's browser itself cheat-proof. A competitive release would need an authoritative server, such as a Node or
+  Deno game server on a host that keeps processes running; GitHub Pages can't.
+- **Capacity.** Supabase's free plan allows about 100 Realtime messages a second across the whole project, counting
+  each delivery. A 1v1 at 10 snapshots a second uses about 20; a 2v2 at 8 a second uses about 32. That is roughly five
+  simultaneous 1v1 matches or three 2v2 matches on the free plan.
+- **Battle size.** Online battles are Normal-sized, and the Large setting is accepted. Epic armies would make
+  snapshots larger than is sensible for this transport.
+- **Host in the background.** A host's background tab keeps simulating through a worker timer, but browsers may
+  throttle it after several minutes.
+
 ## Play locally
 
 ```bash
@@ -214,7 +318,16 @@ orders, the campaign from start to victory, effects, finisher aim accuracy, char
 Hellcrawler (every attack, finisher and charge lands, the gait keeps its feet on the ground, crawlers climb out of
 the Hellpit in a battle), the Chaos Empire (Order against Chaos castle battles both ways, every Thrall, Dreadguard
 and Harvester clip, finisher aim), a seeded
-fingerprint proving the original five units still behave exactly as before, and a simulation cost report.
+fingerprint proving the original five units still behave exactly as before, the online protocol (`nettest`: a host
+and guests in separate processes exchanging the real snapshots and commands: replication, command validation, remote
+recruitment, deaths, victory, 2v2 shared armies, disconnection) and a simulation cost report.
+
+Two more test sets need network access to the Supabase project and are run by hand:
+
+```bash
+NODE_USE_ENV_PROXY=1 node tests/online/rooms.test.mjs              # rooms, codes, seats, RLS, start/result rules, private channels
+npm run serve &  python3 tests/online/browser_match.py http://localhost:8080/ 1v1   # (or 2v2) real browsers, real identities
+```
 
 ## Controls
 

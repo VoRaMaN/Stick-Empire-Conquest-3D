@@ -1,6 +1,6 @@
 // Crimson general: masses an army in formation, charges when strong, falls back to the line when beaten.
 function enemyCommander(dt){
-  if(game.tutorial) return;
+  if(game.tutorial||NET.on) return;   // online, both armies are commanded by people
   game.aiT-=dt; if(game.aiT>0) return; game.aiT=2;
   aiResearch(1); if(game.demo) aiResearch(0);
   const power=t=>units.filter(u=>u.alive&&u.team===t&&u.isUnit&&!u.T.worker&&!u.routing).reduce((a,u)=>a+u.T.cost/econ(t),0);
@@ -18,6 +18,7 @@ function closeThreat(u,r){ let best=null, bd=r*r;
   gridEach(u.pos.x,u.pos.z,r,o=>{ if(!o.alive||o.team===u.team||isAir(o)||!canTarget(u,o)) return; const dx=o.pos.x-u.pos.x,dz=o.pos.z-u.pos.z,d=dx*dx+dz*dz; if(d<bd){ bd=d; best=o; } });
   return best; }
 function brain(u,dt){
+  if(NET.guest&&u.net){ netPuppet(u,dt); return; }   // online guest: the host's snapshots steer this soldier
   u.desired.set(0,0,0);
   if(u.script){ const sc=u.script, w=sc.pts[sc.i]; const dx=w.x-u.pos.x,dz=w.z-u.pos.z,d=Math.hypot(dx,dz);
     if(d<.6){ sc.i++; if(sc.i>=sc.pts.length){ u.script=null; if(sc.then) sc.then(u); return; } }

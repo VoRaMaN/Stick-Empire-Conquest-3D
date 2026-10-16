@@ -10,7 +10,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { transform } from 'esbuild';
+import { transform, build } from 'esbuild';
 
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const SRC = path.join(ROOT, 'src'), DIST = path.join(ROOT, 'dist'), WEB = path.join(DIST, 'web');
@@ -45,6 +45,28 @@ const fxJs = (await transform(fxSrc, { minify: true, target: 'es2017', legalComm
 const gameJs = (target, assets) => "(function(){\n'use strict';\n" +
   `const BUILD={target:'${target}',version:'${pkg.version}',assets:'${assets}'};\n` + parts + '})();\n';
 
+// ---------- online play: the Supabase browser SDK and the project's public configuration ----------
+// The SDK (version pinned in package-lock.json) is bundled from node_modules into its own IIFE that exposes
+// window.SE3DSupabase.createClient; it loads before the game script, which never uses ES module imports.
+const sbJs = (await build({ entryPoints: [path.join(SRC, 'vendor/supabase-entry.js')], bundle: true, format: 'iife', minify: true,
+  target: 'es2019', platform: 'browser', write: false, legalComments: 'none', logLevel: 'silent' })).outputFiles[0].text
+  .replace(/<\/script/gi, '<\\/script');
+// Public configuration: SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY from the environment (GitHub Actions repository
+// variables), else online.config.json. Both values are meant to be public. A secret or service-role key is refused.
+function onlineConfig() {
+  let url = process.env.SUPABASE_URL || '', key = process.env.SUPABASE_PUBLISHABLE_KEY || '', from = 'environment';
+  const file = path.join(ROOT, 'online.config.json');
+  if ((!url || !key) && fs.existsSync(file)) { const j = JSON.parse(fs.readFileSync(file, 'utf8')); url = url || j.supabaseUrl || ''; key = key || j.supabasePublishableKey || ''; from = 'online.config.json'; }
+  if (!url || !key) { console.warn('online play: no Supabase configuration (set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY) — the game builds with online play switched off'); return null; }
+  if (!/^https:\/\/[a-z0-9.-]+$/i.test(url.replace(/\/+$/, ''))) throw new Error('SUPABASE_URL must be an https origin, got ' + url);
+  const jwtRole = k => { try { return JSON.parse(Buffer.from(k.split('.')[1], 'base64url').toString()).role; } catch (e) { return null; } };
+  if (/^sb_secret_/i.test(key) || jwtRole(key) === 'service_role') throw new Error('refusing to publish a Supabase secret / service_role key: use the publishable (or legacy anon) key');
+  if (!/^sb_publishable_/.test(key) && jwtRole(key) !== 'anon') throw new Error('SUPABASE_PUBLISHABLE_KEY does not look like a publishable or anon key');
+  return { url: url.replace(/\/+$/, ''), key, from };
+}
+const ONLINE = onlineConfig();
+const onlineCfgJs = 'window.SE3D_ONLINE=' + JSON.stringify(ONLINE ? { url: ONLINE.url, key: ONLINE.key } : null) + ';\n';
+
 const css = read('styles.css'), body = read('body.html');
 
 // ---------- single-file build ----------
@@ -52,6 +74,7 @@ const FONTS_CDN = '<link rel="preconnect" href="https://fonts.googleapis.com">\n
   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600&family=Barlow+Semi+Condensed:wght@500;600&display=swap">\n';
 const artifact = '<title>Stick Empire 3D</title>\n' + FONTS_CDN + '<style>\n' + css + '</style>\n\n' + body + '\n' +
   '<script type="application/json" id="se3d-assets">' + assetJson + '</script>\n' +
+  '<script id="se3d-online-config">' + onlineCfgJs + '</script>\n<script id="se3d-supabase">' + sbJs + '</script>\n' +
   '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>\n<script>\n' + fxJs + ';\n' + gameJs('artifact', '#se3d-assets') + '</script>\n';
 fs.mkdirSync(DIST, { recursive: true });
 fs.writeFileSync(path.join(DIST, 'artifact.html'), artifact);
@@ -67,6 +90,9 @@ copyDir(path.join(ROOT, 'public'), WEB);
 // three.js r128 (the version the game is written against) and the two typefaces, served from our own origin
 fs.mkdirSync(path.join(WEB, 'vendor'), { recursive: true });
 fs.copyFileSync(path.join(ROOT, 'node_modules/three/build/three.min.js'), path.join(WEB, 'vendor/three.min.js'));
+const sbName = `vendor/supabase.${hash(sbJs)}.js`;
+fs.writeFileSync(path.join(WEB, sbName), sbJs);
+fs.writeFileSync(path.join(WEB, 'online-config.js'), onlineCfgJs);   // relative paths only: works under a GitHub Pages project subpath
 fs.mkdirSync(path.join(WEB, 'fonts'), { recursive: true });
 const FONT_FILES = [['Teko', 'teko', 500], ['Teko', 'teko', 600], ['Barlow Semi Condensed', 'barlow-semi-condensed', 500], ['Barlow Semi Condensed', 'barlow-semi-condensed', 600]];
 let fontCss = '';
@@ -115,6 +141,8 @@ ${css}</style>
 </head>
 <body>
 ${body}
+<script src="online-config.js"></script>
+<script src="${sbName}"></script>
 <script src="vendor/three.min.js"></script>
 <script src="${gameName}"></script>
 </body>
@@ -133,5 +161,6 @@ fs.writeFileSync(path.join(WEB, 'sw.js'), sw);
 fs.writeFileSync(path.join(WEB, 'version.json'), JSON.stringify({ version: pkg.version, build: version }));
 
 const kb = f => (fs.statSync(path.join(WEB, f)).size / 1024).toFixed(0) + ' KB';
+console.log(`online play: ${ONLINE ? 'on (' + ONLINE.url + ', key from ' + ONLINE.from + ')' : 'off (no configuration)'}`);
 console.log(`built v${pkg.version} (${version}) from ${partFiles.length} parts: ${gameName} ${kb(gameName)}, ` +
   `artifact.html ${(artifact.length / 1024).toFixed(0)} KB (assets ${(assetJson.length / 1024).toFixed(0)} KB), ${files.length + 1} web files`);

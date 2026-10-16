@@ -34,13 +34,13 @@ function damage(t,amt,src,dirW,kb,up,blocked,at){
   if(!blocked&&!t.action&&t.state!=='stunned'&&Math.random()<.5){ play(t,'flinch'); t.fwdScale=1; }
   if(!blocked&&amt>0) bleed(at||_tmp.copy(t.j.chest).lerp(t.j.neck,Math.random()).clone(),dirW.clone().setY(.25).normalize(),clamp(Math.round(amt/6),2,9),2.4,.55);
   if(!blocked&&amt>0&&t.T.crawler) puff(at||t.j.chest,3,.09,2.6,'#ff7a2a');   // magma spills from a wounded Hellcrawler
-  if(t.invuln) return;
+  if(t.invuln||NET.guest) return;   // online guest: health only ever comes from the host
   if(amt>0) t.hurtAt=game.time;   // Chaos regeneration waits for the wounds to stop
   t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)); if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
   if(t.hp<=0){ kill(t,dirW.clone().multiplyScalar(2.5*(kb||1)).add(new V3(0,1.8+(kb||1)*.6+(up||0),0)),{}); }
 }
 function kill(t,impWorld,opt){
-  if(!t.alive) return;
+  if(!t.alive||(NET.guest&&!NET.allowKill)) return;
   shakeMorale(t); onKill(t);
   if(t.isUnit){ if(t.type==='giant') sfx('roar',t.j.head,.9,{rate:.8}); else if(t.T.crawler) crSfx('crDie','roar',t.j.head,.85); else if(Math.random()<.75) sfx('death',t.j.head,.9,{rate:t.type==='miner'?1.08:1}); }
   if(t.fin&&t.fin.rag) releaseRag(t.fin.rag,new V3(0,0,0));
@@ -67,6 +67,7 @@ function updateCharge(u,dt){
   if(game.mode==='battle'&&u.state==='ok'&&!u.routing){ const ro=u.reg?u.reg.order:null; mode=ro&&ro.kind!=='army'?(ro.kind==='charge'||ro.kind==='attack'):game.stance[u.team]==='charge'; }
   else if(game.mode==='duel') mode=!!u.chgLab;
   const t=u.target, d=t&&t.isUnit&&t.alive?Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z):99, fast=u.spd>.5*u.T.speed;
+  if(NET.guest){ const want=u.chg&&!u.action&&u.spd>.45*u.T.speed?1:0; u.chgW=(u.chgW||0)+(want-(u.chgW||0))*(1-Math.exp(-dt*7)); return; }   // the host picks the charge style
   if(mode&&!u.chg&&!u.chgCD&&fast&&!u.action&&d>3.5&&d<30&&(!u.T.worker||d<12)) u.chg={i:Math.floor(Math.random()*CHG[u.type].length)};
   if(u.chg&&!mode&&game.mode==='battle') u.chg=null;
   if(u.chg&&!u.action&&u.spd<.2*u.T.speed){ u.chgStop=(u.chgStop||0)+dt; if(u.chgStop>.8&&game.mode==='battle') u.chg=null; } else u.chgStop=0;
@@ -115,6 +116,10 @@ function startFinisher(u,v,forced){
   const list=FINS[u.type]; let name=forced;
   if(!name){ let g=0; do{ name=list[Math.floor(Math.random()*list.length)]; }while(name===u.lastFin&&++g<6); }
   u.lastFin=name;
+  if(NET.host) netCapFin(u,v,name);
+  NET.noCap++; try{ startFinisher0(u,v,name,list); } finally { NET.noCap--; }
+}
+function startFinisher0(u,v,name,list){
   const def=FIN[name], clip=CLIPS[u.type][def.clip], hitT=def.hitT!==undefined?def.hitT:clip.hitT;
   u.fin={victim:v,def,rag:null}; onFinisher(u);
   v.state='stunned'; v.invuln=true; v.stunBy=u; v.target=null; v.fin=null; v.defQ=null;
@@ -128,7 +133,7 @@ function startFinisher(u,v,forced){
   u.cdT=u.T.cd;
   if(game.mode==='duel'||cam.follow===u||cam.follow===v){ showBanner(def.name,TYPES[u.type].name+' finisher · '+(list.indexOf(name)+1)+' of '+list.length); }
 }
-function play(u,name){ const c=CLIPS[u.type][name]; if(!c) return; u.action={c,t:0,age:0,fired:0,prevFwd:0}; }
+function play(u,name){ if(NET.guest&&!NET.allowPlay) return; const c=CLIPS[u.type][name]; if(!c) return; u.action={c,t:0,age:0,fired:0,prevFwd:0}; if(NET.host&&!NET.noCap) netCapPlay(u,name); }
 
 function updateAction(u,dt){
   const a=u.action; if(!a) return;
@@ -152,6 +157,10 @@ function hitPoint(u,v,e){
   for(const k of ['head','neck','chest','gut','thigh']){ const d=partPoint(v,k,_tmp2).distanceTo(wp); if(d<bd){bd=d;best=k;} }
   return partPoint(v,best,new V3()); }
 function handleEvent(u,e){
+  const f=NET.on&&!!u.fin; if(f){ NET.allowPlay++; NET.allowKill++; NET.noCap++; }
+  try{ handleEvent0(u,e); } finally { if(f){ NET.allowPlay--; NET.allowKill--; NET.noCap--; } }
+}
+function handleEvent0(u,e){
   const T=u.T, fin=u.fin, v=fin&&fin.victim;
   if(e.fx) spellFx(u,e,v);
   switch(e.e){

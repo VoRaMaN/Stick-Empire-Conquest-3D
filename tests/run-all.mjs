@@ -22,6 +22,7 @@ const TESTS = [
   ['chaos2test', 'Chaos second wave: Bone Reaver, Bomber, Oracle, Grim Reaper, Hades', o => /battle nan 0 missing powers none/.test(o) && /lab failures 0 nan 0/.test(o)],
   ['finaudit', 'Chaos finisher blows land on the right body part', o => num(o, /misses >0\.12: (\d+)/) <= 2, { DBG: '', FA_TYPES: 'thrall,dread,harvester' }],
   ['determinism', 'original five units behave exactly as before', o => /hash 7db8b359b35a1570/.test(o)],
+  ['nettest', 'online: replication, commands, 2v2, disconnects (no network)', o => /nettest: \d+ passed, 0 failed/.test(o)],
   ['perf', '400-unit simulation cost (report only)', () => true]
 ];
 let fails = 0; const t0 = Date.now();

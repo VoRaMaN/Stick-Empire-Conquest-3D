@@ -1,17 +1,19 @@
 {
   "name": "stick-empire-3d",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "private": true,
   "description": "A 3D Total War-style stick-figure battle game for the browser (three.js).",
   "scripts": {
     "build": "node build.mjs",
     "test": "node build.mjs && node tests/run-all.mjs",
-    "serve": "node tools/serve.mjs dist/web 8080"
+    "serve": "node tools/serve.mjs dist/web 8080",
+    "test:online": "node tests/online/rooms.test.mjs"
   },
   "license": "UNLICENSED",
   "devDependencies": {
     "@fontsource/barlow-semi-condensed": "^5.0.13",
     "@fontsource/teko": "^5.0.13",
+    "@supabase/supabase-js": "2.117.2",
     "esbuild": "^0.21.5",
     "three": "^0.128.0"
   }

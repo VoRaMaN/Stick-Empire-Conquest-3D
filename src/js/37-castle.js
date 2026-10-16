@@ -386,7 +386,8 @@ function emerge(b,type){
   u.script={pts,i:0,speed:sp,then:leaveCastle};
   if(b.id==='aerie'){ u.fl.takeT=.15; u.fl.mode='ground'; }
   if(game.stance) assignSlots(team);
-  if(team===0){ if(type==='giant') narrate('giantUnleashed',25); }
+  if(team===myTeam()){ if(type==='giant') narrate('giantUnleashed',25); }
+  if(NET.host) netCapNew(u,1,b);
   return u;
 }
 function leaveCastle(u){
@@ -407,7 +408,7 @@ function updateCastles(dt){
       if(b.chimney&&on&&crand()<dt*1.2){ _tp.set(cwx(t,b.chimney.x),CGY[t]+b.chimney.y,b.chimney.z); puff(_tp,1,.35,.35,C.fac==='chaos'?'#3a2e2a':'#8a8478'); }
       // doors swing toward their goal; they shut again once nobody is coming through
       const D=b.door; if(D){ D.hold-=dt; if(D.hold<=0) D.goal=0; const sp=D.kind==='portcullis'?.8:2.2; const o0=D.open; D.open=clamp(D.open+(D.goal>D.open?1:-1)*dt*sp,0,1); if(D.open!==o0) poseDoor(b); }
-      if(!on) continue;
+      if(!on||NET.guest) continue;   // an online guest's castles only show what the host's snapshots say
       // training: one unit at a time per building, then it waits at the door until the door is open
       if(!b.train&&b.q.length){ const ty=b.q.shift(); b.train={type:ty,t:TRAIN_T[ty]||3,tot:TRAIN_T[ty]||3}; }
       if(b.train){ b.train.t-=dt*researchTrainMul(t); if(b.train.t<=0){ b.exitQ.push(b.train.type); b.train=null; } }
@@ -420,8 +421,8 @@ function updateCastles(dt){
     let near=false; if(on) for(const u of units){ if(u.team===t&&u.inCastle&&!u.fl&&Math.abs(u.pos.x-cwx(t,-1))<6&&Math.abs(u.pos.z-GATE_Z)<5){ near=true; break; } }
     const po=C.portOpen||0; C.portOpen=clamp(po+(near?1:-.6)*dt*.9,0,1); if(po===0&&C.portOpen>0) sfx('gate',_tp.set(cwx(t,0),CGY[t]+3,GATE_Z),.9);
     C.portcullis.position.y=EASE.io(C.portOpen)*5.2;
-    if(on) updateGarrison(C,dt);
-    if(on) updateResearch(C,dt);
+    if(on) (NET.guest?netGarrison(C,dt):updateGarrison(C,dt));
+    if(on&&!NET.guest) updateResearch(C,dt);
   }
   updatePits(dt);
 }

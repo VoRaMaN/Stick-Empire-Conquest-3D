@@ -63,7 +63,7 @@ function rageTick(u,dt){
 function resBuilding(team,bid){ const C=CASTLES[team]; return bid==='castle'?C.keep:C.B[bid]; }
 function resNext(team,id){ const R=RES_BY_ID[id], l=CASTLES[team].res[id]||0; return l<R.lv?{R,l,cost:[Math.round(R.cost[l][0]*(R.native?1:econ(team))),R.cost[l][1]],t:R.t[l]}:null; }
 function startResearch(team,id){
-  const R=RES_BY_ID[id], b=resBuilding(team,R.bid), N=resNext(team,id), me=team===0;
+  const R=RES_BY_ID[id], b=resBuilding(team,R.bid), N=R&&b?resNext(team,id):null, me=team===myTeam();
   if(!N) return false;
   if(b.res){ if(me){ narrate('researchBusy',3); sfx('deny'); } return false; }
   if(game.gold[team]<N.cost[0]){ if(me){ narrate('noGold',3); sfx('deny'); } return false; }
@@ -77,7 +77,8 @@ function finishResearch(C,b){
   const r=b.res, t=C.team; b.res=null; C.res[r.id]=r.lvl;
   if(r.id==='castleArchers') syncGarrison(C);
   if(r.id==='resilience'){ const st=statues[t]; if(st){ const add=st.max*.4; st.max+=add; st.hp+=add; } }
-  if(t===0){ sfx('research',null,.9); narrate(r.id==='castleArchers'?'castleArchers':(C.nDone=(C.nDone||0)+1)%2?'researchDone':'upgradeDone',0);
+  if(NET.host) netCapEvent(['rs',t,r.id,r.lvl]);
+  if(t===myTeam()){ sfx('research',null,.9); narrate(r.id==='castleArchers'?'castleArchers':(C.nDone=(C.nDone||0)+1)%2?'researchDone':'upgradeDone',0);
     const R=RES_BY_ID[r.id]; showBanner(rName(R,t)+(R.lv>1?' '+['I','II','III'][r.lvl-1]:''),'research complete',1.4); refreshPanel(); }
 }
 function updateResearch(C,dt){
@@ -107,7 +108,7 @@ const aiSaving=team=>!!aiSave[team];
 // gold and mana trickle in during a castle battle
 function resetAiResearch(){ aiSave[0]=aiSave[1]=null; aiSave.n0=aiSave.n1=0; }
 function castleIncome(dt){
-  if(!castleOn()||game.over>0) return;
+  if(!castleOn()||game.over>0||NET.guest) return;
   for(let t=0;t<2;t++){ const l=CASTLES[t].res.income||0; game.mana[t]+=(2.5+1.5*l)*dt; if(l) game.gold[t]+=3*l*dt*econ(t); }
 }
 
@@ -131,12 +132,16 @@ function narrate(key,cool){
 function unitVoice(type){ if(!settings.voice) return; playVoice('u_'+type+'_'+(1+Math.floor(Math.random()*3)),.9,'u'); }
 
 /* ---------- buying: the dock chips and the building panel share this ---------- */
-function buyUnit(t){
-  const T=TYPES[t], m=unitMana(t);
-  if(count(0)+queued(0)>=POP_CAP){ narrate('fullStrength',6); sfx('deny'); return false; }
-  if(game.gold[0]<T.cost){ narrate('noGold',3); sfx('deny'); return false; }
-  if(game.mana[0]<m){ narrate('noMana',3); sfx('deny'); return false; }
-  game.gold[0]-=T.cost; game.mana[0]-=m; recruit(t,0); sfx('buy'); onRecruit(t); unitVoice(t);
+function buyUnit(t){ return issue('buy',{t}); }   // the dock and the building panel: offline it buys at once, online it asks the host
+// the purchase itself, checked against this team's roster, population, treasury and mana (the online host runs it for every player)
+function buyFor(team,t,quiet){
+  const T=TYPES[t], m=unitMana(t), me=!quiet&&team===myTeam();
+  if(!T||!FAC(team).roster.includes(t)) return 'not_in_roster';
+  if(count(team)+queued(team)>=POP_CAP){ if(me){ narrate('fullStrength',6); sfx('deny'); } return 'population'; }
+  if(game.gold[team]<T.cost){ if(me){ narrate('noGold',3); sfx('deny'); } return 'gold'; }
+  if(game.mana[team]<m){ if(me){ narrate('noMana',3); sfx('deny'); } return 'mana'; }
+  game.gold[team]-=T.cost; game.mana[team]-=m; recruit(t,team); onRecruit(t);
+  if(me){ sfx('buy'); unitVoice(t); }
   if(panelB) refreshPanel();
   return true;
 }
@@ -153,28 +158,28 @@ function openPanel(b){
   const box=$('#bpUnits'); box.innerHTML=''; const trains=b.trains||[];
   $('#bpTrainSec').hidden=!trains.length;
   for(const t of trains){ const T=TYPES[t], btn=document.createElement('button'); btn.className='bpu'; btn.dataset.t=t;
-    btn.innerHTML='<img alt="" src="'+(ICONS[t]||'')+'"><span class="n">'+T.name+'</span><span class="s">'+costTxt(T.cost,unitMana(t),0)+'</span><span class="qn"></span>';
-    btn.addEventListener('click',()=>buyUnit(t)); box.appendChild(btn); }
+    btn.innerHTML='<img alt="" src="'+(ICONS[t]||'')+'"><span class="n">'+T.name+'</span><span class="s">'+costTxt(T.cost,unitMana(t),myTeam())+'</span><span class="qn"></span>';
+    btn.addEventListener('click',()=>buyUnit(t)); box.appendChild(btn); }   // costs shown in this army's currency
   const rb=$('#bpRes'); rb.innerHTML='';
   for(const R of RESEARCH[b.id]||[]){ const d=document.createElement('button'); d.className='bpr'; d.dataset.id=R.id;
-    d.innerHTML='<span class="rn"></span><span class="rd">'+rDesc(R,0)+'</span><span class="rc"></span><i class="rp"><b></b></i>';
-    d.addEventListener('click',()=>{ startResearch(0,R.id); }); rb.appendChild(d); }
+    d.innerHTML='<span class="rn"></span><span class="rd">'+rDesc(R,myTeam())+'</span><span class="rc"></span><i class="rp"><b></b></i>';
+    d.addEventListener('click',()=>{ issue('res',{id:R.id}); }); rb.appendChild(d); }
   refreshPanel();
 }
 function closePanel(){ panelB=null; if(bpEl) bpEl.hidden=true; }
 function refreshPanel(){
   const b=panelB; if(!b||!bpEl||bpEl.hidden) return;
-  const C=CASTLES[0];
+  const me=myTeam(), C=CASTLES[me];
   if(bpEl.querySelectorAll){
-    bpEl.querySelectorAll('.bpu').forEach(el=>{ const t=el.dataset.t, q=queuedType(0,t);
-      el.querySelector('.qn').textContent=q?('×'+q+' training'):''; el.classList.toggle('poor',game.gold[0]<TYPES[t].cost||game.mana[0]<unitMana(t)); });
-    bpEl.querySelectorAll('.bpr').forEach(el=>{ const R=RES_BY_ID[el.dataset.id], l=C.res[R.id]||0, N=resNext(0,R.id), busy=b.res&&b.res.id===R.id;
-      el.querySelector('.rn').textContent=rName(R,0)+(R.lv>1?' '+['I','II','III'][Math.min(R.lv-1,busy?b.res.lvl-1:l)]:'');
-      el.querySelector('.rc').textContent=busy?'researching… '+Math.ceil(b.res.t)+'s':N?costTxt(N.cost[0],N.cost[1],0)+' · '+N.t+'s':'done';
+    bpEl.querySelectorAll('.bpu').forEach(el=>{ const t=el.dataset.t, q=queuedType(me,t);
+      el.querySelector('.qn').textContent=q?('×'+q+' training'):''; el.classList.toggle('poor',game.gold[me]<TYPES[t].cost||game.mana[me]<unitMana(t)); });
+    bpEl.querySelectorAll('.bpr').forEach(el=>{ const R=RES_BY_ID[el.dataset.id], l=C.res[R.id]||0, N=resNext(me,R.id), busy=b.res&&b.res.id===R.id;
+      el.querySelector('.rn').textContent=rName(R,me)+(R.lv>1?' '+['I','II','III'][Math.min(R.lv-1,busy?b.res.lvl-1:l)]:'');
+      el.querySelector('.rc').textContent=busy?'researching… '+Math.ceil(b.res.t)+'s':N?costTxt(N.cost[0],N.cost[1],me)+' · '+N.t+'s':'done';
       el.querySelector('.rp b').style.width=(busy?100*(1-b.res.t/b.res.tot):N?0:100)+'%';
-      el.classList.toggle('done',!N); el.classList.toggle('busy',!!busy); el.classList.toggle('poor',!!N&&!busy&&(game.gold[0]<N.cost[0]||game.mana[0]<N.cost[1])); });
+      el.classList.toggle('done',!N); el.classList.toggle('busy',!!busy); el.classList.toggle('poor',!!N&&!busy&&(game.gold[me]<N.cost[0]||game.mana[me]<N.cost[1])); });
   }
-  const gs=$('#bpGarr'); if(gs){ gs.hidden=b.id!=='castle'; if(b.id==='castle'){ const st=statues[0]; gs.textContent=C.garrison.length+(C.fac==='chaos'?' Soul Harvesters':' archers')+' on the walls · statue '+(st?Math.ceil(st.hp)+' / '+Math.ceil(st.max):''); } }
+  const gs=$('#bpGarr'); if(gs){ gs.hidden=b.id!=='castle'; if(b.id==='castle'){ const st=statues[me]; gs.textContent=C.garrison.length+(C.fac==='chaos'?' Soul Harvesters':' archers')+' on the walls · statue '+(st?Math.ceil(st.hp)+' / '+Math.ceil(st.max):''); } }
   const tr=$('#bpTrain'); if(tr){ const cur=b.train; tr.textContent=cur?'Training '+TYPES[cur.type].name+' · '+Math.max(0,cur.t).toFixed(1)+'s':(b.q&&b.q.length?b.q.length+' waiting':''); }
 }
 function panelTick(dt){ panelT-=dt; if(panelT<=0){ panelT=.25; refreshPanel(); } }
@@ -193,7 +198,7 @@ function setHover(b,x,y){
   if(hoverB!==b){ hoverB=b; if(canvas.style) canvas.style.cursor=b?'pointer':''; }
   if(!tipEl) return;
   if(!b){ tipEl.hidden=true; return; }
-  const own=b.team===0, C=CASTLES[b.team];
+  const own=b.team===myTeam(), C=CASTLES[b.team];
   let sub=b.trains?'Trains '+b.trains.map(t=>TYPES[t].name).join(', '):'Research: '+(C.fac==='chaos'?'wall harvesters':'castle archers')+', income, resilience';
   if(own&&b.res) sub+=' · researching '+rName(RES_BY_ID[b.res.id],b.team);
   if(own&&b.train) sub+=' · training '+TYPES[b.train.type].name;

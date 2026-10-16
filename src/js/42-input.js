@@ -59,13 +59,14 @@ function pick(x,y){
   for(const u of units){ if(!u.alive) continue; _proj.copy(u.j.chest).project(camera); if(_proj.z>1) continue;
     const sx=(_proj.x*.5+.5)*innerWidth, sy=(-_proj.y*.5+.5)*innerHeight, d=(sx-x)**2+(sy-y)**2; if(d<bd){bd=d;best=u;} }
   // a building (and nobody standing right where you tapped): open it, or show what the enemy's is
-  if(!selReg&&(!best||bd>20*20)){ const bb=pickBuilding(x,y); if(bb){ if(bb.team===0) openPanel(bb); else { setHover(bb,x,y); setTimeout(()=>{ if(hoverB===bb) setHover(null); },1800); } return; } }
-  if(best&&best.team===0&&best.reg){ selectReg(best.reg); return; }          // tap your regiment: select it
+  const me=myTeam(), foe=1-me;
+  if(!selReg&&(!best||bd>20*20)){ const bb=pickBuilding(x,y); if(bb){ if(bb.team===me) openPanel(bb); else { setHover(bb,x,y); setTimeout(()=>{ if(hoverB===bb) setHover(null); },1800); } return; } }
+  if(best&&best.team===me&&best.reg){ selectReg(best.reg); return; }          // tap your regiment: select it
   if(selReg){
-    if(best&&best.team===1){ orderAttack(selReg,best.reg,best); updateRegbar(); return; }   // tap an enemy: attack
+    if(best&&best.team===foe){ issue('reg',{r:selReg.id,k:'attack',tr:best.reg?best.reg.id:0,tu:best.id}); updateRegbar(); return; }   // tap an enemy: attack
     const gp=groundPoint(x,y); if(!gp) return;
-    if(Math.hypot(gp.x-BASE_X[1],gp.z)<5){ selReg.order={kind:'charge'}; marker.at(BASE_X[1]-3,0,'#ff5a4f'); updateRegbar(); return; }
-    orderMove(selReg,gp); updateRegbar(); return; }                                     // tap ground: march there
+    if(Math.hypot(gp.x-BASE_X[foe],gp.z)<5){ issue('reg',{r:selReg.id,k:'charge'}); marker.at(BASE_X[foe]-DIRX[foe]*3,0,'#ff5a4f'); updateRegbar(); return; }
+    issue('reg',{r:selReg.id,k:'move',x:+gp.x.toFixed(2),z:+gp.z.toFixed(2)}); updateRegbar(); return; }   // tap ground: march there
   cam.follow=best; if(best) cam.dGoal=Math.min(cam.dGoal,best.s>1.5?14:9);
   updateFollowUI();
 }

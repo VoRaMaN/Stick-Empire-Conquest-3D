@@ -68,12 +68,13 @@ function regBrain(u,o){
   else u.faceGoal=o.a;
   return true;
 }
-function orderMove(r,p){
+// quiet: an order given on another screen (online) moves the soldiers without flashing a marker on this one
+function orderMove(r,p,quiet){
   const c=regCenter(r); let a=Math.atan2(p.x-c.x,p.z-c.z); if(Math.hypot(p.x-c.x,p.z-c.z)<2.5) a=r.team?-Math.PI/2:Math.PI/2;
-  r.order={kind:'move',x:clamp(p.x,-40,40),z:clamp(p.z,-14,14),a}; marker.at(r.order.x,r.order.z,'#ffd36b');
+  r.order={kind:'move',x:clamp(p.x,-40,40),z:clamp(p.z,-14,14),a}; if(!quiet) marker.at(r.order.x,r.order.z,'#ffd36b');
 }
-function orderAttack(r,tr,unit){ r.order={kind:'attack',target:tr||null,unit:tr?null:unit}; const c=tr?regCenter(tr):unit.pos; marker.at(c.x,c.z,'#ff5a4f'); }
-function orderHold(r){ const c=regCenter(r); r.order={kind:'hold',x:c.x,z:c.z,a:r.team?-Math.PI/2:Math.PI/2}; marker.at(c.x,c.z,'#ffd36b'); }
+function orderAttack(r,tr,unit,quiet){ r.order={kind:'attack',target:tr||null,unit:tr?null:unit}; const c=tr?regCenter(tr):unit.pos; if(!quiet) marker.at(c.x,c.z,'#ff5a4f'); }
+function orderHold(r,quiet){ const c=regCenter(r); r.order={kind:'hold',x:c.x,z:c.z,a:r.team?-Math.PI/2:Math.PI/2}; if(!quiet) marker.at(c.x,c.z,'#ffd36b'); }
 // selection visuals
 const ringIM=new THREE.InstancedMesh((()=>{const g=new THREE.RingGeometry(.42,.54,28); g.rotateX(-Math.PI/2); return g;})(),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.85,depthWrite:false}),160);
 for(let i=0;i<160;i++) ringIM.setColorAt(i,WHITE);   // before count=0: three sizes the colour buffer from .count

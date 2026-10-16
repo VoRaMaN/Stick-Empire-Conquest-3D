@@ -15,7 +15,7 @@ function statsTick(){ if(!game.stats||game.mode!=='battle') return; for(let t=0;
 /* ---------- title screen with a battle playing behind it ---------- */
 const menuEl=$('#menu');
 let menuSize=settings.size||0;
-function showPanel(id){ for(const p of ['menuMain','menuSkirmish','menuInstall']) $('#'+p).hidden=p!==id; }
+function showPanel(id){ for(const p of ['menuMain','menuSkirmish','menuInstall','menuOnline']) { const el=$('#'+p); if(el) el.hidden=p!==id; } }
 function openMenu(panel){
   closeOverlays(); closeCampaign(); selectReg(null);
   game.paused=false; game.tutorial=null; endCoach(); game.campFight=null; game.spent=false;
@@ -82,6 +82,7 @@ menuClick('mmCampaign',()=>{ const sv=campLoad(), b=$('#mmCampaign');
 menuClick('mmTraining',()=>startTutorial());
 menuClick('mmLab',()=>{ closeMenu(); game.campFight=null; setTerrain('skirmish'); setMode('duel'); });
 menuClick('mmViewer',()=>{ closeMenu(); game.campFight=null; setTerrain('skirmish'); setMode('viewer'); });
+menuClick('mmOnline',()=>openOnline());
 menuClick('mmSettings',()=>openSheet('settings'));
 menuClick('mmHelp',()=>openSheet('help'));
 menuClick('mmInstall',()=>{ if(installEvt){ installEvt.prompt(); installEvt.userChoice&&installEvt.userChoice.finally(()=>{ installEvt=null; updateInstallButton(); }); } else showPanel('menuInstall'); });
@@ -93,7 +94,8 @@ $('#cClose').onclick=()=>{ sfx('ui'); closeCampaign(); if(!game.campFight&&game.
 function closeOverlays(){ $('#pause').hidden=true; $('#results').hidden=true; for(const s of ['settings','help','tune']) $('#'+s).hidden=true; sheetBack=null; }
 function pauseGame(){
   if(!menuEl.hidden||!$('#camp').hidden||!$('#results').hidden) return;
-  game.paused=true; $('#pause').hidden=false;
+  if(NET.on){ netPauseMenu(); return; }   // an online battle never stops for one player: the menu opens over it
+  game.paused=true; $('#pause').hidden=false; $('#pRestart').hidden=false; $('#pauseH').textContent='Paused'; $('#pResume').innerHTML='<span>Resume</span>'; $('#pMenu').textContent='Main menu';
   $('#pauseSub').textContent=game.tutorial?'Training':game.mode==='duel'?'Finisher Lab':game.mode==='viewer'?'Unit Viewer':game.campFight?campName(game.campFight.id)+' · campaign battle':BATTLE_SIZES[game.size].name+' skirmish · '+fmtTime(game.time-game.stats.t0);
   $('#pRestart').textContent=game.mode==='duel'?'Reset the lab':game.mode==='viewer'?'Reset the viewer':'Restart battle';
 }
@@ -108,14 +110,15 @@ menuClick('pRestart',()=>{ resumeGame();
   else resetBattle(); });
 menuClick('pSettings',()=>openSheet('settings'));
 menuClick('pHelp',()=>openSheet('help'));
-menuClick('pMenu',()=>openMenu());
+menuClick('pMenu',()=>{ if(NET.on){ netLeavePressed(); return; } openMenu(); });
 window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(!menuEl.hidden) return; if(!$('#pause').hidden) resumeGame(); else pauseGame(); } });
-document.addEventListener('visibilitychange',()=>{ if(document.hidden&&menuEl.hidden&&game.mode==='battle'&&!game.over) pauseGame(); });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&menuEl.hidden&&game.mode==='battle'&&!game.over&&!NET.on) pauseGame(); });
 
 /* ---------- results ---------- */
 const fmtTime=s=>{ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 function battleEnded(){
   if(game.demo){ startDemo(); return; }
+  if(NET.on){ netShowResults(); return; }
   if(game.autoResults){ if(game.campFight) finishCampFight(game.winner); else resetBattle(); return; }   // used by the test suite
   showResults();
 }
@@ -134,10 +137,11 @@ function showResults(){
   if(tut&&win){ settings.tutorialDone=true; } saveSettings();
 }
 menuClick('rAgain',()=>{ $('#results').hidden=true;
+  if(NET.on||NET.after){ netResultsAgain(); return; }
   if(game.tutorial){ game.tutorial=null; endCoach(); startSkirmish(settings.size||0); return; }
   if(game.campFight){ finishCampFight(game.winner); return; }
   resetBattle(); });
-menuClick('rMenu',()=>{ if(game.campFight){ finishCampFight(game.winner); closeCampaign(); } openMenu(); });
+menuClick('rMenu',()=>{ if(NET.on||NET.after){ netResultsMenu(); return; } if(game.campFight){ finishCampFight(game.winner); closeCampaign(); } openMenu(); });
 
 /* ---------- install ---------- */
 let installEvt=null;
