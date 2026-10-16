@@ -27,12 +27,13 @@ finishers and 10 charge attacks.
 The Crimson Horde has made a pact with the abyss. Its first Chaos unit, the Hellcrawler, is not a stick soldier
 but a four-limbed demon: cracked black rock with magma glowing in the cracks, long ape-like forelimbs with hooked
 claws, digitigrade hind legs, a horned skull with a hinged, fanged jaw, bone spikes down its spine and a long
-spiked tail. It walks, trots and gallops on four planted feet (procedural gait and IK), and its tail trails
-behind it with lag.
+spiked tail, carried like a scorpion's: arched high over its back with the bone blade hanging over its skull.
+It walks, trots and gallops on four planted feet (procedural gait and IK), and the tail sways and lags behind
+its turns.
 
 It fights with its claws (swipes, rakes, a frenzy of strikes, a rearing double slash), its jaws (lunge bite),
-its legs (a reared raptor kick, a turn-and-buck double kick) and its tail (a spinning sweep that hits everything
-behind it, an overhead scorpion strike). Its signature move is the pounce: a leap from several strides out that
+its legs (a reared raptor kick, a turn-and-buck double kick) and its tail (a spinning sweep with the tail dropped
+low that hits everything around it, a scorpion strike over its head). Its signature move is the pounce: a leap from several strides out that
 knocks archers, wizards, clerics and miners flat. Hellcrawlers hunt in packs and surround their prey four at a
 time; every other crawler on the same enemy speeds their claws up (Pack Frenzy, to +54%) and their cracks burn
 brighter. They are weak to Spartan shields and area attacks. 10 idles, 5 defence clips, 10 finishers and 10

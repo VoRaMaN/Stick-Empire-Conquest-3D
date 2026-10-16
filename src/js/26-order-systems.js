@@ -173,6 +173,7 @@ function updateFly(u,dt){
     if(F.takeT<=0){ F.mode='air'; F.air=true; F.vy=4.6; F.h=.885*s; F.fq=3.6; F.amp=1.05; sfx('flap',u.pos,.9); }
   }
   if(F.air){
+    F.fold=Math.max(0,F.fold-dt*2.2);   // finish spreading the wings (a launch from the aerie hatch takes off before they're open)
     const gy=H(u.pos.x,u.pos.z), ah=H(u.pos.x+u.av.x*.9,u.pos.z+u.av.z*.9);
     let hT=CRUISE+Math.max(0,ah-gy)*.8;
     let clipH=null, cw=0;

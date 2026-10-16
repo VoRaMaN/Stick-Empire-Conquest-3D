@@ -171,7 +171,7 @@ function handleEvent(u,e){
         const st=statues[1-u.team]; if(st&&Math.hypot(st.pos.x-c.x,st.pos.z-c.z)<3) hitStatue(st,dm);
         break; }
       if(e.arc){
-        const Rr=T.reach+.75+(e.arc-1)*1.6;
+        const Rr=T.reach+.75+(e.arc-1)*1.6+(e.tail?.9:0);
         for(const o of units){ if(!o.alive||o.team===u.team) continue; const dx=o.pos.x-u.pos.x,dz=o.pos.z-u.pos.z,d=Math.hypot(dx,dz)||1;
           if(d<Rr+(o.s-1)*.4&&(dx*u.fwdW.x+dz*u.fwdW.z)/d*(e.tail?-1:1) >.25){ if(meleeHit(u,o,e,dm)==='parry') break; } }
         const st=statues[1-u.team]; if(st&&Math.hypot(st.pos.x-u.pos.x,st.pos.z-u.pos.z)<Rr+2) hitStatue(st,dm);

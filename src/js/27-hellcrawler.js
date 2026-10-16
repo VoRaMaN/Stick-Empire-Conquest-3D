@@ -4,14 +4,23 @@
    spikes down its spine and a long spiked tail.
    Rig (metres at scale 1): hips → mid-spine → shoulders → neck → skull + jaw. Forelimbs shoulder-elbow-wrist
    reach (2-bone IK) for paws planted by the gait; hind legs run hip-knee-ankle-toe, the ankle sitting on a
-   fixed-angle metatarsus above the planted toe, then 2-bone IK hip→ankle. The tail is 8 segments that trail
-   behind with lag. The usual joint names (pelvis, chest, neck, head, sL/eL/hL, hipL/kL/fL …) are filled in, so
+   fixed-angle metatarsus above the planted toe, then 2-bone IK hip→ankle. The tail is 16 segments carried
+   scorpion-style, arched up over the back with the blade over the skull, and follows the body with lag. The usual joint names (pelvis, chest, neck, head, sL/eL/hL, hipL/kL/fL …) are filled in, so
    ragdolls, aiming, arrows, blood and finishers treat it like any other body.
    The model is built from shaped parts (one gear group per bone), so every Hellcrawler on the field is drawn
    in a handful of instanced batches. */
 const CHAOS=['crawler'];
 const CRB={pm:.4,mc:.36,ua:.5,fa:.58,th:.36,sh:.38,mt:.27,hipH:.66,metaA:1.0}, CR_HEAD=1.22;   // CR_HEAD: skull and jaw scale
-const CR_TK=[1,.92,.85,.78,.71,.64,.58,.52,.46], CR_TL=.17;   // tail segments: scale base → tip, length at scale 1
+// tail: CR_TN segments (about 2 m at scale 1) tapering base → tip, plus the bone blade; CR_TK has one more entry for the tip
+const CR_TN=16, CR_TK=Array.from({length:CR_TN+1},(_,i)=>1-.56*i/CR_TN), CR_TL=.17;
+const crTi=i=>i*8/CR_TN;   // segment index on the original 8-segment curl profile
+// elevation of tail segment fi (0…8) above the backward horizontal for the 'alt' channel:
+//   0 = scorpion stance (rises off the hips, arches about 1.8 m high, blade over the skull pointing down at the prey),
+//   0→1 cocks it back and up, 1→1.4 the strike (the original strike path, so tail hits keep their reach),
+//   below 0 lowers it flat behind (−1 = trailing low, for the spinning sweeps)
+function crTh(fi,al){ const u=fi/8, low=.32-.88*u, K=.7+3.04*u;
+  if(al<0) return lerp(.9+3.7*u-.6*u*u,low,Math.min(-al,1));
+  return al<=1?lerp(.9+3.7*u-.6*u*u,K,al):lerp(low,K,al); }
 const CR_HOME=[[-.4,-.21],[-.4,.21],[.5,-.5],[.5,.5]];       // planted limb homes [forward, right]: hindL, hindR, foreL, foreR
 const CRM={}, CRG={};
 let crReady=false;
@@ -126,15 +135,15 @@ function buildCrawler(u,G){
   for(const n of ['pel','abd','tor','nek']) G['c_'+n]=crPart(n,s);
   G.c_skl=crPart('skl',s,CR_HEAD); G.c_jaw=crPart('jaw',s,CR_HEAD);
   for(const sd of ['L','R']) for(const n of ['ua','fa','hd','th','sh','mt','ft']) G['c_'+n+sd]=crPart(n,s);
-  for(let i=0;i<8;i++) G['c_t'+i]=crPart('tseg',s,CR_TK[i]);
-  G.c_tt=crPart('ttip',s,CR_TK[8]);
+  for(let i=0;i<CR_TN;i++) G['c_t'+i]=crPart('tseg',s,CR_TK[i]);
+  G.c_tt=crPart('ttip',s,CR_TK[CR_TN]);
   crInitRig(u);
 }
 function crInitRig(u){
   const v=()=>new V3();
   const cr=u.cr={P:v(),M:v(),C:v(),N:v(),H:v(),f:v(),r:v(),rc:v(),n:new V3(0,1,0),d1:v(),d2:v(),hd:new V3(0,0,1),hu:new V3(0,1,0),aL:v(),aR:v(),
     tail:[],tailTip:v(),ph:Math.random(),hw:{R:0,L:0},lc:{R:null,L:null},jaw:0,wasAir:false};
-  for(let i=0;i<=8;i++) cr.tail.push(v());
+  for(let i=0;i<=CR_TN;i++) cr.tail.push(v());
   u.paws=[0,1].map(()=>({pos:v(),from:v(),to:v(),t:-1,dur:.2,lift:.1,air:false}));
   crPlace(u);
 }
@@ -294,18 +303,20 @@ function crGait(u,p,dt,air){
 const _ct1=new V3(),_ct2=new V3(),_ct3=new V3();
 function crTailStep(u,p,dt,alive){
   const cr=u.cr, s=u.s, T=cr.tail, n=T.length-1;
-  if(alive){ _ct1.set(-cr.f.x,0,-cr.f.z); T[0].copy(u.j.pelvis).addScaledVector(cr.d1,-.13*s).addScaledVector(UP,.06*s); }
+  if(alive){ _ct1.set(-cr.f.x,0,-cr.f.z); _ct3.copy(T[0]); T[0].copy(u.j.pelvis).addScaledVector(cr.d1,-.13*s).addScaledVector(UP,.06*s);
+    // the tail rides along with most of the body's movement, so running only sweeps the curl back a little
+    _ct3.subVectors(T[0],_ct3); if(_ct3.lengthSq()<.25) for(let i=1;i<=n;i++) T[i].addScaledVector(_ct3,.85); }
   else { _ct1.subVectors(u.j.pelvis,u.j.chest); _ct1.y=0; if(_ct1.lengthSq()<1e-6) _ct1.set(-u.fwdW.x,0,-u.fwdW.z); _ct1.normalize(); T[0].copy(u.j.pelvis).addScaledVector(_ct1,.12*s); }
-  const al=alive?clamp(p.alt||0,0,1.4):0, tw=alive?(p.twist||0):0, alw=Math.min(al,1);
-  const sw=alive?Math.sin(game.time*2.3+u.id)*(.12+.22*(1-clamp(u.spd/u.T.speed,0,1))):0;
+  const al=alive?clamp(p.alt||0,-1,1.4):0, tw=alive?(p.twist||0):0, alw=clamp(al,0,1);
+  const sw=alive?Math.sin(game.time*2.3+u.id)*(.1+.16*(1-clamp(u.spd/u.T.speed,0,1))):0;
   for(let i=1;i<=n;i++){
-    const L=CR_TL*CR_TK[i-1]*s, th=alive?lerp(.32-i*.11,.7+i*.38,al):-.25, ps=alive?(-tw*1.3*(1-alw)+sw*i/n):0;
+    const fi=crTi(i), L=CR_TL*CR_TK[i-1]*s, th=alive?crTh(fi,al):-.25, ps=alive?(-tw*1.1*(1-alw)+sw*i/n):0;
     crRot(_ct2,_ct1,th,ps); _ct3.copy(T[i-1]).addScaledVector(_ct2,L);
-    const rate=alive?(al>.05?42:16-i*.9):3;
+    const rate=alive?(al>.05?42:16-fi*.9):3;
     T[i].lerp(_ct3,1-Math.exp(-dt*rate));
     _ct2.subVectors(T[i],T[i-1]); const d=_ct2.length(); if(d>1e-6) T[i].copy(T[i-1]).addScaledVector(_ct2,L/d); else T[i].copy(_ct3);
-    const g=groundAt(u,T[i].x,T[i].z)+.06*s*CR_TK[Math.min(i,8)]; if(T[i].y<g) T[i].y=g; }
-  _ct2.subVectors(T[n],T[n-1]).normalize(); cr.tailTip.copy(T[n]).addScaledVector(_ct2,.3*s*CR_TK[8]);
+    const g=groundAt(u,T[i].x,T[i].z)+.06*s*CR_TK[Math.min(i,CR_TN)]; if(T[i].y<g) T[i].y=g; }
+  _ct2.subVectors(T[n],T[n-1]).normalize(); cr.tailTip.copy(T[n]).addScaledVector(_ct2,.3*s*CR_TK[CR_TN]);
 }
 
 /* ---------- dead: the ragdoll moves the main joints; the rest follows from them ---------- */
@@ -353,8 +364,8 @@ function updateCrawlerModel(u){
     _cm2.subVectors(toe,an); _cm2.y=Math.min(0,_cm2.y)*.3; _cm2.addScaledVector(cr.f,.15*s); if(_cm2.lengthSq()<1e-8) _cm2.copy(cr.f);
     orient(G['c_ft'+X],toe,_cm2,UP); }
   const T=cr.tail;
-  for(let i=0;i<8;i++) orient(G['c_t'+i],T[i],_cm1.subVectors(T[i+1],T[i]),UP);
-  orient(G.c_tt,T[8],_cm1.subVectors(T[8],T[7]),UP);
+  for(let i=0;i<CR_TN;i++) orient(G['c_t'+i],T[i],_cm1.subVectors(T[i+1],T[i]),UP);
+  orient(G.c_tt,T[CR_TN],_cm1.subVectors(T[CR_TN],T[CR_TN-1]),UP);
 }
 function crSetHot(u,hot){ if(!!u.crHot===hot) return; u.crHot=hot; const G=u.G; if(!G) return;
   for(const k in G){ const g=G[k]; if(g&&g.isObject3D) for(const c of g.children) if(c.userData.skin) c.material=hot?CRM.hot:CRM.skin; } }
@@ -367,9 +378,9 @@ function crPredict(u,c,te,by,root,out){
   const ln=u.leanS?k.lean+(u.leanS.x-k.lean)*Math.exp(-Math.max(0,te-(u.action?u.action.t:0))/.13):k.lean;
   crFrame(u,k,root,ln,k.side,_cpo,0);
   if(by==='head'){ _pS.copy(_cpo.N); _pReach=.01; out.copy(_cpo.H); _pH.copy(out); return out; }
-  if(by==='tail'){ const al=clamp(k.alt||0,0,1.4); _cpr.set(-_cpo.f.x,0,-_cpo.f.z); out.copy(_cpo.P).addScaledVector(_cpo.d1,-.13*s).addScaledVector(UP,.06*s);
-    for(let i=1;i<=8;i++){ crRot(_cps,_cpr,lerp(.32-i*.11,.7+i*.38,al),-(k.twist||0)*1.3*(1-Math.min(al,1))); out.addScaledVector(_cps,CR_TL*CR_TK[i-1]*s); }
-    out.addScaledVector(_cps,.3*s*CR_TK[8]); _pS.copy(_cpo.P); _pReach=.01; _pH.copy(out); return out; }
+  if(by==='tail'){ const al=clamp(k.alt||0,-1,1.4); _cpr.set(-_cpo.f.x,0,-_cpo.f.z); out.copy(_cpo.P).addScaledVector(_cpo.d1,-.13*s).addScaledVector(UP,.06*s);
+    for(let i=1;i<=CR_TN;i++){ const fi=crTi(i); crRot(_cps,_cpr,crTh(fi,al),-(k.twist||0)*1.1*(1-clamp(al,0,1))); out.addScaledVector(_cps,CR_TL*CR_TK[i-1]*s); }
+    out.addScaledVector(_cps,.3*s*CR_TK[CR_TN]); _pS.copy(_cpo.P); _pReach=.01; _pH.copy(out); return out; }
   if(by==='foot'){ _cps.copy(_cpo.P).addScaledVector(_cpo.r,.16*s);
     if(k.kick<0) out.copy(_cps).addScaledVector(_cpo.f,-.8*s).addScaledVector(UP,.14*s); else out.copy(_cps).addScaledVector(_cpo.f,.72*s).addScaledVector(UP,.05*s);
     _pS.copy(_cps); _pReach=(CRB.th+CRB.sh+CRB.mt)*s; _pH.copy(out); return out; }

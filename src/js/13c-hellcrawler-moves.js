@@ -8,7 +8,8 @@
      twist     turns the front half of the body; side rolls it
      draw      opens the jaw (0 shut … 1 gaping)
      kick      + the right hind leg kicks forward (reared, raptor-style), − both hind legs buck backward
-     alt       swings the tail up over the back (1 = tip forward over the head, scorpion-style)
+     alt       the tail: 0 = carried scorpion-style, arched over the back; 0→1 cocks it, 1→1.4 strikes forward over
+               the head; below 0 lowers it flat behind (−1, for the spinning sweeps)
      look      turns the head; wL (if set) aims the head in the shoulders' frame
      pR / pL   elbow direction override */
 Object.assign(TYPES,{
@@ -41,7 +42,7 @@ const CRA={
     ev:[{t:.36,e:'hit',dmg:1.1,kb:3}]},
   crBuck:{keys:[{t:0},{t:.28,yaw:3.14,crouch:.15,lean:.2},{t:.42,e:'o',kick:-1,lean:.6,crouch:.1},{t:.56,kick:-.2,lean:.3},{t:.82,yaw:6.28,kick:0,lean:0},R_(1.05,{yaw:6.28})],
     ev:[{t:.42,e:'hit',dmg:1.2,kb:4.5}]},
-  crTailSweep:{keys:[{t:0,crouch:.1},{t:.15,yaw:-.5,twist:.4,alt:.1},{t:.6,e:'l',yaw:6.28,crouch:.15,fwd:.3,twist:-.3},{t:.75},R_(1.05,{yaw:6.28})],
+  crTailSweep:{keys:[{t:0,crouch:.1},{t:.15,yaw:-.5,twist:.4,alt:-1},{t:.6,e:'l',yaw:6.28,crouch:.15,fwd:.3,twist:-.3},{t:.75},R_(1.05,{yaw:6.28})],
     ev:[{t:.39,e:'hit',arc:1.3,dmg:.9,kb:3,tail:1}]},
   crTailStrike:{keys:[{t:0},{t:.2,alt:.95,lean:.3,crouch:.1},{t:.42,e:'o',alt:1.3,lean:.45,fwd:.25},{t:.6,alt:1.1},{t:.75,alt:.4},R_(1.05)],
     ev:[{t:.42,e:'hit',dmg:1.3,kb:2.4}]},
@@ -151,7 +152,7 @@ chg('crawler','tailLash','Tail Lash',{alt:.45,lean:.2},
 chg('crawler','kickLeap','Leaping Kick',{crouch:.1},
   [{t:.08,crouch:.35},{t:.26,e:'o',jump:.7,fwd:.8,lean:-.6,kick:.2,crouch:0},{t:.38,e:'o',kick:1,jump:.5,fwd:1.2},{t:.5,e:'i',kick:0,jump:0,lean:0,fwd:1.4,crouch:.35},R_(.95)],
   [HIT(.38,['foot','chest'],{dmg:1.2,kb:3.8}),{t:.5,e:'land'}]);
-chg('crawler','spinTail','Spinning Tail',{alt:.15},
+chg('crawler','spinTail','Spinning Tail',{alt:-1},
   [{t:.06,yaw:-.4},{t:.4,e:'l',yaw:6.28,fwd:.5,twist:-.3},{t:.52},R_(.85,{yaw:6.28})],[{t:.24,e:'hit',arc:1.3,dmg:1,kb:3,tail:1}]);
 chg('crawler','slideClaw','Slide Claw',{crouch:.3,lean:.2},
   [{t:.1,crouch:.45,fwd:.4,R:[.4,-.5,.2]},{t:.24,e:'o',R:[-.1,-.6,.7],twist:.4,crouch:.45,fwd:.9},{t:.4},R_(.8)],[HIT(.24,['tip','shin'],{dmg:1,kb:1.2,up:2})]);
