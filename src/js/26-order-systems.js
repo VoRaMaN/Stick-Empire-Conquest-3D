@@ -5,7 +5,7 @@
 const isAir=o=>!!(o&&o.fl&&o.fl.air&&o.alive!==false);
 // only arrows, bolts and spells reach a flyer; a cloaked ninja is invisible until he is close
 function canTarget(u,o){
-  if(o.inCastle) return false;                 // still inside its castle walls
+  if(o.inCastle||o.emerging) return false;     // still inside its castle walls (or climbing out of the Hellpit)
   if(isAir(o)&&!u.T.ranged&&!u.fl) return false;
   if(o.cloak&&Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z)>1.8) return false;
   return true;
@@ -77,6 +77,7 @@ function gxInit(){
   GX.cbBolt=new THREE.CylinderGeometry(.011,.011,.36,5); GX.cbTip=new THREE.ConeGeometry(.022,.07,5);
 }
 function buildGearX(u,G,acc,acc2,steel){
+  if(u.type==='crawler'){ buildCrawler(u,G); return; }
   gxInit(); const team=u.team;
   switch(u.type){
     case 'wizard':{
@@ -125,6 +126,7 @@ function buildGearX(u,G,acc,acc2,steel){
 }
 const _gq=new V3(),_gs=new V3(),_gso=new V3(),_gm=new V3(),_ge=new V3(),_gch=new V3(),_gfl=new V3(),_gd=new V3();
 function updateGearX(u){
+  if(u.type==='crawler') return;   // a Hellcrawler's model is posed when it's drawn (drawCrawler), and only if it's on screen
   const G=u.G, j=u.j, s=u.s; if(!G) return;
   _gfl.copy(u.fwdW).addScaledVector(u.spine,-u.fwdW.dot(u.spine)); if(_gfl.lengthSq()<1e-6) _gfl.copy(u.fwdW); _gfl.normalize();
   if(u.type==='cleric'){
@@ -429,6 +431,7 @@ function drawSpells(){
   for(const u of units) if(u.alive&&u.boltFire&&u.G&&u.G.w) glowAt(crossbowTip(u,_dp),.12+.04*Math.random(),'#ffb347');
 }
 function drawUnit(u){
+  if(u.T.crawler){ if(crForce) crPrep(u); if(u.crVis) drawCrawlerFx(u); return; }   // a Hellcrawler is all model (posed in crPrep before the gear is batched)
   let col=u.col; const S=u.st;
   if(S&&u.alive){ const tc=u.tc||(u.tc=new THREE.Color());
     if(S.poison){ tc.copy(u.col).lerp(scol('#57c447'),.35+.15*Math.sin(game.time*7+u.id)); col=tc; }

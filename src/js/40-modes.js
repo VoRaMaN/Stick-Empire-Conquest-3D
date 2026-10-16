@@ -14,7 +14,9 @@ function resetBattle(opt){
   const BS=BATTLE_SIZES[game.size], n=BS.start;
   if(!opt.gold) game.gold=[BS.gold,BS.gold];
   const start=n<=8?['miner','miner','sword','sword','sword','archer','archer','spear']:armyMix(n);
-  for(let t=0;t<2;t++) for(const ty of start) spawn(ty,t);
+  // the Crimson Horde has made a pact with the abyss: Hellcrawlers take the place of some of its swordsmen
+  const start1=game.classicMix?start:hordeMix(start);
+  for(let t=0;t<2;t++) for(const ty of (t?start1:start)) spawn(ty,t);
   const extra=['spear','sword','archer','giant']; for(let k=0;k<(opt.enemyExtra||0);k++) spawn(extra[k%4],1);
   game.stance=['defend','defend']; game.aiT=4; game.bt=0; setStance(0,'defend'); setStance(1,'defend');
   if(n>8) for(const u of units) if(u.slot&&u.isUnit&&u.type!=='miner'){ placeUnit(u,u.slot.x,u.slot.z,u.team?-Math.PI/2:Math.PI/2); }
@@ -30,12 +32,13 @@ function frameBattle(){
   cam.dGoal=cam.dist=clamp((hi-lo+7)/(2*tanH),26,52);
 }
 // a balanced army of n soldiers (a few miners, then mostly swordsmen, Spartans and archers, a handful of giants)
+function hordeMix(L){ let k=0; return L.map(t=>t==='sword'&&(k++%3)!==2?'crawler':t); }
 function armyMix(n){ const out=['miner','miner','miner','miner']; const pat=game.classicMix?['sword','spear','sword','archer','spear','sword','archer','sword','spear','archer','sword','giant']
     :['sword','spear','sword','archer','ninja','spear','sword','archer','wizard','sword','spear','archer','cleric','sword','ninja','giant','wing','spear','archer','sword'];
   for(let i=0;out.length<n;i++) out.push(pat[i%pat.length]); return out; }
 // teleport a fresh unit (feet included) — used to deploy big armies straight into their ranks
 function placeUnit(u,x,z,face){ u.pos.set(x,H(x,z),z); u.face=u.faceGoal=face; const f=new V3(Math.sin(face),0,Math.cos(face)), r=new V3(f.z,0,-f.x);
-  u.feet.forEach((ft,i)=>{ const sd=i?1:-1; ft.pos.set(x+r.x*sd*.13*u.s,0,z+r.z*sd*.13*u.s); ft.pos.y=H(ft.pos.x,ft.pos.z); ft.t=-1; }); u.pyS=undefined; if(u.fl) flyInstant(u); }
+  u.feet.forEach((ft,i)=>{ const sd=i?1:-1; ft.pos.set(x+r.x*sd*.13*u.s,0,z+r.z*sd*.13*u.s); ft.pos.y=H(ft.pos.x,ft.pos.z); ft.t=-1; }); u.pyS=undefined; if(u.fl) flyInstant(u); if(u.cr) crPlace(u); }
 const DUEL_X=0, DUEL_Z=-1.3;
 function resetDuel(){
   clearAll(); setupStatues(); resetCastles(); closePanel();
@@ -47,9 +50,9 @@ function resetDuel(){
   att.face=att.faceGoal=Math.PI/2; dum.face=dum.faceGoal=-Math.PI/2;
   for(const u of [att,dum]){ const f=new V3(Math.sin(u.face),0,Math.cos(u.face)), r=new V3(f.z,0,-f.x);
     u.feet.forEach((ft,i)=>{const sd=i?1:-1; ft.pos.set(u.pos.x+r.x*sd*.13*u.s,0,u.pos.z+r.z*sd*.13*u.s); ft.pos.y=H(ft.pos.x,ft.pos.z);}); }
-  if(att.fl) flyInstant(att);
+  if(att.fl) flyInstant(att); if(att.cr) crPlace(att);
   game.duel={att,dum,q:null,home:{a:att.pos.clone(),d:dum.pos.clone()}};
-  cam.goal.set(DUEL_X,H(DUEL_X,DUEL_Z)+(ty==='wing'?2.2:1.1),DUEL_Z); cam.dGoal=ty==='giant'?10.5:ty==='wing'?11:ty==='archer'||ty==='wizard'?8.5:7.5;
+  cam.goal.set(DUEL_X,H(DUEL_X,DUEL_Z)+(ty==='wing'?2.2:1.1),DUEL_Z); cam.dGoal=ty==='giant'?10.5:ty==='wing'?11:ty==='crawler'?9:ty==='archer'||ty==='wizard'?8.5:7.5;
 }
 function duelDo(kind){
   const D=game.duel;

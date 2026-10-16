@@ -251,3 +251,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 @media (max-width:560px){ .bpanel{left:calc(env(safe-area-inset-left,0px) + 10px);right:calc(env(safe-area-inset-right,0px) + 10px);width:auto} }
 .chip.pic img,.bpu img{background:radial-gradient(circle at 50% 58%,rgba(246,226,180,.92) 0,rgba(228,190,120,.55) 46%,rgba(228,190,120,0) 70%);border-radius:50%}
 @media (max-width:560px){ .side .gold .mana{display:block;text-align:right;margin-top:1px} .side .gold .mana i{display:none} }
+
+/* Chaos units in the Lab: ember-red card */
+.chip.chaos{border-color:rgba(255,106,30,.55);background:linear-gradient(180deg,rgba(80,20,10,.85),rgba(40,12,8,.88))}
+.chip.chaos .n{color:#ffb38a}
+.chip.chaos[aria-pressed="true"]{border-color:#ff7a2a;box-shadow:0 0 0 1px #ff7a2a inset}

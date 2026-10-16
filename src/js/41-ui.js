@@ -3,13 +3,13 @@ let bannerTimer=0;
 function showBanner(t,s,dur){ $('#bannerT').textContent=t; $('#bannerS').textContent=s||''; $('#banner').classList.add('show'); bannerTimer=dur||1.6; }
 function renderChips(){
   const box=$('#chips'); box.innerHTML='';
-  for(const t of ORDER){ const T=TYPES[t]; const b=document.createElement('button'); b.className='chip'; b.id='chip-'+t;
+  for(const t of (game.mode==='duel'?ORDER.concat(CHAOS):ORDER)){ const T=TYPES[t]; const b=document.createElement('button'); b.className='chip'+(T.chaos?' chaos':''); b.id='chip-'+t;
     const mc=game.mode==='battle'&&!game.classicMix?(MANA_COST[t]||0):0;
     b.innerHTML='<span class="n">'+T.name+'</span><span class="s">'+(game.mode==='battle'?T.cost+' gold'+(mc?' · '+mc+' mana':''):'10 finishers · 10 charges')+'</span><span class="qn"></span>';
     if(game.mode==='duel') b.setAttribute('aria-pressed',game.duelSel===t);
     b.addEventListener('click',()=>{
       if(game.mode==='battle'){ if(!buyUnit(t)){ b.classList.remove('no'); void b.offsetWidth; b.classList.add('no'); } }
-      else { sfx('ui'); game.duelSel=t; game.finI=-1; game.idleI=-1; renderChips(); duelDo('fin'); }
+      else { sfx('ui'); game.duelSel=t; game.finI=-1; game.idleI=-1; renderChips(); duelDo('fin'); unitVoice(t); }
     });
     box.appendChild(b); }
   applyIcons();

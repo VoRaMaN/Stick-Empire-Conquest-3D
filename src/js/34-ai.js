@@ -63,7 +63,7 @@ function fightBrain(u,t,dx,dz,d){
   // only two fighters press an enemy at once; the rest wait their turn a step further back
   let rank=0; if(!u.T.ranged&&t.atk) for(const o of t.atk){ if(o===u||!o.alive||o.team!==u.team||o.target!==t) continue;
     if(Math.hypot(t.pos.x-o.pos.x,t.pos.z-o.pos.z)<d-.05) rank++; }
-  const waiting=rank>=2; if(waiting) eng+=1.5+(rank-2)*.6;
+  const lim=T.swarm?4:2, waiting=rank>=lim; if(waiting) eng+=1.5+(rank-lim)*.6;   // a swarm surrounds its prey four at a time
   u.faceGoal=Math.atan2(dx,dz);
   if(T.ranged){
     if(d>T.range){ u.desired.set(nx*sp,0,nz*sp); return; }
@@ -72,7 +72,9 @@ function fightBrain(u,t,dx,dz,d){
     return;
   }
   if(d>eng+.35){ // close in, slowing as we reach fighting distance
-    const k=clamp((d-eng)/1.5,.35,1); u.desired.set(nx*sp*k,0,nz*sp*k);
+    const k=clamp((d-eng)/1.5,.35,1);
+    if(T.swarm&&d<eng+4){ const a=((u.id*7)%9-4)*.2*clamp((d-eng)/3,0,1), ca=Math.cos(a), sa=Math.sin(a); u.desired.set((nx*ca+nz*sa)*sp*k,0,(nz*ca-nx*sa)*sp*k); }   // fan out round it
+    else u.desired.set(nx*sp*k,0,nz*sp*k);
     if(!waiting&&d<eng+.8&&!u.action&&u.cdT<=0&&Math.abs(wrapA(u.faceGoal-u.face))<.35) startAttack(u,t);
     return;
   }

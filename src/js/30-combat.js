@@ -33,6 +33,7 @@ function damage(t,amt,src,dirW,kb,up,blocked,at){
   react(t,dirW,kb||1); if(t.fl) t.fl.vy-=Math.min(3,(kb||1)*.45);
   if(!blocked&&!t.action&&t.state!=='stunned'&&Math.random()<.5){ play(t,'flinch'); t.fwdScale=1; }
   if(!blocked&&amt>0) bleed(at||_tmp.copy(t.j.chest).lerp(t.j.neck,Math.random()).clone(),dirW.clone().setY(.25).normalize(),clamp(Math.round(amt/6),2,9),2.4,.55);
+  if(!blocked&&amt>0&&t.T.crawler) puff(at||t.j.chest,3,.09,2.6,'#ff7a2a');   // magma spills from a wounded Hellcrawler
   if(t.invuln) return;
   t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)); if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
   if(t.hp<=0){ kill(t,dirW.clone().multiplyScalar(2.5*(kb||1)).add(new V3(0,1.8+(kb||1)*.6+(up||0),0)),{}); }
@@ -40,7 +41,7 @@ function damage(t,amt,src,dirW,kb,up,blocked,at){
 function kill(t,impWorld,opt){
   if(!t.alive) return;
   shakeMorale(t); onKill(t);
-  if(t.isUnit){ if(t.type==='giant') sfx('roar',t.j.head,.9,{rate:.8}); else if(Math.random()<.75) sfx('death',t.j.head,.9,{rate:t.type==='miner'?1.08:1}); }
+  if(t.isUnit){ if(t.type==='giant') sfx('roar',t.j.head,.9,{rate:.8}); else if(t.T.crawler) crSfx('crDie','roar',t.j.head,.85); else if(Math.random()<.75) sfx('death',t.j.head,.9,{rate:t.type==='miner'?1.08:1}); }
   if(t.fin&&t.fin.rag) releaseRag(t.fin.rag,new V3(0,0,0));
   if(t.fin&&t.fin.victim&&t.fin.victim.alive){ unstun(t.fin.victim); }
   t.fin=null; t.target=null;
@@ -85,6 +86,7 @@ function startAttack(u,t,forced){
     planDefense(tUnit,u,c); }
   if(c.aim&&t){ const d=Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z); u.aimPitch=clamp(d*.018,0,.3); }
   u.cdT=T.cd*rand(.85,1.15)*(c.dur>1.2?1.12:1);
+  if(T.swarm&&tUnit&&u.action) packFrenzy(u,tUnit);
 }
 // The defender reads the incoming blow and times a block, parry or dodge to meet it.
 function planDefense(t,u,c){
@@ -129,7 +131,7 @@ function play(u,name){ const c=CLIPS[u.type][name]; if(!c) return; u.action={c,t
 
 function updateAction(u,dt){
   const a=u.action; if(!a) return;
-  a.t+=dt; a.age+=dt;
+  a.t+=dt*(a.sp||1); a.age+=dt;
   const c=a.c;
   // root motion
   const f1=evalClip(c,Math.min(a.t,c.dur)).fwd; const sc=(c.hitT===undefined||a.t<=c.hitT+1e-3)?u.fwdScale:1; let df=(f1-a.prevFwd)*sc*u.s; a.prevFwd=f1;
@@ -171,10 +173,10 @@ function handleEvent(u,e){
       if(e.arc){
         const Rr=T.reach+.75+(e.arc-1)*1.6;
         for(const o of units){ if(!o.alive||o.team===u.team) continue; const dx=o.pos.x-u.pos.x,dz=o.pos.z-u.pos.z,d=Math.hypot(dx,dz)||1;
-          if(d<Rr+(o.s-1)*.4&&(dx*u.fwdW.x+dz*u.fwdW.z)/d>.25){ if(meleeHit(u,o,e,dm)==='parry') break; } }
+          if(d<Rr+(o.s-1)*.4&&(dx*u.fwdW.x+dz*u.fwdW.z)/d*(e.tail?-1:1) >.25){ if(meleeHit(u,o,e,dm)==='parry') break; } }
         const st=statues[1-u.team]; if(st&&Math.hypot(st.pos.x-u.pos.x,st.pos.z-u.pos.z)<Rr+2) hitStatue(st,dm);
         break; }
-      if(t&&t.isUnit){ if(t.alive&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)<T.reach+.5+(t.s-1)*.5) meleeHit(u,t,e,dm); }
+      if(t&&t.isUnit){ if(t.alive&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)<T.reach+.5+(t.s-1)*.5){ const r=meleeHit(u,t,e,dm); if(e.kd&&r==='hit') knockDown(t,u); } }
       else if(t&&t.isStatue&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)<4) hitStatue(t,dm);
       break; }
     case 'fire':{
@@ -226,6 +228,8 @@ function handleEvent(u,e){
       const s=u.s, uu=u, by=e.aim?e.aim[0]:'tip';
       if(e.at==='tip'||e.at==='wtip') pinRag(rg,1,out=>strikePoint(uu,by,out));
       else if(e.at==='tk') pinRag(rg,1,out=>out.copy(uu.j.hL).addScaledVector(uu.fwdW,1.05*s).addScaledVector(UP,.1*s));
+      else if(e.at==='jaw') pinRag(rg,2,out=>out.copy(uu.j.head).addScaledVector(uu.cr.hd,.06*s));
+      else if(e.at==='tail') pinRag(rg,1,out=>out.copy(uu.cr.tailTip));
       else pinRag(rg,1,out=>out.copy(uu.j.hL).addScaledVector(uu.spine,-.12*s));
       puff(cp,4,.16,2); shakeAt(v.pos,.1); hitSfx(u,e,cp,1); break; }
     case 'release':{

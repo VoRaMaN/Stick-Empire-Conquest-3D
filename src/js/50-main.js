@@ -57,7 +57,9 @@ function step(rdt){
   if(bannerTimer>0){ bannerTimer-=rdt; if(bannerTimer<=0) $('#banner').classList.remove('show'); }
 }
 function draw(){
+  draw.frame=(draw.frame||0)+1;
   for(const im of CNT.keys()) CNT.set(im,0);
+  for(const L of [units,corpses]) for(const u of L) if(u.cr) crPrep(u);   // Hellcrawler models: posed only when on screen
   drawGear();
   _cr.set(1,0,0).applyQuaternion(camera.quaternion); _cb.set(0,0,1).applyQuaternion(camera.quaternion);
   for(const st of statues){ const f=st.fig; if(!f.rag) drawFigure(f.j,f.s,f.col,f.thick,f.fwdW); }

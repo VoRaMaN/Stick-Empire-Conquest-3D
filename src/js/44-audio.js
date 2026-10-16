@@ -11,7 +11,8 @@ const audio={ctx:null,ready:false,master:null,sfxBus:null,musicBus:null,verbSend
 // recorded take levels (the files are normalised to the same loudness) and the synthesized names they replace
 const SAMPLE_VOL={clang:.42,parry:.55,shield:.55,slash:.42,stab:.48,blunt:.55,heavy:.78,swing:.3,swingHeavy:.38,bow:.4,arrowHit:.42,arrowShield:.45,arrowGround:.22,
   death:.42,roar:.66,warcry:.5,horn:.55,land:.38,giantStep:.55,mine:.3,coin:.32,stone:.55,crumble:.95,cast:.4,orbWhoosh:.34,blast:.68,zap:.42,thunder:.85,poison:.42,
-  heal:.42,flash:.5,smite:.6,cloak:.42,crossbow:.45,flap:.34,door:.62,gate:.7,hatch:.6,research:.5,rage:.6,shieldWall:.6,ignite:.5};
+  heal:.42,flash:.5,smite:.6,cloak:.42,crossbow:.45,flap:.34,door:.62,gate:.7,hatch:.6,research:.5,rage:.6,shieldWall:.6,ignite:.5,
+  crClaw:.42,crBite:.55,crScreech:.42,crHiss:.36,crDie:.48,crTail:.5,pitRise:.6};
 const MAX_VOICES=30, MAX_PER_FRAME=7;
 
 // ---- tiny DSP toolkit (sample domain) ----
@@ -159,6 +160,7 @@ function sfx(name,pos,vol,opt){
 }
 // which sound a landed blow makes, from the weapon part that struck
 function hitSfx(u,e,at,vol){
+  if(u.T&&u.T.crawler){ crHitSfx(u,e,at,vol); return; }
   const by=e&&e.aim?e.aim[0]:null;
   const n=by==='hL'||by==='foot'||by==='head'||by==='shoulder'||by==='pommel'?'punch':u.type==='giant'?'heavy':u.type==='miner'?'blunt':(u.type==='spear'||by==='tip')?'stab':'slash';
   sfx(n,at,vol);

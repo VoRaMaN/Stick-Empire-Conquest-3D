@@ -22,6 +22,26 @@ app from the browser.
 Every fighting unit has 10 idles, 10 to 11 moves, 5 defence clips (block, parry, dodge, flinch, recoil), 10
 finishers and 10 charge attacks.
 
+## Chaos: the Hellcrawler
+
+The Crimson Horde has made a pact with the abyss. Its first Chaos unit, the Hellcrawler, is not a stick soldier
+but a four-limbed demon: cracked black rock with magma glowing in the cracks, long ape-like forelimbs with hooked
+claws, digitigrade hind legs, a horned skull with a hinged, fanged jaw, bone spikes down its spine and a long
+spiked tail. It walks, trots and gallops on four planted feet (procedural gait and IK), and its tail trails
+behind it with lag.
+
+It fights with its claws (swipes, rakes, a frenzy of strikes, a rearing double slash), its jaws (lunge bite),
+its legs (a reared raptor kick, a turn-and-buck double kick) and its tail (a spinning sweep that hits everything
+behind it, an overhead scorpion strike). Its signature move is the pounce: a leap from several strides out that
+knocks archers, wizards, clerics and miners flat. Hellcrawlers hunt in packs and surround their prey four at a
+time; every other crawler on the same enemy speeds their claws up (Pack Frenzy, to +54%) and their cracks burn
+brighter. They are weak to Spartan shields and area attacks. 10 idles, 5 defence clips, 10 finishers and 10
+charges, like the other units; pick it in the Finisher Lab to see them all.
+
+The Horde fields them in skirmishes and the campaign: they replace some of its swordsmen, and the ones it buys
+climb out of the Hellpit, a magma pool in a ring of cracked rock and bone outside the Crimson castle, in packs
+of up to three.
+
 ## Castles and research
 
 Behind each statue stands a castle: a crenellated curtain wall with a gatehouse and iron portcullis, corner
@@ -49,7 +69,7 @@ are unlocked by research. The Finisher Lab has everything unlocked.
 
 ## Sound, voices and textures
 
-Battle sounds (42 effects, two takes each), the narrator (an old wizard's voice, 18 lines) and three voice lines
+Battle sounds (49 effects, two takes each, including the Hellcrawler's claws, bite, tail, screech, hiss and death and the Hellpit's rumble), the narrator (an old wizard's voice, 18 lines) and three voice lines
 for each unit (played when you tap its card) were generated with ElevenLabs. The castle's stone, slate, clay
 tile, timber, iron, sandstone, cobble, marble and basalt textures and the nine gold building emblems were
 generated with Artlist (Nano Banana 2.1), then cut, made tileable and compressed. Unit portraits are rendered
@@ -98,7 +118,8 @@ Main source files:
 | `30`–`36` | Combat, armies and formations, regiments and tactics, campaign, AI, per-unit update and drawing; `36`: the new units' regiments and formation places |
 | `40`–`42` | Game modes, battle UI, camera and touch input |
 | `43` | Graphics quality (Auto/Low/Medium/High), FPS counter, settings screen |
-| `37`–`39` | Castles (walls, gatehouse, buildings, doors, training queues, garrison); research, mana, narrator and building panel; unit portraits |
+| `13c`, `27` | The Hellcrawler: stats and every clip; its rig, gait, tail, procedural model and behaviour |
+| `37`–`39` | Castles (walls, gatehouse, buildings, doors, training queues, garrison), the Hellpit (`37b`); research, mana, narrator and building panel; unit portraits |
 | `44` | Sound: recorded effects with synthesized fallbacks, voices, procedural music (Web Audio) |
 | `45` | Title screen, pause, battle results |
 | `46` | Battlefield map |
@@ -115,7 +136,9 @@ npm test
 Builds the game and runs the Node regression suite: a full battle with every unit's finishers, regiments and
 orders, the campaign from start to victory, effects, finisher aim accuracy, charges, arrow rendering in a
 400-soldier battle, big-army formations, every idle, move, finisher and charge of the four newer units, castles
-(every unit walks out of its building and through the gate, research, garrison archers, enemy research), a seeded
+(every unit walks out of its building and through the gate, research, garrison archers, enemy research), the
+Hellcrawler (every attack, finisher and charge lands, the gait keeps its feet on the ground, crawlers climb out of
+the Hellpit in a battle), a seeded
 fingerprint proving the original five units still behave exactly as before, and a simulation cost report.
 
 ## Controls

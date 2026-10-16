@@ -201,4 +201,5 @@ function castleFx(){
     if(b.glowMat){ b.glowMat.color.copy(_wgc).lerp(_wgh,on?.6+.4*Math.sin(tt*6):.05+.05*Math.sin(tt*2.3+b.bx)); } }
   // torches by the gates
   for(const C of CASTLES) for(const p of C.torches){ _tp.set(cwx(C.team,p.x+.05),CGY[C.team]+p.y,p.z); glowAt(_tp,.22+.05*Math.sin(tt*13+p.z),'#ffa040'); }
+  drawPits();
 }

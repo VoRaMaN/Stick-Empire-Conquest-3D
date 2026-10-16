@@ -42,10 +42,12 @@ function autoSpend(team){
   const cq=castleOn();
   if(count(team,'miner')+(cq?queuedType(team,'miner'):0)<3) pick='miner';
   else if(game.classicMix){ const r=Math.random(); pick=r<.38?'sword':r<.62?'archer':r<.82?'spear':'giant'; }   // the original four-type army (regression tests)
-  else { const r=Math.random(); pick=r<.3?'sword':r<.48?'archer':r<.62?'spear':r<.72?'ninja':r<.8?'wizard':r<.87?'cleric':r<.94?'wing':'giant'; }
+  else { const r=Math.random(); pick=r<.3?'sword':r<.48?'archer':r<.62?'spear':r<.72?'ninja':r<.8?'wizard':r<.87?'cleric':r<.94?'wing':'giant';
+    if(team===1&&cq&&(pick==='sword'||pick==='ninja')&&Math.random()<.6) pick='crawler'; }   // the Horde's Hellcrawlers come up out of their pit in packs
   const cost=TYPES[pick].cost;
   if(cq&&pick!=='miner'&&aiSaving(team)) return;   // saving up for research
-  if(cq){ const m=unitMana(pick); if(game.gold[team]>=cost&&game.mana[team]>=m&&count(team)+queued(team)<POP_CAP&&queuedType(team,pick)<3){ game.gold[team]-=cost; game.mana[team]-=m; recruit(pick,team); } }
+  if(cq&&pick==='crawler'){ const n=Math.min(3,Math.floor(game.gold[team]/cost),POP_CAP-count(team)-queued(team)); if(n>0&&queuedType(team,pick)<4){ game.gold[team]-=cost*n; for(let i=0;i<n;i++) recruit(pick,team); } }
+  else if(cq){ const m=unitMana(pick); if(game.gold[team]>=cost&&game.mana[team]>=m&&count(team)+queued(team)<POP_CAP&&queuedType(team,pick)<3){ game.gold[team]-=cost; game.mana[team]-=m; recruit(pick,team); } }
   else if(game.gold[team]>=cost){ game.gold[team]-=cost; spawn(pick,team); }
 }
 /* ---------- spatial hash: neighbour queries stay cheap with hundreds of units ---------- */

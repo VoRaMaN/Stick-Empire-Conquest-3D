@@ -116,12 +116,14 @@ function strikePoint(u,by,out,T){
     case 'hL': if(u.type==='spear'&&u.G&&u.G.o&&!u.G.o.dropped) return out.copy(u.G.o.position); return out.copy(j.hL);
     case 'head': return out.copy(j.head);
     case 'shoulder': return out.copy(j.chest).addScaledVector(u.fwdW,.1*s);
+    case 'tail': return out.copy(u.cr?u.cr.tailTip:j.pelvis);
   } return out.copy(j.hR); }
 const _aimX=new V3(),_aimY=new V3(),_aimT=new V3(),_aimP=new V3(),_aimD=new V3(),_aimQ=new V3(),_aimH=new V3();
 // predicted strike point at clip time te for a root at `root` (motion warping looks ahead with this)
 const _pf=new V3(),_pr=new V3(),_psp=new V3(),_pfl=new V3(),_pp=new V3(),_pq=new V3(),_pd=new V3(),_pH=new V3(),_pS=new V3();
 let _pReach=.62;
 function predictStrike(u,c,te,by,root,out){
+  if(u.T.crawler) return crPredict(u,c,te,by,root,out);
   const k=evalClip(c,te), s=u.s, yaw=u.face+(k.yaw||0);
   _pf.set(Math.sin(yaw),0,Math.cos(yaw)); _pr.set(_pf.z,0,-_pf.x);
   // the lean spring lags the pose by ~0.13s; account for it when the blow is close
@@ -205,7 +207,7 @@ function residualStep(u,dir,frac,w,dt){
   const k=Math.min(1,dt*16)*frac*w; u.residX=(u.residX||0)+dir.x*k; u.residZ=(u.residZ||0)+dir.z*k; }
 // called inside buildSkel once the pose's hand targets and weapon direction are known
 function applyAim(u,dt,p){
-  const A=u.aim, s=u.s, j=u.j, w=A.w, T=A.T, by=A.by, reach=.62*s;
+  const A=u.aim, s=u.s, j=u.j, w=A.w, T=A.T, by=A.by, reach=(u.T.armReach||.62)*s;
   if(by==='tip'||by==='blade'||by==='pick'||by==='pommel'){
     const H0=u.hand.R, sh=j.sR; _aimQ.copy(u.wRw);
     if(by==='tip'){ _aimD.subVectors(T,sh).normalize(); u.wRw.lerp(_aimD,.55).normalize(); }

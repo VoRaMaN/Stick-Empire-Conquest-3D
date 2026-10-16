@@ -309,12 +309,14 @@ function buildCastle(t){
   for(const b of [...C.list,C.keep]) b.wbox.copy(b.box).applyMatrix4(C.group.matrixWorld);
   CASTLES[t]=C;
 }
-function castleGround(){ if(!castleReady) return; for(const C of CASTLES){ C.group.position.y=CGY[C.team]; C.group.updateMatrixWorld(true); for(const b of [...C.list,C.keep]) b.wbox.copy(b.box).applyMatrix4(C.group.matrixWorld); } }
+function castleGround(){ if(!castleReady) return; for(const C of CASTLES){ C.group.position.y=CGY[C.team]; C.group.updateMatrixWorld(true);
+  if(typeof placePit==='function') placePit(C);
+  for(const b of [...C.list,C.keep]) b.wbox.copy(b.box).applyMatrix4((b.grp||C.group).matrixWorld); } }
 buildCastle(0); buildCastle(1); castleReady=true;
 loadAssets().then(A=>{ if(A) applyCastleTextures(A); });
 
 /* ---------- castle state: training queues, doors, garrison ---------- */
-const TRAIN_T={miner:2.2,sword:2.4,spear:3.4,archer:2.8,ninja:3.2,cleric:3.6,wizard:4.4,wing:4.4,giant:7};
+const TRAIN_T={miner:2.2,sword:2.4,spear:3.4,archer:2.8,ninja:3.2,cleric:3.6,wizard:4.4,wing:4.4,giant:7,crawler:1.1};
 // castles only run in a real skirmish/campaign battle; the classic regression mix and the Lab keep the old spawn
 const castleOn=()=>game.mode==='battle'&&!game.classicMix;
 function resetCastles(){
@@ -328,7 +330,7 @@ function resetCastles(){
   resetAiResearch();
 }
 function queued(team){ let n=0; for(const b of CASTLES[team].list) n+=b.q.length+(b.train?1:0)+b.exitQ.length; return n; }
-function queuedType(team,ty){ const b=CASTLES[team].B[TRAINED_AT[ty]]; let n=b.q.filter(x=>x===ty).length; if(b.train&&b.train.type===ty) n++; return n; }
+function queuedType(team,ty){ const b=CASTLES[team].B[TRAINED_AT[ty]]; if(!b) return 0; let n=b.q.filter(x=>x===ty).length; if(b.train&&b.train.type===ty) n++; return n; }
 // buy a unit: in a castle battle it is trained in its building and walks out; otherwise it appears by the statue
 function recruit(type,team){
   if(!castleOn()){ spawn(type,team); return true; }
@@ -391,7 +393,8 @@ function updateCastles(dt){
       // training: one unit at a time per building, then it waits at the door until the door is open
       if(!b.train&&b.q.length){ const ty=b.q.shift(); b.train={type:ty,t:TRAIN_T[ty]||3,tot:TRAIN_T[ty]||3}; }
       if(b.train){ b.train.t-=dt*researchTrainMul(t); if(b.train.t<=0){ b.exitQ.push(b.train.type); b.train=null; } }
-      if(b.exitQ.length){ openDoor(b,2.2); if(D&&D.open>.62){ const ty=b.exitQ.shift(); emerge(b,ty); if(D) D.hold=Math.max(D.hold,1.4); } }
+      if(b.exitQ.length&&b.pit){ b.emT=(b.emT||0)-dt; if(b.emT<=0){ b.emT=.5; pitEmerge(b,b.exitQ.shift()); } }
+      else if(b.exitQ.length){ openDoor(b,2.2); if(D&&D.open>.62){ const ty=b.exitQ.shift(); emerge(b,ty); if(D) D.hold=Math.max(D.hold,1.4); } }
     }
     // the gate's portcullis lifts while soldiers pass beneath it
     let near=false; if(on) for(const u of units){ if(u.team===t&&u.inCastle&&!u.fl&&Math.abs(u.pos.x-cwx(t,-1))<6&&Math.abs(u.pos.z-GATE_Z)<5){ near=true; break; } }
@@ -400,6 +403,7 @@ function updateCastles(dt){
     if(on) updateGarrison(C,dt);
     if(on) updateResearch(C,dt);
   }
+  updatePits(dt);
 }
 
 /* ---------- garrison: archers on the battlements (Castle Archer research adds more) ---------- */

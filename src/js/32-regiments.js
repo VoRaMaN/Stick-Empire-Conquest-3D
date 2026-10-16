@@ -1,7 +1,7 @@
 /* ================= PHASE 3: regiments, tactics, campaign ================= */
 
 /* ---------- regiments ---------- */
-const regs=[]; const regNum=[0,0]; let selReg=null;
+const regs=[]; const regNum=[0,0]; let selReg=null, chaosReg=0;
 const REG_SIZE={sword:12,spear:12,archer:10,giant:3};
 const FORM={spear:{cols:6,gap:1.3,depth:1.35},sword:{cols:6,gap:1.3,depth:1.35},archer:{cols:5,gap:1.35,depth:1.4},giant:{cols:3,gap:3.1,depth:3.1}};
 const ROMAN=n=>{const r=[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];let s='';for(const [v,c] of r) while(n>=v){s+=c;n-=v;} return s;};
@@ -9,7 +9,7 @@ const TYPE_PL={sword:'Swordsmen',spear:'Spartans',archer:'Archers',giant:'Giants
 function assignRegiment(u){
   if(!REG_SIZE[u.type]||game.mode!=='battle') return;
   let r=regs.find(r=>r.team===u.team&&r.type===u.type&&r.units.filter(x=>x.alive).length<REG_SIZE[u.type]);
-  if(!r){ r={id:++uid,team:u.team,type:u.type,units:[],num:++regNum[u.team],order:{kind:'army'}}; regs.push(r); makeBanner(r); }
+  if(!r){ r={id:u.T.chaos?-(++chaosReg):++uid,team:u.team,type:u.type,units:[],num:++regNum[u.team],order:{kind:'army'}}; regs.push(r); makeBanner(r); }   // Chaos packs number apart, so they never shift the army's ids
   r.units.push(u); u.reg=r;
 }
 function regAlive(r){ return r.units.filter(x=>x.alive); }

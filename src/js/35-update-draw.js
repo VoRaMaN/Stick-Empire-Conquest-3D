@@ -12,7 +12,8 @@ function updateUnit(u,dt){
     u.idleT=(u.idleT===undefined?rand(1.5,6):u.idleT)-dt;
     if(u.idleT<=0){ u.idleT=rand(4,10); if(!nearestEnemy(u,9)&&!(game.mode==='duel'&&game.duel&&game.duel.q)){ const L=IDLES[u.type]; play(u,L[Math.floor(Math.random()*L.length)]); u.fwdScale=0; } }
   }
-  if(u.type==='sword'&&!game.classicMix&&game.mode==='battle') rageTick(u,dt);   // Rage research (never in the classic battle)
+  if(u.type==='sword'&&!game.classicMix&&game.mode==='battle') rageTick(u,dt);
+  if(u.T.crawler) crawlerTick(u,dt);   // Rage research (never in the classic battle)
   const acc=u.T.acc||(u.type==='giant'?3:9);
   u.vel.lerp(u.desired,1-Math.exp(-dt*acc));
   u.last.copy(u.pos);
@@ -31,11 +32,12 @@ function updateUnit(u,dt){
   const nowF=u.av.x*Math.sin(u.face)+u.av.z*Math.cos(u.face);
   u.accF=lerp(u.accF||0,(nowF-prevF)/Math.max(dt,1e-4),.15);
   if(u.fl) updateFly(u,dt);
-  buildSkel(u,filterPose(u,computePose(u),dt),dt);
+  if(u.T.crawler) buildCrawlSkel(u,filterPose(u,computeCrawlPose(u),dt),dt);
+  else buildSkel(u,filterPose(u,computePose(u),dt),dt);
   updateGear(u);
 }
 // shoulder charges, headbutts, shield shoves and kicks need the bodies to actually meet
-const BODY_BLOW={hL:1,head:1,shoulder:1,foot:1,pommel:1};
+const BODY_BLOW={hL:1,head:1,shoulder:1,foot:1,pommel:1,tail:1};
 function bodyBlow(a,b){ return !!(a.aim&&BODY_BLOW[a.aim.by]&&a.atkTarget===b); }
 function separate(){
   gridBuild();
