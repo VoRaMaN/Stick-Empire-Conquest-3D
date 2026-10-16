@@ -33,7 +33,7 @@ finishers and 10 charge attacks.
 | Soulbound Thrall | 50 souls | Mines soul crystals | A hooded, chained slave with a mattock; fights only when cornered |
 | Hellcrawler | 150 souls | Fast pack hunter | Pounce, Pack Frenzy (below) |
 | Dreadguard | 150 souls | Heavy armoured axeman | Broad-shouldered and fully armoured: a horned great helm with a burning visor slit and a fanged grill, layered spiked pauldrons, a breastplate cracked with glowing magma, plate on every limb, hip plates and a crimson cape. Hellforged Cleave: a white-hot sweep that interrupts and breaks a shield wall |
-| Soul Harvester | 120 souls | Ranged caster | A walking skeleton: a thin column of vertebrae, a rib cage with a captured soul glowing inside, a horned skull, a torn shroud and a lantern scythe. Throws soul fragments, a charged soul blast, and a wail that curses everyone around it |
+| Soul Harvester | 120 souls | Ranged caster | A walking skeleton: a thin column of vertebrae, a rib cage with a captured soul glowing inside, a horned skull, a torn shroud and a lantern scythe. Enemies that get within arm's reach meet the scythe: 16 close-range strikes (reaps, an overhead Death Arc, a spin, ankle and hook trips, a cursed claw, a Soul Slash that curses) Throws soul fragments, a charged soul blast, and a wail that curses everyone around it |
 
 Chaos pays in **souls** instead of gold. Souls come in at 0.42 of the gold rate (thralls dig red soul crystals, and
 the passive trickle is scaled the same way), so the sheet prices weigh the same as the Order's gold prices. There is
@@ -52,8 +52,8 @@ a Dreadguard statue, and its own buildings: the Hellforge (Dreadguards), the Sou
 | Hellforge | Infernal Plate | Dreadguards take 20% less damage |
 | Soul Spire | Soul Rend | Soul fragments curse what they hit: +25% damage taken for 5 s |
 
-The Thrall, Dreadguard and Soul Harvester each have 10 idles, 11 moves, 5 defence clips, 10 finishers and 10
-charges. Their own sound effects and voice lines are not recorded yet, so they use the stock sounds for now. The rest
+The Thrall, Dreadguard and Soul Harvester each have 10 idles, 5 defence clips, 10 finishers and 10 charges; the Thrall
+and Dreadguard have 11 moves and the Soul Harvester 23 (11 spells and casts, 12 more scythe strikes). Their own sound effects and voice lines are not recorded yet, so they use the stock sounds for now. The rest
 of the Chaos roster (Hellhound, Bone Reaver, Infernal Bomber, Grim Reaper, Cerberus, Fallen Oracle, Hades) comes
 later.
 

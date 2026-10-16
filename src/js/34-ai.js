@@ -13,6 +13,10 @@ function enemyCommander(dt){
     for(const r of regs) if(r.team===1&&(r.type==='sword'||r.type==='crawler')&&archers.length&&Math.random()<.45) r.order={kind:'attack',target:archers[Math.floor(Math.random()*archers.length)]}; }
   else if(st==='charge'&&mine<theirs*.6&&!full){ setStance(1,'defend'); for(const r of regs) if(r.team===1) r.order={kind:'army'}; }
 }
+// the nearest enemy on foot within r, by plain distance (nearestEnemy's crowd penalty would hide one already brawling with our own)
+function closeThreat(u,r){ let best=null, bd=r*r;
+  gridEach(u.pos.x,u.pos.z,r,o=>{ if(!o.alive||o.team===u.team||isAir(o)||!canTarget(u,o)) return; const dx=o.pos.x-u.pos.x,dz=o.pos.z-u.pos.z,d=dx*dx+dz*dz; if(d<bd){ bd=d; best=o; } });
+  return best; }
 function brain(u,dt){
   u.desired.set(0,0,0);
   if(u.script){ const sc=u.script, w=sc.pts[sc.i]; const dx=w.x-u.pos.x,dz=w.z-u.pos.z,d=Math.hypot(dx,dz);
@@ -28,6 +32,8 @@ function brain(u,dt){
     u.desired.set(dx/d*sp,0,dz/d*sp); u.faceGoal=Math.atan2(dx,dz); return; }
   if(u.T.worker){ const near=u.target&&Math.hypot(u.target.pos.x-u.pos.x,u.target.pos.z-u.pos.z)<4.5; if(!near){ minerLogic(u,dt); return; } }
   const ro=u.reg&&game.mode==='battle'?u.reg.order:null;
+  // a caster with a blade (the Soul Harvester) turns on whoever gets within arm's reach, unless ordered to move
+  if(u.T.meleeR&&!(ro&&ro.kind==='move')){ const th=closeThreat(u,u.T.meleeR); if(th){ u.target=th; const dx=th.pos.x-u.pos.x,dz=th.pos.z-u.pos.z; return fightBrain(u,th,dx,dz,Math.hypot(dx,dz)||1e-3); } }
   if(ro&&(ro.kind==='move'||ro.kind==='hold'||ro.kind==='attack')&&regBrain(u,ro)) return;
   const st=ro&&ro.kind==='charge'?'charge':(game.mode==='battle'?game.stance[u.team]:'charge');
   if(st!=='charge'&&!u.T.worker&&u.slot){
@@ -66,6 +72,12 @@ function fightBrain(u,t,dx,dz,d){
   const lim=T.swarm?4:2, waiting=rank>=lim; if(waiting) eng+=1.5+(rank-lim)*.6;   // a swarm surrounds its prey four at a time
   u.faceGoal=Math.atan2(dx,dz);
   if(T.ranged){
+    if(T.meleeR&&!isAir(t)&&d<T.meleeR+(t.s-1)*.4){   // too close to cast: stand and fight with the blade
+      const eg=T.reach+.5+(t.s-1)*.35;
+      if(d>eg+.25) u.desired.set(nx*sp*.6,0,nz*sp*.6); else if(d<eg*.7) u.desired.set(-nx*sp*.4,0,-nz*sp*.4);
+      if(!u.action&&u.cdT<=0&&Math.abs(wrapA(u.faceGoal-u.face))<.45){ startAttack(u,t); if(u.action&&!u.fin) u.cdT=Math.min(u.cdT,T.meleeCd*rand(.85,1.15)); }
+      return;
+    }
     if(d>T.range){ u.desired.set(nx*sp,0,nz*sp); return; }
     if(d<(T.kite||4.5)&&!(d<2.6&&canFinish(u,t))){ u.desired.set(-nx*sp*.85,0,-nz*sp*.85); if(d<2.2) return; }
     if(!u.action&&u.cdT<=0&&Math.abs(wrapA(u.faceGoal-u.face))<.4) startAttack(u,t);

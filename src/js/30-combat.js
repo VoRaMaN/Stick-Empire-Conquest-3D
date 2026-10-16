@@ -80,7 +80,7 @@ function startAttack(u,t,forced){
   let cname=null; if(!forced&&u.chg&&tUnit){ const id='chg_'+CHG[u.type][u.chg.i].id; if(CLIPS[u.type][id]&&(T.ranged||u.spd>.4*T.speed||u.chgLab)) cname=id; }
   const name=forced||cname||pickAttack(u,t), c=CLIPS[u.type][name]; u.lastAtk=name;
   play(u,name); u.atkTarget=t; u.fwdScale=1;
-  if(!T.ranged&&!T.noSwing&&c.hitT!==undefined) sfx(u.type==='giant'?'swingHeavy':'swing',u.pos,.8,{delay:Math.max(0,c.hitT-.14)}); u.charging=!!(t&&t.isUnit&&!T.ranged&&(u.spd>.55*T.speed||cname));
+  if((!T.ranged||T.meleeSet&&T.meleeSet.has(name))&&!T.noSwing&&c.hitT!==undefined) sfx(u.type==='giant'?'swingHeavy':'swing',u.pos,.8,{delay:Math.max(0,c.hitT-.14)}); u.charging=!!(t&&t.isUnit&&!T.ranged&&(u.spd>.55*T.speed||cname));
   if(cname){ u.chg=null; u.chgCD=1.5; u.chgW=0; }
   if(tUnit){ const d=Math.hypot(tUnit.pos.x-u.pos.x,tUnit.pos.z-u.pos.z), fwd=c.keys.reduce((m,k)=>Math.max(m,k.fwd),0)*u.s;
     u.fwdScale=fwd>0?clamp((d-(T.reach+(tUnit.s-1)*.35))/fwd,0,2.4):1;
@@ -174,11 +174,11 @@ function handleEvent(u,e){
       if(e.arc){
         const Rr=T.reach+.75+(e.arc-1)*1.6+(e.tail?.9:0);
         for(const o of units){ if(!o.alive||o.team===u.team) continue; const dx=o.pos.x-u.pos.x,dz=o.pos.z-u.pos.z,d=Math.hypot(dx,dz)||1;
-          if(d<Rr+(o.s-1)*.4&&(dx*u.fwdW.x+dz*u.fwdW.z)/d*(e.tail?-1:1) >.25){ const r=meleeHit(u,o,e,dm); if(r==='parry') break; if(e.cleave&&r!=='dodge'&&r!=='miss') cleaveHit(u,o); } }
+          if(d<Rr+(o.s-1)*.4&&(dx*u.fwdW.x+dz*u.fwdW.z)/d*(e.tail?-1:1) >.25){ const r=meleeHit(u,o,e,dm); if(r==='parry') break; if(e.cleave&&r!=='dodge'&&r!=='miss') cleaveHit(u,o); if(e.rend&&r==='hit') curse(o,u); } }
         if(e.cleave) cleaveFx(u);
         const st=statues[1-u.team]; if(st&&Math.hypot(st.pos.x-u.pos.x,st.pos.z-u.pos.z)<Rr+2) hitStatue(st,dm);
         break; }
-      if(t&&t.isUnit){ if(t.alive&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)<T.reach+.5+(t.s-1)*.5){ const r=meleeHit(u,t,e,dm); if(e.kd&&r==='hit') knockDown(t,u); } }
+      if(t&&t.isUnit){ if(t.alive&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)<T.reach+.5+(t.s-1)*.5){ const r=meleeHit(u,t,e,dm); if(e.kd&&r==='hit') knockDown(t,u); if(e.rend&&r==='hit') curse(t,u); } }
       else if(t&&t.isStatue&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)<4) hitStatue(t,dm);
       break; }
     case 'fire':{

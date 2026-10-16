@@ -200,6 +200,7 @@ const FX_X={
 };
 Object.assign(EXTRA_EV,{
   soul:castSoul, wail:castWail,
+  soulTrail:(u)=>{ for(let k=0;k<4;k++){ _ch1.copy(u.j.hR).addScaledVector(u.wRw,(.55+k*.2)*u.s); puff(_ch1,1,.08,.4,k%2?'#9a5cff':'#c58cff'); } u.soulGlow=1; },
   soulCharge:(u)=>{ u.soulGlow=1; crSfx('soulCharge','cast',u.j.hR,.5); },
   soulDrain:(u,e,fin,v)=>{ const rg=fin&&(fin.rag||fin.rag2), src=v&&v.alive?v.j.chest:(rg?rg.p[1]:null); if(src) soulDrain(src,u); },
   soulDrainRag:(u,e,fin)=>{ const rg=fin&&(fin.rag||fin.rag2); if(!rg) return; soulDrain(rg.p[1],u); for(const vv of rg.v) vv.add(_ch1.set(rand(-.5,.5),rand(0,.8),rand(-.5,.5))); wakeRag(rg); },
@@ -238,7 +239,7 @@ TYPES.dread.pick=(u,t)=>{
 };
 TYPES.harvester.pick=(u,t)=>{
   const d=t?Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z):99, now=game.time;
-  if(t&&t.isUnit&&d<2.2&&!isAir(t)) return pickOf(['reap','hookPull','scytheChop','haftJab']);
+  if(t&&t.isUnit&&d<TYPES.harvester.meleeR+(t.s-1)*.4&&!isAir(t)) return pickOf(HV_MELEE);
   if(!t||!t.isUnit) return pickOf(['soulBolt','soulLance','soulVolley']);
   if(d<5&&(u.cdWail||0)<now&&enemiesNear(u.team,u.pos.x,u.pos.z,4.5)>=3){ u.cdWail=now+12; return 'soulWail'; }
   if(hasRes(u.team,'soulRend')&&!(t.st&&t.st.rend)&&(u.cdRend||0)<now){ u.cdRend=now+6; return 'soulRend'; }

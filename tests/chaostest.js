@@ -22,7 +22,7 @@ for(const [f0,f1] of [['order','chaos'],['chaos','order']]){
   S.setFactions(f0,f1); S.game.size=1; S.game.mode='battle'; S.resetBattle(); S.game.finMode=2; S.game.auto=[true,true];
   for(const C of S.CASTLES) for(const id of ['soulSiphon','magmaClaws','hellCleave','infernalPlate','soulRend','shinobi','ewall','poison','cure','blazing']) C.res[id]=1;
   const born={}; for(const u of S.units) born[u.type+(u.team?'¹':'⁰')]=(born[u.type+(u.team?'¹':'⁰')]||0)+1;
-  const gold0=S.game.gold.slice(); let regen=0, cursed=0, thrallTrips=0, hp0=new Map(), finBy={}, maxSouls=0, fromBuildings={};
+  const gold0=S.game.gold.slice(); let hvMelee=0, regen=0, cursed=0, thrallTrips=0, hp0=new Map(), finBy={}, maxSouls=0, fromBuildings={};
   const seenUnit=new Set(S.units.map(u=>u.id));
   run(60*70,i=>{
     if(i===60*12){ S.setStance(0,'charge'); S.setStance(1,'charge'); }
@@ -30,6 +30,7 @@ for(const [f0,f1] of [['order','chaos'],['chaos','order']]){
       if(!seenUnit.has(u.id)){ seenUnit.add(u.id); fromBuildings[u.type]=(fromBuildings[u.type]||0)+1; }
       if(u.fin&&u.fin.def&&NEW.includes(u.type)) finBy[u.type+':'+u.fin.def.name]=1;
       if(u.st&&u.st.rend) cursed++;
+      if(u.type==='harvester'&&u.action&&u.action!==u._hvA){ u._hvA=u.action; if(S.TYPES.harvester.meleeSet.has(u.action.c.name)) hvMelee++; }
       const p=hp0.get(u); if(p!==undefined&&u.T.chaos&&u.alive&&u.hp>p+1e-6&&!u.st?.healF) regen++; hp0.set(u,u.hp);
       if(u.type==='thrall'&&u.mstate==='toMine'&&u._wasCarry) thrallTrips++; u._wasCarry=u.carry;
     }
@@ -41,7 +42,7 @@ for(const [f0,f1] of [['order','chaos'],['chaos','order']]){
   console.log('army',JSON.stringify(born));
   console.log('bought',JSON.stringify(fromBuildings));
   console.log('dead',JSON.stringify(dead),'statues',st,'winner',S.game.winner===undefined?'-':S.game.winner);
-  console.log('thrall trips',thrallTrips,'regen ticks',regen,'cursed-frames',cursed,'souls in flight max',maxSouls,'chaos finishers seen',Object.keys(finBy).length);
+  console.log('thrall trips',thrallTrips,'regen ticks',regen,'cursed-frames',cursed,'souls in flight max',maxSouls,'chaos finishers seen',Object.keys(finBy).length,'harvester melee',hvMelee);
 }
 console.log('events',JSON.stringify(ev));
 const need=['soul','wail','forge','soulCharge'];

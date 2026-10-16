@@ -70,7 +70,11 @@ function duelDo(kind){
     if(D.att.action&&!D.att.action.c.idle||D.att.script&&D.att.script.walk) return;
     D.att.script=null; D.dum.invuln=true;
     const L=D.att.T.attacks; D.att.atkI=((D.att.atkI===undefined?-1:D.att.atkI)+1)%L.length; const name=L[D.att.atkI];
-    startAttack(D.att,D.dum,name);
+    // a caster's close-range move: walk up to blade's reach first (the Lab walks him back to his mark afterwards)
+    const T=D.att.T, dx=D.dum.pos.x-D.att.pos.x, dz=D.dum.pos.z-D.att.pos.z, dd=Math.hypot(dx,dz), want=T.reach+.6;
+    if(T.meleeSet&&T.meleeSet.has(name)&&dd>want+.4){ const k=(dd-want)/dd;
+      D.att.script={pts:[new V3(D.att.pos.x+dx*k,0,D.att.pos.z+dz*k)],i:0,speed:T.speed,walk:true,face:D.dum,then:()=>{ if(D.att.alive&&D.dum.alive) startAttack(D.att,D.dum,name); }}; }
+    else startAttack(D.att,D.dum,name);
     showBanner(MOVE_NAMES[name]||name,TYPES[D.att.type].name+' · move '+(D.att.atkI+1)+' of '+L.length,1.3);
     return; }
   if(kind==='charge'){ // run in from far away with the next charge style and crash into the dummy

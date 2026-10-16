@@ -17,7 +17,7 @@ const TESTS = [
   ['ordertest', 'Wizard, Cleric, Ninja, Wing Archer: battle + every clip', o => /battle nan 0 missing abilities none/.test(o) && /lab failures 0 nan 0/.test(o)],
   ['castletest', 'castles: training, gates, research, garrison, AI', o => /reached the field 9\/9/.test(o) && /levels 1 1 1 garrison 2 -> 4/.test(o) && num(o, /garrison arrows (\d+)/) > 0 && !/enemy research none/.test(o) && /stuck in castle 0/.test(o) && /nan 0\s*$/.test(o.trim())],
   ['crawlertest', 'Hellcrawler: attacks, finishers, charges, gait, the Hellpit', o => /landed 12 missed none/.test(o) && /killed 10 failed none/.test(o) && /charges landed 10\/10/.test(o) && num(o, /climbed out of the pit (\d+)/) > 0 && /nan 0\s*$/.test(o.trim())],
-  ['chaostest', 'Chaos Empire: Order vs Chaos castle battles, every Thrall, Dreadguard and Harvester clip', o => /battle nan 0 missing powers none/.test(o) && /lab failures 0 nan 0/.test(o) && (o.match(/thrall trips (\d+)/g)||[]).every(m => +m.split(' ').pop() > 0)],
+  ['chaostest', 'Chaos Empire: Order vs Chaos castle battles, every Thrall, Dreadguard and Harvester clip', o => /battle nan 0 missing powers none/.test(o) && /lab failures 0 nan 0/.test(o) && (o.match(/thrall trips (\d+)/g)||[]).every(m => +m.split(' ').pop() > 0) && (o.match(/harvester melee (\d+)/g)||[]).some(m => +m.split(' ').pop() > 0)],
   ['finaudit', 'Chaos finisher blows land on the right body part', o => num(o, /misses >0\.12: (\d+)/) <= 2, { DBG: '', FA_TYPES: 'thrall,dread,harvester' }],
   ['determinism', 'original five units behave exactly as before', o => /hash 7db8b359b35a1570/.test(o)],
   ['perf', '400-unit simulation cost (report only)', () => true]

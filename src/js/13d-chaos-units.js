@@ -28,6 +28,10 @@ const DG={READY:TW([.12,-.12,.36],[.08,.75,.65]),SHLD:{R:[.22,.12,.1],wR:[.08,.3
 const HV={REST:{R:[.22,-.28,.2],wR:[.05,1,.12]},RAISE:{R:[.16,.42,.25],wR:[0,1,.35],pR:[.6,.2,.2]},POINT:{R:[.16,.1,.5],wR:[0,.55,.84]},
   REAPW:TW([.45,.1,-.05],[.5,.6,-.62],.4),REAP:TW([-.15,-.15,.5],[-.75,.1,.65],.4),CHOPU:{R:[.15,.5,-.1],wR:[0,.6,-.8]},CHOP:{R:[.12,-.05,.55],wR:[0,-.2,.98]}};
 const KICKP={lean:-.1,L:[-.3,-.2,.2]};
+// two-handed scythe grips for the Harvester's close fighting
+Object.assign(HV,{HIGHW:TW([.1,.5,-.15],[0,.3,-.95],.4),HIGHC:TW([.08,0,.5],[0,-.35,.94],.4),LOWW:TW([.42,-.35,-.1],[.6,-.4,-.7],.4),LOWS:TW([-.2,-.4,.45],[-.75,-.35,.55],.4),
+  RISE:TW([.1,.45,.4],[0,.95,.3],.4),BACKW:TW([-.35,.1,.15],[-.7,.4,-.55],.4),BACK:TW([.4,0,.4],[.85,.1,.5],.4),
+  DIAG:TW([-.15,-.2,.5],[-.7,-.35,.62],.4),HOOK:TW([.1,-.3,.55],[0,-.6,.8],.4),YANK:TW([.12,-.25,.2],[0,-.3,.95],.4),FOLLOW:TW([.08,-.3,.45],[0,-.85,.5],.4)});
 
 // ---- locomotion poses ----
 Object.assign(POSES,{
@@ -126,25 +130,48 @@ const MOVES_C={
     haftJab:{keys:[{t:0},{t:.14,R:[.24,0,.05],wR:[0,.35,-.94],twist:-.4,crouch:.08},{t:.26,e:'o',R:[.12,0,.55],wR:[0,.3,-.95],twist:.3,lean:.35,fwd:.3},{t:.4},R_(.75)],ev:[{t:.26,e:'hit',dmg:.55,kb:1.8}]},
     soulRend:{keys:[{t:0},{t:.4,...HV.RAISE,L:[-.18,.4,.35],wL:[0,1,0],lean:-.1},{t:.7,e:'o',...HV.POINT,L:[-.12,.2,.5],lean:.25},{t:.9},R_(1.3)],ev:[{t:.3,e:'soulCharge'},{t:.7,e:'soul',dmg:.8,rend:1}]},
     backstepBolt:{keys:[{t:0},{t:.2,...HV.RAISE,fwd:-.4,lean:-.1},{t:.42,e:'o',...HV.POINT,fwd:-.8,lean:.15},{t:.6,fwd:-.9},R_(1.0)],ev:[{t:.42,e:'soul',dmg:.85}]},
+    // ---- close fighting: twelve scythe, haft, bone and soul strikes for when an enemy gets near ----
+    hvWideHarvest:{keys:[{t:0},{t:.28,...HV.REAPW,twist:-.6,crouch:.12,lean:.05},{t:.5,e:'o',...HV.REAP,twist:.55,lean:.3,crouch:.12,fwd:.3},{t:.66,...HV.BACKW,twist:.7},R_(1.05)],ev:[{t:.5,e:'hit',arc:1.4,dmg:.85,kb:2.4}]},
+    hvDeathArc:{keys:[{t:0},{t:.32,...HV.HIGHW,lean:-.2,crouch:.04},{t:.52,e:'o',...HV.HIGHC,lean:.5,crouch:.22,fwd:.3},{t:.68,...HV.FOLLOW,lean:.55,crouch:.25},R_(1.1)],ev:[{t:.52,e:'hit',dmg:1.25,kb:2}]},
+    hvBackReap:{keys:[{t:0},{t:.22,...HV.BACKW,twist:.5,crouch:.08},{t:.42,e:'o',...HV.BACK,twist:-.45,lean:.25,fwd:.25},{t:.56,...HV.REAPW,twist:-.55},R_(.95)],ev:[{t:.42,e:'hit',dmg:.95,kb:2.2}]},
+    hvAnkleReaper:{keys:[{t:0},{t:.22,...HV.LOWW,crouch:.35,lean:.35,twist:-.45},{t:.42,e:'o',...HV.LOWS,crouch:.42,lean:.45,twist:.4,fwd:.25},{t:.58},R_(.95)],ev:[{t:.42,e:'hit',dmg:.7,kb:.6,kd:1}]},
+    hvWhirl:{keys:[{t:0,...HV.REAPW,crouch:.12},{t:.15,yaw:-.5,crouch:.18},{t:.62,e:'l',yaw:6.28,...HV.REAP,crouch:.18,fwd:.3},{t:.78},R_(1.15,{yaw:6.28})],ev:[{t:.5,e:'hit',arc:1.3,dmg:.8,kb:2.6}]},
+    hvHookTrip:{keys:[{t:0},{t:.22,...HV.HIGHW,lean:-.1},{t:.4,e:'o',...HV.HOOK,lean:.45,crouch:.25,fwd:.3},{t:.62,e:'o',...HV.YANK,lean:-.15,crouch:.15,fwd:-.15},R_(1.05)],ev:[{t:.62,e:'hit',dmg:.6,kb:-1.6,kd:1}]},
+    hvTwinReap:{keys:[{t:0},{t:.2,...HV.REAPW,twist:-.5,crouch:.1},{t:.36,e:'o',...HV.REAP,twist:.45,lean:.3,fwd:.2},{t:.5,...HV.BACKW,twist:.5},{t:.66,e:'o',...HV.BACK,twist:-.45,lean:.3,fwd:.35},{t:.8},R_(1.15)],
+      ev:[{t:.36,e:'hit',dmg:.6},{t:.66,e:'hit',dmg:.7,kb:2}]},
+    hvPommelSmash:{keys:[{t:0},{t:.16,R:[.22,.15,.05],wR:[0,.5,-.87],twist:-.35,crouch:.05},{t:.3,e:'o',R:[.1,.32,.5],wR:[0,.45,-.89],twist:.3,lean:.35,fwd:.3},{t:.44},R_(.8)],ev:[{t:.3,e:'hit',dmg:.65,kb:2.4}]},
+    hvBoneKick:{keys:[{t:0},{t:.2,...KICKP,...HV.RAISE},{t:.32,e:'o',kick:1,lean:-.3,fwd:.15},{t:.46,kick:0},R_(.8)],ev:[{t:.32,e:'hit',dmg:.5,kb:3}]},
+    hvBoneClaw:{keys:[{t:0},{t:.16,L:[-.4,.3,-.05],wL:[0,1,0],twist:.45,crouch:.06},{t:.3,e:'o',L:[.08,-.05,.6],wL:[.3,-.6,.7],twist:-.45,lean:.35,fwd:.25},{t:.44},R_(.8)],ev:[{t:.3,e:'hit',dmg:.6,kb:1.2,rend:1}]},
+    hvRisingReap:{keys:[{t:0},{t:.2,...HV.LOWW,crouch:.32,lean:.35,twist:-.35},{t:.4,e:'o',...HV.RISE,crouch:0,lean:-.15,twist:.3,fwd:.3},{t:.54},R_(.95)],ev:[{t:.4,e:'hit',dmg:.9,up:2.4,kb:1.6}]},
+    hvSoulSlash:{keys:[{t:0},{t:.3,...HV.HIGHW,twist:-.3,lean:-.15},{t:.5,e:'o',...HV.DIAG,twist:.4,lean:.4,crouch:.18,fwd:.3},{t:.66},R_(1.05)],
+      ev:[{t:.15,e:'soulCharge'},{t:.44,e:'soulTrail'},{t:.5,e:'hit',dmg:1.1,kb:2.2,rend:1}]},
   },
 };
 const ATTACKS_C={
   thrall:['mine','thHook','thChop2','thButt','thChainLash','thHeadbutt','thKick','thFlail','thLeapChop','thUppercut','thSweep'],
   dread:['dgOverhead','dgSweep','dgUpswing','dgDoubleChop','dgShoulder','dgHaftJab','dgStomp','dgSpin','dgSlam','dgBackhand','dgCleave'],
-  harvester:['soulBolt','soulVolley','soulLance','soulWail','palmSouls','reap','hookPull','scytheChop','haftJab','soulRend','backstepBolt'],
+  harvester:['soulBolt','soulVolley','soulLance','soulWail','palmSouls','reap','hookPull','scytheChop','haftJab','soulRend','backstepBolt',
+    'hvWideHarvest','hvDeathArc','hvBackReap','hvAnkleReaper','hvWhirl','hvHookTrip','hvTwinReap','hvPommelSmash','hvBoneKick','hvBoneClaw','hvRisingReap','hvSoulSlash'],
 };
+// the Harvester casts from range, but an enemy that gets within meleeR meets the scythe (27b: brain; 34: footwork)
+const HV_MELEE=['reap','hookPull','scytheChop','haftJab','hvWideHarvest','hvDeathArc','hvBackReap','hvAnkleReaper','hvWhirl','hvHookTrip','hvTwinReap','hvPommelSmash','hvBoneKick','hvBoneClaw','hvRisingReap','hvSoulSlash'];
+Object.assign(TYPES.harvester,{meleeR:2.4,meleeCd:.75,meleeSet:new Set(HV_MELEE)});
 Object.assign(MOVE_NAMES,{thHook:'Mattock Hook',thChop2:'Double Chop',thButt:'Haft Jab',thChainLash:'Chain Lash',thHeadbutt:'Headbutt',thKick:'Kick',thFlail:'Flailing Frenzy',
   thLeapChop:'Leap Chop',thUppercut:'Rising Pick',thSweep:'Low Sweep',dgOverhead:'Overhead Chop',dgSweep:'Side Cleave',dgUpswing:'Upswing',dgDoubleChop:'Double Chop',
   dgShoulder:'Shoulder Bash',dgHaftJab:'Haft Jab',dgStomp:'Stomp Kick',dgSpin:'Whirling Axe',dgSlam:'Ground Slam',dgBackhand:'Backhand Cleave',dgCleave:'Hellforged Cleave',
   soulBolt:'Soul Fragment',soulVolley:'Soul Volley',soulLance:'Soul Lance',soulWail:'Wail of the Dead',palmSouls:'Palm of Souls',reap:'Reap',hookPull:'Hook & Pull',
-  scytheChop:'Scythe Chop',haftJab:'Haft Jab',soulRend:'Soul Rend',backstepBolt:'Backstep Bolt'});
+  scytheChop:'Scythe Chop',haftJab:'Haft Jab',soulRend:'Soul Rend',backstepBolt:'Backstep Bolt',
+  hvWideHarvest:'Wide Harvest',hvDeathArc:'Death Arc',hvBackReap:'Backhand Reap',hvAnkleReaper:'Ankle Reaper',hvWhirl:'Whirling Scythe',hvHookTrip:'Hook & Trip',
+  hvTwinReap:'Twin Reap',hvPommelSmash:'Pommel Smash',hvBoneKick:'Bone Kick',hvBoneClaw:'Cursed Claw',hvRisingReap:'Rising Reap',hvSoulSlash:'Soul Slash'});
 for(const t in MOVES_C){ Object.assign(RAW[t],MOVES_C[t]); TYPES[t].attacks=ATTACKS_C[t]; }
 Object.assign(ATK_AIM_X,{
   thrall:{mine:[['pick','head']],thHook:[['pick','chest']],thChop2:[['pick','head'],['pick','chest']],thButt:[['pommel','head']],thChainLash:[['hL','chest']],thHeadbutt:[['head','chest']],
     thKick:[['foot','gut']],thFlail:[['pick','head'],['pick','chest'],['pick','head']],thLeapChop:[['pick','head']],thUppercut:[['pick','head']],thSweep:[['pick','shin']]},
   dread:{dgOverhead:[['blade','head']],dgUpswing:[['blade','chest']],dgDoubleChop:[['blade','head'],['blade','chest']],dgShoulder:[['shoulder','chest']],dgHaftJab:[['pommel','head']],
     dgStomp:[['foot','gut']],dgBackhand:[['blade','chest']]},
-  harvester:{hookPull:[['blade','neck']],scytheChop:[['blade','neck']],haftJab:[['pommel','chest']]},
+  harvester:{hookPull:[['blade','neck']],scytheChop:[['blade','neck']],haftJab:[['pommel','chest']],
+    hvWideHarvest:[['blade','chest']],hvDeathArc:[['blade','head']],hvBackReap:[['blade','chest']],hvAnkleReaper:[['blade','shin']],hvHookTrip:[['blade','shin']],
+    hvTwinReap:[['blade','chest'],['blade','chest']],hvPommelSmash:[['pommel','head']],hvBoneKick:[['foot','gut']],hvBoneClaw:[['hL','chest']],hvRisingReap:[['blade','chest']],hvSoulSlash:[['blade','neck']]},
 });
 
 // ---- defence ----
