@@ -46,3 +46,11 @@ $('#sBlood').addEventListener('change',e=>{tune.blood=e.target.checked; settings
 $('#unfollow').onclick=()=>{cam.follow=null; updateFollowUI();};
 function updateFollowUI(){ const f=cam.follow; $('#follow').hidden=!f||game.mode!=='battle'||!!selReg; if(f) $('#followT').textContent='Following '+teamName(f.team).split(' ')[0]+' '+f.T.name; }
 
+// the unit row scrolls with a mouse too: the wheel scrolls it sideways, and it can be dragged; a drag doesn't count as a click
+{ const row=$('#chips'); let drag=null;
+  row.addEventListener('wheel',e=>{ const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY; if(!d||row.scrollWidth<=row.clientWidth) return;
+    e.preventDefault(); row.scrollLeft+=d*(e.deltaMode===1?32:1); },{passive:false});
+  row.addEventListener('pointerdown',e=>{ if(e.pointerType!=='mouse'||e.button!==0) return; drag={x:e.clientX,s:row.scrollLeft,moved:false}; });
+  window.addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-drag.x; if(Math.abs(dx)>5) drag.moved=true; if(drag.moved){ row.scrollLeft=drag.s-dx; row.classList.add('dragging'); } });
+  window.addEventListener('pointerup',()=>{ if(!drag) return; const m=drag.moved; drag=null; row.classList.remove('dragging'); if(m) row.dataset.justDragged='1'; setTimeout(()=>{ delete row.dataset.justDragged; },0); });
+  row.addEventListener('click',e=>{ if(row.dataset.justDragged){ e.stopPropagation(); e.preventDefault(); } },true); }
