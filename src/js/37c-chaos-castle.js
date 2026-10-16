@@ -40,18 +40,18 @@ let CHAOS_EMB_URL='';
 
 const KEEP_C={id:'castle',name:'Black Citadel',emb:8,desc:'Soul Harvesters on the walls, income and the statue'};
 const BUILDINGS_CHAOS=[
-  {id:'forge',name:'Hellforge',emb:1,x:-6.5,row:0,w:5.6,d:6,trains:['dread'],desc:'Dreadguards, armoured at the anvil of the abyss'},
+  {id:'forge',name:'Hellforge',emb:1,x:-6.5,row:0,w:5.6,d:6,trains:['dread','boner','hades'],desc:'Dreadguards, Bone Reavers and Hades himself, forged at the anvil of the abyss'},
   {id:'brazier',deco:true,x:-13.5,row:0,w:5.6,d:6},
   {id:'bones',deco:true,x:-20.5,row:0,w:5.6,d:6},
   {id:'cage',deco:true,x:-28,row:0,w:7,d:6},
-  {id:'quarry',name:'Soul Quarry',emb:0,x:-6.5,row:1,w:5.6,d:8,trains:['thrall'],desc:'Soulbound Thralls who dig soul crystals'},
-  {id:'spire',name:'Soul Spire',emb:5,x:-13.5,row:1,w:5.6,d:8,trains:['harvester'],desc:'Soul Harvesters'},
+  {id:'quarry',name:'Soul Quarry',emb:0,x:-6.5,row:1,w:5.6,d:8,trains:['thrall','bomber'],desc:'Soulbound Thralls who dig soul crystals, and Infernal Bombers'},
+  {id:'spire',name:'Soul Spire',emb:5,x:-13.5,row:1,w:5.6,d:8,trains:['harvester','oracle','reaper'],desc:'Soul Harvesters, Fallen Oracles and Grim Reapers'},
   {id:'altar',deco:true,x:-20.5,row:1,w:5.6,d:8},
   {id:'obelisk',deco:true,x:-28,row:1,w:7,d:8},
 ];
 const BUILDINGS_OF={order:BUILDINGS,chaos:BUILDINGS_CHAOS};
 for(const B of BUILDINGS_CHAOS) if(B.trains) for(const ty of B.trains) TRAINED_AT[ty]=B.id;
-Object.assign(TRAIN_T,{thrall:2.0,dread:3.2,harvester:3.0});
+Object.assign(TRAIN_T,{thrall:2.0,dread:3.2,harvester:3.0,boner:2.6,bomber:3.0,oracle:3.8,reaper:4.6,hades:10});
 const hornPut=(C,b,p,d,ax,ang,len,r,n)=>{ for(const [g,m] of crHorn(p,d,ax,ang,len,r,n)) (b?bPut(C,b,'bone',g,m):C.kit.put('bone',g,m)); };
 
 // bone spikes along the battlements and on the towers, skulls over the gate, a moat of magma along the front

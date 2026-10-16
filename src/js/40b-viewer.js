@@ -26,6 +26,16 @@ const UNIT_INFO={
     abil:['Cleaving swings hit every enemy in the arc','Hellforged Cleave (research): breaks lines and shield walls','Infernal Plate (research): 20% less damage']},
   harvester:{role:'Soul caster',desc:'A walking skeleton with a captured soul burning in its ribs. From range it hurls soul fragments and wails; up close it fights with the scythe. Its Soul Rend curse makes victims take more damage.',
     abil:['Soul Fragment, Volley and Lance','Wail of the Dead','Soul Rend: cursed enemies take 25% more damage','Scythe strikes when enemies get close']},
+  boner:{role:'Skirmisher',desc:'A skeleton warrior with a curved bone blade in each hand. Bone Reavers are fast and vicious, cutting in flurries and whirling through crowds, and they come cheap enough to field in packs.',
+    abil:['Dual bone blades: flurries, thrusts and leaps','Bone Whirl: cuts all the way round when surrounded']},
+  bomber:{role:'Explosives',desc:'A goggled imp with a barrel of hellfire bombs strapped to its back. It lobs bombs over the enemy line that blast and burn whole groups, and it goes off one last time when it dies.',
+    abil:['Lobbed, rolled and cluster bombs that blast and burn','Explodes when it dies','Bashes and kicks when cornered']},
+  oracle:{role:'Healer and hexer',desc:'A blindfolded seer whose third eye never closes. The Fallen Oracle mends the wounds of the Chaos army from afar, hexes the enemy so they take more damage, and strikes with bolts of void light.',
+    abil:['Dark Mending: heals the most wounded ally','Mass Mending: heals everyone nearby','Hex: cursed enemies take 25% more damage','Void Bolt and Eye of the Abyss']},
+  reaper:{role:'Elite reaper',desc:'Death itself, hooded and robed, with a great scythe. The Grim Reaper reaps whole ranks in wide arcs, drinks a quarter of every cut as life, and steps through shadow to appear behind its prey.',
+    abil:['Reaping arcs that hit everything in front','Life Drain: heals 25% of the damage it deals','Shadow Step: vanishes and reappears behind its target']},
+  hades:{role:'Lord of the Underworld',desc:'The master of the Chaos Empire walks the field himself: a towering lord in bronze plate, crowned in fire, with a burning bident. Whoever stands near him burns, and his slams set the ground alight.',
+    abil:['Burning aura: sets nearby enemies on fire','Hellfire Slam and Stomp: a ring of fire','Wave of Flame: burns everything in a cone','Every blow sets the target on fire']},
 };
 const VW={u:null,spin:true,idleI:-1,h:1.1};
 const vwEsc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

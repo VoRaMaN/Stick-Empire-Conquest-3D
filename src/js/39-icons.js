@@ -5,7 +5,9 @@ const ICONS={};
 const ICON_POSE={sword:{R:[.22,-.05,.32],wR:[.1,.9,.3],L:[-.24,-.3,.18],wL:[0,1,0],lean:.06,crouch:.04},
   spear:null,archer:null,miner:null,giant:null,wizard:null,cleric:null,ninja:null,wing:null,crawler:{lean:-.3,draw:.8,crouch:.04,look:-.25},
   thrall:{R:[.18,-.1,.3],wR:[.05,.8,-.6],L:[-.12,-.05,.36],lean:.25,crouch:.05},dread:{R:[.22,.12,.1],wR:[.08,.35,-.93],L:[-.24,-.4,.2],lean:.08},
-  harvester:{R:[.24,-.2,.22],wR:[.05,1,.15],L:[-.2,-.3,.25],lean:.04}};
+  harvester:{R:[.24,-.2,.22],wR:[.05,1,.15],L:[-.2,-.3,.25],lean:.04},
+  boner:{R:[.24,-.05,.32],wR:[.15,.75,.6],L:[-.24,-.05,.32],wL:[-.15,.75,.6],lean:.08,crouch:.06},bomber:{R:[.22,.05,.3],wR:[0,1,0],L:[-.2,-.3,.2],lean:.15},
+  oracle:{R:[.22,-.2,.24],wR:[.04,1,.1],L:[-.18,-.1,.3],lean:.02},reaper:{R:[.24,-.2,.2],wR:[.05,1,.12],L:[-.18,-.3,.22],lean:.06},hades:{R:[.2,-.15,.3],wR:[.08,.85,.5],L:[-.04,-.3,.42],lean:.05}};
 function makeUnitIcons(){
   if(!renderer.readRenderTargetPixels||!THREE.WebGLRenderTarget||typeof document.createElement!=='function') return;
   const S=192, rt=new THREE.WebGLRenderTarget(S,S), cam2=new THREE.PerspectiveCamera(26,1,.1,60), px=new Uint8Array(S*S*4);

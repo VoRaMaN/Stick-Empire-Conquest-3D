@@ -79,7 +79,7 @@ function gxInit(){
 }
 function buildGearX(u,G,acc,acc2,steel){
   if(u.type==='crawler'){ buildCrawler(u,G); return; }
-  if(u.type==='thrall'||u.type==='dread'||u.type==='harvester'){ buildChaosGear(u,G); return; }
+  if(u.T.chaos){ buildChaosGear(u,G); return; }
   gxInit(); const team=u.team;
   switch(u.type){
     case 'wizard':{

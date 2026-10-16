@@ -12,7 +12,7 @@ const FACTIONS={
   chaos:{id:'chaos',name:'Chaos Empire',roster:CHAOS,worker:'thrall',garrison:'harvester',garrisonAtk:'soulBolt',statue:'dread',money:'souls',
     team:['Infernal Dominion','Chaos Empire'],cap:['Hellmouth Caldera','Infernal Gate'],
     start:['thrall','thrall','crawler','crawler','crawler','harvester','harvester','dread'],
-    mix:['crawler','dread','crawler','harvester','crawler','dread','crawler','harvester','crawler','harvester','dread','crawler','harvester','crawler','dread','crawler','harvester','dread','crawler','harvester']},
+    mix:['crawler','dread','crawler','harvester','boner','crawler','dread','bomber','crawler','harvester','boner','dread','oracle','crawler','reaper','boner','harvester','bomber','dread','crawler','hades','harvester','boner','reaper']},
 };
 const ECON={order:1,chaos:.42};
 const facOf=t=>game.classicMix?'order':(game.fac[t]||'order');
@@ -33,7 +33,7 @@ function factionStart(t,n){
 // the general's shopping list: a few workers, then the faction's fighting mix
 function factionPick(t){
   const F=FAC(t);
-  if(F.id==='chaos'){ const r=Math.random(); return r<.45?'crawler':r<.73?'dread':'harvester'; }
+  if(F.id==='chaos'){ const r=Math.random(); return r<.3?'crawler':r<.47?'dread':r<.59?'harvester':r<.71?'boner':r<.8?'bomber':r<.87?'oracle':r<.96?'reaper':'hades'; }
   const r=Math.random(); return r<.3?'sword':r<.48?'archer':r<.62?'spear':r<.72?'ninja':r<.8?'wizard':r<.87?'cleric':r<.94?'wing':'giant';
 }
 function syncTeamNames(){
@@ -43,9 +43,11 @@ function syncTeamNames(){
 }
 
 /* ---------- Chaos regiments, formations and weapon contact points ---------- */
-Object.assign(REG_SIZE,{dread:10,harvester:8});
-Object.assign(FORM,{dread:{cols:5,gap:1.5,depth:1.6},harvester:{cols:4,gap:1.45,depth:1.5}});
-FORM_ORDER.unshift('dread'); { const i=FORM_ORDER.indexOf('archer'); FORM_ORDER.splice(i+1,0,'harvester'); }
-Object.assign(TYPE_PL,{thrall:'Thralls',dread:'Dreadguards',harvester:'Soul Harvesters'});
+Object.assign(REG_SIZE,{dread:10,harvester:8,boner:12,bomber:8,oracle:6,reaper:6,hades:1});
+Object.assign(FORM,{dread:{cols:5,gap:1.5,depth:1.6},harvester:{cols:4,gap:1.45,depth:1.5},boner:{cols:6,gap:1.3,depth:1.4},bomber:{cols:4,gap:1.45,depth:1.5},oracle:{cols:3,gap:1.5,depth:1.5},reaper:{cols:3,gap:1.7,depth:1.7},hades:{cols:1,gap:3.5,depth:3}});
+FORM_ORDER.unshift('hades','dread','reaper','boner'); { const i=FORM_ORDER.indexOf('archer'); FORM_ORDER.splice(i+1,0,'harvester','bomber','oracle'); }
+Object.assign(TYPE_PL,{thrall:'Thralls',dread:'Dreadguards',harvester:'Soul Harvesters',boner:'Bone Reavers',bomber:'Infernal Bombers',oracle:'Fallen Oracles',reaper:'Grim Reapers',hades:'Hades'});
 Object.assign(AIMW,{thrall:{tip:.62,hit:.62,blade:[.2,.7],pommel:-.12,r:.03},dread:{tip:1.18,hit:1.18,blade:[.62,1.08],pommel:-.55,r:.1},
-  harvester:{tip:1.18,hit:1.18,blade:[.85,1.18],pommel:-.55,r:.04}});
+  harvester:{tip:1.18,hit:1.18,blade:[.85,1.18],pommel:-.55,r:.04},
+  boner:{tip:.64,hit:.62,blade:[.3,.64],pommel:-.1,r:.03},bomber:{tip:.1,hit:.1,blade:[0,.12],pommel:-.05,r:.11},oracle:{tip:.95,hit:.95,blade:[.7,.95],pommel:-.7,r:.07},
+  reaper:{tip:1.5,hit:1.45,blade:[1.1,1.5],pommel:-.7,r:.05},hades:{tip:1.85,hit:1.8,blade:[1.4,1.85],pommel:-.95,r:.06}});

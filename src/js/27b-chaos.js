@@ -125,6 +125,7 @@ function buildChaosGear(u,G){
       const r=grp(); r.add(mesh(CGX.bones,bone),mesh(CGX.shroud,st?M.stoneD:lamOf(REAPER_CAPE[team],{side:THREE.DoubleSide}))); G.r=r;
       if(!st) makeCape(u,'r');
       break; }
+    default: buildChaosGear2(u,G,L,LD,E,acc,black);   // the second wave (27c)
   }
   for(const k of ['r','pl','pr']) if(G[k]){ G[k].scale.setScalar(u.s); freezeGear(G[k]); }
 }
@@ -149,6 +150,7 @@ function updateChaosGear(u){
   for(const [k,sh,sd] of [['pl',j.sL,-1],['pr',j.sR,1]]){ const g=G[k]; if(!g) continue;
     if(u.alive&&!u.rag) _ch1.copy(sh); else _ch1.copy(j.chest).addScaledVector(u.rightW,sd*((u.T.shW||.07)+.1)*s);
     _ch1.addScaledVector(u.rightW,sd*.05*s).addScaledVector(u.spine,.02*s); orient(g,_ch1,u.spine,_gfl); }
+  updateChaosGear2(u);
 }
 
 /* ---------- soul fragments, wails, drains ---------- */
@@ -220,7 +222,9 @@ Object.assign(EXTRA_EV,{
 function workerDig(u){ return u.type==='thrall'?(hasRes(u.team,'soulSiphon')?2.8:4):(hasRes(u.team,'hustle')?2.6:4); }
 function workerYield(u){ return u.type==='thrall'?(hasRes(u.team,'soulSiphon')?34:25):(hasRes(u.team,'hustle')?80:60); }
 // Hellcrawlers with Magma Claws set what they rake on fire
-function chaosHitMods(u,t,dm){ if(u.T.crawler&&hasRes(u.team,'magmaClaws')&&t.isUnit) applyBurn(t,u,4,2.5); return dm; }
+function chaosHitMods(u,t,dm){ if(u.T.crawler&&hasRes(u.team,'magmaClaws')&&t.isUnit) applyBurn(t,u,4,2.5);
+  if(u.type==='reaper'&&u.alive) u.hp=Math.min(u.maxHp,u.hp+dm*.25);   // the Grim Reaper drinks a quarter of every cut
+  if(u.type==='hades'&&t.isUnit) applyBurn(t,u,6,2.5); return dm; }
 // Infernal Regeneration: four seconds without a wound and the flesh starts knitting back (1.2% a second)
 function chaosTick(u,dt){
   if(u.forgeT>0) u.forgeT-=dt; if(u.soulGlow>0) u.soulGlow=Math.max(0,u.soulGlow-dt*1.6); if(u.crystalT>0) u.crystalT-=dt; if(u.wispT>0) u.wispT-=dt;
@@ -261,10 +265,11 @@ function updateChaos(dt){
     if(gone){ soulBurst(S.p,.5); souls.splice(i,1); } }
   for(let i=wisps.length-1;i>=0;i--){ const W=wisps[i]; W.t+=dt; if(W.t<0) continue; const k=Math.min(1,W.t/W.life), dst=W.u&&W.u.j?W.u.j.hL:W.a;
     W.p.copy(W.a).lerp(dst,EASE.io(k)); W.p.y+=Math.sin(k*Math.PI)*.35; if(k>=1){ flashes.push({p:dst.clone(),r0:.05,r1:.3,t:0,life:.2,col:W.col}); wisps.splice(i,1); } }
+  updateChaos2(dt);
 }
 const _cd2=new V3();
 function drawChaos(){
-  for(const S of souls){ glowAt(S.p,S.big?.24:.15,'#d7a6ff'); glowAt(S.p,S.big?.42:.28,'#4a1a6a'); }
+  for(const S of souls){ glowAt(S.p,S.big?.24:.15,S.col||'#d7a6ff'); glowAt(S.p,S.big?.42:.28,S.col2||'#4a1a6a'); }
   for(const W of wisps) if(W.t>=0) glowAt(W.p,.09,W.col);
   const ct=cam.target, tt=game.time;
   for(const L of [units,CASTLES[0]?CASTLES[0].garrison:[],CASTLES[1]?CASTLES[1].garrison:[]]) for(const u of L){
@@ -285,4 +290,5 @@ function drawChaos(){
   // the cursed: a ring of soul light circling the chest
   for(const u of units){ const S=u.st; if(!u.alive||!S||!S.rend) continue;
     for(let i=0;i<3;i++){ const a=tt*3+i*2.094; _ch1.copy(u.j.chest).addScaledVector(u.rightW,Math.cos(a)*.22*u.s).addScaledVector(u.fwdW,Math.sin(a)*.22*u.s); glowAt(_ch1,.05,'#b070ff'); } }
+  drawChaos2();
 }
