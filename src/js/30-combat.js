@@ -174,7 +174,7 @@ function handleEvent(u,e){
       if(e.arc){
         const Rr=T.reach+.75+(e.arc-1)*1.6+(e.tail?.9:0);
         for(const o of units){ if(!o.alive||o.team===u.team) continue; const dx=o.pos.x-u.pos.x,dz=o.pos.z-u.pos.z,d=Math.hypot(dx,dz)||1;
-          if(d<Rr+(o.s-1)*.4&&(dx*u.fwdW.x+dz*u.fwdW.z)/d*(e.tail?-1:1) >.25){ const r=meleeHit(u,o,e,dm); if(r==='parry') break; if(e.cleave&&r!=='dodge'&&r!=='miss') cleaveHit(u,o); if(e.rend&&r==='hit') curse(o,u); } }
+          if(d<Rr+(o.s-1)*.4&&(e.around||(dx*u.fwdW.x+dz*u.fwdW.z)/d*(e.tail?-1:1) >.25)){ const r=meleeHit(u,o,e,dm); if(r==='parry') break; if(e.cleave&&r!=='dodge'&&r!=='miss') cleaveHit(u,o); if(e.rend&&r==='hit') curse(o,u); } }
         if(e.cleave) cleaveFx(u);
         const st=statues[1-u.team]; if(st&&Math.hypot(st.pos.x-u.pos.x,st.pos.z-u.pos.z)<Rr+2) hitStatue(st,dm);
         break; }
@@ -226,7 +226,7 @@ function handleEvent(u,e){
       fireArrow(u,rg.p[RAG_OF[e.part]!==undefined?RAG_OF[e.part]:1].clone(),0,{rag:rg}); break; }
     case 'grab':{
       if(!v||!v.alive) break; v.invuln=false;
-      const cp=hitPoint(u,v,e), rg=toRagdoll(v,new V3(),{}); fin.rag=rg; if(e.at!=='hL') bleed(cp,u.fwdW,10,2.4,.5);
+      const cp=hitPoint(u,v,e), rg=toRagdoll(v,new V3(),{}); fin.rag=rg; if(e.at!=='hL'&&e.at!=='tk') bleed(cp,u.fwdW,10,2.4,.5);
       const s=u.s, uu=u, by=e.aim?e.aim[0]:'tip';
       if(e.at==='tip'||e.at==='wtip') pinRag(rg,1,out=>strikePoint(uu,by,out));
       else if(e.at==='tk') pinRag(rg,1,out=>out.copy(uu.j.hL).addScaledVector(uu.fwdW,1.05*s).addScaledVector(UP,.1*s));

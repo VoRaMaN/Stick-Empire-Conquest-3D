@@ -103,17 +103,17 @@ const MOVES_C={
     thSweep:{keys:[{t:0},{t:.12,...TH.LOWW,crouch:.35,lean:.35,twist:-.45},{t:.28,e:'o',...TH.LOW,crouch:.4,lean:.45,twist:.4,fwd:.2},{t:.4},R_(.8)],ev:[{t:.28,e:'hit',dmg:.6,kb:.8}]},
   },
   dread:{
-    dgOverhead:{keys:[{t:0},{t:.35,...DG.UP,lean:-.2,crouch:.05,twist:-.1},{t:.58,e:'o',...DG.CHOP,lean:.55,crouch:.25,fwd:.35,twist:.1},{t:.72,...DG.LOW,lean:.6,crouch:.3},R_(1.15)],ev:[{t:.58,e:'hit',dmg:1.1,kb:2.4}]},
-    dgSweep:{keys:[{t:0},{t:.3,...DG.SIDEW,twist:-.55,crouch:.12,lean:.05},{t:.52,e:'o',...DG.SIDE,twist:.45,lean:.3,crouch:.15,fwd:.25},{t:.68,...DG.SIDEF,twist:.6},R_(1.1)],ev:[{t:.52,e:'hit',arc:1,dmg:.85,kb:2.6}]},
-    dgUpswing:{keys:[{t:0},{t:.25,...DG.LOWW,crouch:.25,lean:.3,twist:-.35},{t:.45,e:'o',...DG.RISE,crouch:0,lean:-.15,twist:.25,fwd:.3},{t:.6},R_(1.0)],ev:[{t:.45,e:'hit',dmg:1,up:2.5,kb:2}]},
+    dgOverhead:{keys:[{t:0},{t:.35,...DG.UP,lean:-.2,crouch:.05,twist:-.1},{t:.58,e:'o',...DG.CHOP,lean:.55,crouch:.25,fwd:.35,twist:.1},{t:.72,...DG.LOW,lean:.6,crouch:.3},R_(1.15)],ev:[{t:.58,e:'hit',arc:1,dmg:1.1,kb:2.4}]},
+    dgSweep:{keys:[{t:0},{t:.3,...DG.SIDEW,twist:-.55,crouch:.12,lean:.05},{t:.52,e:'o',...DG.SIDE,twist:.45,lean:.3,crouch:.15,fwd:.25},{t:.68,...DG.SIDEF,twist:.6},R_(1.1)],ev:[{t:.52,e:'hit',arc:1.3,dmg:.85,kb:2.6}]},
+    dgUpswing:{keys:[{t:0},{t:.25,...DG.LOWW,crouch:.25,lean:.3,twist:-.35},{t:.45,e:'o',...DG.RISE,crouch:0,lean:-.15,twist:.25,fwd:.3},{t:.6},R_(1.0)],ev:[{t:.45,e:'hit',arc:1,dmg:1,up:2.5,kb:2}]},
     dgDoubleChop:{keys:[{t:0},{t:.28,...DG.UP,lean:-.15},{t:.48,e:'o',...DG.CHOP,lean:.5,crouch:.2,fwd:.2},{t:.72,...DG.UP,lean:-.1,crouch:.05},{t:.92,e:'o',...DG.CHOP,lean:.55,crouch:.25,fwd:.35},{t:1.08,...DG.LOW},R_(1.45)],
-      ev:[{t:.48,e:'hit',dmg:.7},{t:.92,e:'hit',dmg:.8}]},
+      ev:[{t:.48,e:'hit',arc:1,dmg:.7},{t:.92,e:'hit',arc:1,dmg:.8}]},
     dgShoulder:{keys:[{t:0},{t:.2,...DG.SHLD,twist:.5,crouch:.15,lean:.1},{t:.36,e:'o',twist:.6,lean:.45,crouch:.1,fwd:.7},{t:.52,twist:.2},R_(.9)],ev:[{t:.36,e:'hit',dmg:.6,kb:3.6}]},
     dgHaftJab:{keys:[{t:0},{t:.18,...TW([.2,.05,.1],[.1,.35,-.93]),twist:-.3,crouch:.08},{t:.32,e:'o',...TW([.08,.05,.55],[.05,.3,-.95]),twist:.3,lean:.35,fwd:.35},{t:.46},R_(.85)],ev:[{t:.32,e:'hit',dmg:.5,kb:2.2}]},
     dgStomp:{keys:[{t:0},{t:.25,kick:.6,lean:-.2},{t:.42,e:'o',kick:1,lean:-.35,fwd:.15},{t:.56,kick:0,lean:.1},R_(.9)],ev:[{t:.42,e:'hit',dmg:.5,kb:3.2}]},
-    dgSpin:{keys:[{t:0,...DG.SIDEW,crouch:.15},{t:.15,yaw:-.5,crouch:.2},{t:.6,e:'l',yaw:6.28,...DG.SIDE,crouch:.2,fwd:.3},{t:.75,...DG.SIDEF},R_(1.1,{yaw:6.28})],ev:[{t:.5,e:'hit',arc:1.2,dmg:.8,kb:2.8}]},
+    dgSpin:{keys:[{t:0,...DG.SIDEW,crouch:.15},{t:.15,yaw:-.5,crouch:.2},{t:.6,e:'l',yaw:6.28,...DG.SIDE,crouch:.2,fwd:.3},{t:.75,...DG.SIDEF},R_(1.1,{yaw:6.28})],ev:[{t:.5,e:'hit',arc:1.3,around:1,dmg:.8,kb:2.8}]},
     dgSlam:{keys:[{t:0},{t:.4,...DG.UPB,lean:-.25,crouch:.05},{t:.65,e:'o',...DG.LOW,lean:.7,crouch:.4,fwd:.3},{t:.95,lean:.6,crouch:.35},R_(1.35)],ev:[{t:.65,e:'hit',aoe:.85,dmg:.9,kb:3.4}]},
-    dgBackhand:{keys:[{t:0},{t:.25,...DG.SIDEF,twist:.5,crouch:.1},{t:.45,e:'o',...TW([.3,0,.4],[.85,0,.5]),twist:-.45,lean:.25,fwd:.25},{t:.6,...DG.SIDEW,twist:-.5},R_(1.0)],ev:[{t:.45,e:'hit',dmg:.9,kb:2.6}]},
+    dgBackhand:{keys:[{t:0},{t:.25,...DG.SIDEF,twist:.5,crouch:.1},{t:.45,e:'o',...TW([.3,0,.4],[.85,0,.5]),twist:-.45,lean:.25,fwd:.25},{t:.6,...DG.SIDEW,twist:-.5},R_(1.0)],ev:[{t:.45,e:'hit',arc:1.2,dmg:.9,kb:2.6}]},
     dgCleave:{keys:[{t:0},{t:.45,...DG.SIDEW,twist:-.7,crouch:.2,lean:-.05},{t:.7,e:'o',...DG.SIDE,twist:.6,lean:.4,crouch:.25,fwd:.45},{t:.9,...DG.SIDEF,twist:.75,lean:.3},R_(1.45)],
       ev:[{t:.25,e:'forge'},{t:.7,e:'hit',arc:1.6,dmg:1.35,kb:4.4,cleave:1}]},
   },
@@ -135,7 +135,7 @@ const MOVES_C={
     hvDeathArc:{keys:[{t:0},{t:.32,...HV.HIGHW,lean:-.2,crouch:.04},{t:.52,e:'o',...HV.HIGHC,lean:.5,crouch:.22,fwd:.3},{t:.68,...HV.FOLLOW,lean:.55,crouch:.25},R_(1.1)],ev:[{t:.52,e:'hit',dmg:1.25,kb:2}]},
     hvBackReap:{keys:[{t:0},{t:.22,...HV.BACKW,twist:.5,crouch:.08},{t:.42,e:'o',...HV.BACK,twist:-.45,lean:.25,fwd:.25},{t:.56,...HV.REAPW,twist:-.55},R_(.95)],ev:[{t:.42,e:'hit',dmg:.95,kb:2.2}]},
     hvAnkleReaper:{keys:[{t:0},{t:.22,...HV.LOWW,crouch:.35,lean:.35,twist:-.45},{t:.42,e:'o',...HV.LOWS,crouch:.42,lean:.45,twist:.4,fwd:.25},{t:.58},R_(.95)],ev:[{t:.42,e:'hit',dmg:.7,kb:.6,kd:1}]},
-    hvWhirl:{keys:[{t:0,...HV.REAPW,crouch:.12},{t:.15,yaw:-.5,crouch:.18},{t:.62,e:'l',yaw:6.28,...HV.REAP,crouch:.18,fwd:.3},{t:.78},R_(1.15,{yaw:6.28})],ev:[{t:.5,e:'hit',arc:1.3,dmg:.8,kb:2.6}]},
+    hvWhirl:{keys:[{t:0,...HV.REAPW,crouch:.12},{t:.15,yaw:-.5,crouch:.18},{t:.62,e:'l',yaw:6.28,...HV.REAP,crouch:.18,fwd:.3},{t:.78},R_(1.15,{yaw:6.28})],ev:[{t:.5,e:'hit',arc:1.3,around:1,dmg:.8,kb:2.6}]},
     hvHookTrip:{keys:[{t:0},{t:.22,...HV.HIGHW,lean:-.1},{t:.4,e:'o',...HV.HOOK,lean:.45,crouch:.25,fwd:.3},{t:.62,e:'o',...HV.YANK,lean:-.15,crouch:.15,fwd:-.15},R_(1.05)],ev:[{t:.62,e:'hit',dmg:.6,kb:-1.6,kd:1}]},
     hvTwinReap:{keys:[{t:0},{t:.2,...HV.REAPW,twist:-.5,crouch:.1},{t:.36,e:'o',...HV.REAP,twist:.45,lean:.3,fwd:.2},{t:.5,...HV.BACKW,twist:.5},{t:.66,e:'o',...HV.BACK,twist:-.45,lean:.3,fwd:.35},{t:.8},R_(1.15)],
       ev:[{t:.36,e:'hit',dmg:.6},{t:.66,e:'hit',dmg:.7,kb:2}]},
@@ -259,6 +259,35 @@ const FIN_C={
       ev:[{t:.4,e:'grab',at:'tip'},{t:.8,e:'soulDrainRag'},{t:1.2,e:'soulDrainRag'},{t:1.55,e:'release',imp:[0,1,3],shake:.12}]},
     hvSpinReap:{name:'Spinning Reap',contact:1.45,keys:[{t:0,...HV.REAPW,crouch:.12},{t:.18,yaw:-.6,twist:-.4,crouch:.2},{t:.62,e:'l',yaw:6.28,...HV.REAP,crouch:.15,fwd:.35,twist:0},{t:.85},R_(1.25,{yaw:6.28})],
       ev:[{t:.56,e:'kill',imp:[2,1.5,1.5],decap:true,headImp:[5,4,1],shake:.2}]},
+    // ---- ten more: the harvest ----
+    hvFinalHarvest:{name:'Final Harvest',contact:1.35,keys:[{t:0},{t:.22,R:[.22,.05,.05],wR:[0,.35,-.94],twist:-.3,crouch:.06},{t:.34,e:'o',R:[.1,-.05,.5],wR:[0,.3,-.95],twist:.25,lean:.35,fwd:.25},
+      {t:.7,...HV.HIGHW,lean:-.2,crouch:.02,fwd:.1},{t:1.15,...TW([.1,.58,-.1],[0,.2,-.98],.4),lean:-.28},{t:1.38,e:'o',...HV.HIGHC,lean:.55,crouch:.25,fwd:.2},{t:1.55,...HV.FOLLOW,lean:.6,crouch:.3},{t:1.9},R_(2.3)],
+      ev:[{t:.34,e:'jolt',victim:'kneel',mag:1},{t:.8,e:'soulCharge'},{t:1.22,e:'soulTrail'},{t:1.38,e:'kill',decap:true,imp:[0,-1,.8],headImp:[0,4.5,2.5],fx:'soul',shake:.25}]},
+    hvGallows:{name:'Gallows Hook',contact:1.4,keys:[{t:0},{t:.25,...HV.CHOPU,lean:-.12},{t:.42,e:'o',...HV.CHOP,lean:.4,fwd:.2},{t:.8,R:[.12,.35,.3],wR:[0,.95,.3],lean:-.15},
+      {t:1.1,R:[.1,.5,.05],wR:[0,.9,-.4],lean:-.3,crouch:.02},{t:1.35,e:'o',R:[.12,.35,-.25],wR:[0,.2,-.98],lean:-.4,twist:-.2},{t:1.65},R_(2.1)],
+      ev:[{t:.42,e:'grab',at:'tip'},{t:1.33,e:'release',imp:[0,-8,-4],slam:1,shake:.3}]},
+    hvThroatDrain:{name:'Throat Drain',contact:.9,keys:[{t:0},{t:.3,e:'o',L:[-.06,.25,.58],wL:[0,1,0],lean:.3,fwd:.3},{t:.75,L:[-.08,.55,.45],wL:[0,1,0],lean:-.15},{t:1.5,L:[-.08,.58,.44],lean:-.18},
+      {t:1.8,e:'o',L:[-.1,-.35,.5],lean:.55,crouch:.35},{t:2.1},R_(2.5)],
+      ev:[{t:.3,e:'grab',at:'hL'},{t:.85,e:'soulDrainRag'},{t:1.15,e:'soulDrainRag'},{t:1.45,e:'soulDrainRag'},{t:1.78,e:'release',imp:[0,-13,1],slam:1,shake:.25}]},
+    hvTripReap:{name:'Trip & Reap',contact:1.35,keys:[{t:0},{t:.2,...HV.LOWW,crouch:.32,lean:.35,twist:-.4},{t:.38,e:'o',...HV.LOWS,crouch:.4,lean:.45,twist:.35,fwd:.2},{t:.7,...HV.HIGHW,crouch:.05,lean:-.15,twist:0},
+      {t:1.0,e:'o',...TW([.08,-.3,.55],[0,-.72,.69],.4),lean:.65,crouch:.4,fwd:.3},{t:1.3,...TW([.1,-.1,.4],[0,-.45,.89],.4),lean:.35,crouch:.28,fwd:.3},{t:1.5,e:'o',...TW([.1,.3,.3],[0,.9,.4],.4),lean:-.2,crouch:.05,fwd:.2},{t:1.8},R_(2.2)],
+      ev:[{t:.38,e:'knock',imp:[-.6,1.4,.9]},{t:1.0,e:'stabRag',imp:[0,-2.5,.3],part:'chest',shake:.15},{t:1.5,e:'stabRag',imp:[0,4,.5],part:'chest',shake:.12}]},
+    hvLanternSmash:{name:'Lantern Smash',contact:1.45,keys:[{t:0},{t:.4,...HV.HIGHW,lean:-.25,crouch:.03},{t:.62,e:'o',...TW([.08,.1,.5],[0,-.05,1],.4),lean:.5,crouch:.2,fwd:.25},{t:.8,...HV.FOLLOW,lean:.55,crouch:.25},{t:1.15},R_(1.6)],
+      ev:[{t:.3,e:'soulCharge'},{t:.62,e:'kill',imp:[0,-4,1.5],fx:'soulBlast',ring:1,shake:.35}]},
+    hvReapersDance:{name:"Reaper's Dance",contact:1.45,keys:[{t:0},{t:.2,...HV.REAPW,twist:-.5,crouch:.1},{t:.36,e:'o',...HV.REAP,twist:.45,lean:.3,fwd:.15},{t:.52,...HV.BACKW,twist:.5},{t:.68,e:'o',...HV.BACK,twist:-.45,lean:.3,fwd:.2},
+      {t:.9,...HV.HIGHW,lean:-.2,twist:0},{t:1.1,e:'o',...HV.HIGHC,lean:.55,crouch:.25,fwd:.25},{t:1.3,...HV.FOLLOW,lean:.6,crouch:.3},R_(1.75)],
+      ev:[{t:.36,e:'jolt'},{t:.68,e:'jolt',victim:'kneel'},{t:1.1,e:'kill',decap:true,imp:[0,-1.5,1],headImp:[0,3,3.5],shake:.25}]},
+    hvLevitate:{name:'Soul Levitation',contact:1.6,keys:[{t:0},{t:.35,e:'o',L:[-.1,.15,.55],wL:[0,0,1],lean:.2,fwd:.1},{t:1.1,L:[-.12,.6,.35],wL:[0,1,.2],lean:-.2},{t:1.6,L:[-.12,.64,.34],lean:-.22},
+      {t:1.95,e:'o',L:[-.1,-.4,.45],wL:[0,-1,.2],lean:.5,crouch:.3},{t:2.25},R_(2.6)],
+      ev:[{t:.3,e:'soulCharge'},{t:.35,e:'grab',at:'tk',fx:'soul'},{t:.9,e:'soulDrainRag'},{t:1.3,e:'soulDrainRag'},{t:1.93,e:'release',imp:[0,-16,1],slam:1,shake:.3}]},
+    hvHeadTaker:{name:'Head Taker',contact:1.45,keys:[{t:0},{t:.3,...HV.REAPW,twist:-.55,crouch:.08,lean:.05},{t:.5,e:'o',...TW([-.05,.15,.6],[-.6,.2,.78],.4),twist:.3,lean:.3,fwd:.25},
+      {t:.72,e:'o',...TW([.2,.1,.15],[.1,.3,.95],.4),twist:-.2,lean:-.25,fwd:-.15},{t:1.0,L:[-.15,.3,.4],wL:[0,1,0],lean:-.1},{t:1.5,L:[-.1,.35,.35]},R_(1.9)],
+      ev:[{t:.5,e:'jolt',mag:.6},{t:.72,e:'kill',decap:true,imp:[0,.5,.8],headImp:[0,3.5,-4],shake:.2},{t:.95,e:'wisp'},{t:1.2,e:'wisp'}]},
+    hvDeathSpiral:{name:'Death Spiral',contact:1.45,keys:[{t:0,...HV.REAPW,crouch:.12},{t:.15,yaw:-.5,twist:-.4,crouch:.2},{t:.55,e:'l',yaw:6.28,...HV.REAP,crouch:.18,fwd:.2},{t:.95,e:'l',yaw:12.57,...HV.REAP,crouch:.25,fwd:.4},{t:1.15},R_(1.55,{yaw:12.57})],
+      ev:[{t:.48,e:'jolt',mag:1.2},{t:.7,e:'soulTrail'},{t:.88,e:'kill',decap:true,imp:[2,1.5,1.5],headImp:[5,4.5,1],spin:4,shake:.25}]},
+    hvVaultKick:{name:'Grim Vault',contact:1.25,keys:[{t:0},{t:.2,R:[.15,-.3,.4],wR:[0,-.95,.3],crouch:.3,lean:.25},{t:.42,R:[.12,-.15,.3],wR:[0,-.98,.15],jump:.85,crouch:0,lean:-.35,kick:.6,fwd:.25},
+      {t:.55,e:'o',jump:.7,kick:1,lean:-.45,fwd:.4},{t:.75,jump:0,kick:0,crouch:.3,fwd:.5},R_(1.15)],
+      ev:[{t:.55,e:'kill',imp:[0,3.5,9],spin:5,shake:.3},{t:.75,e:'land'}]},
   },
 };
 for(const t in FIN_C){ FINS[t]=[]; for(const n in FIN_C[t]){ const d=FIN_C[t][n];
@@ -271,8 +300,11 @@ Object.assign(FIN_AIM_X,{
   dgSpinBehead:[[.62,'blade','neck']],dgHaftChoke:[[.3,'hL','neck']],dgLaunch:[[.52,'blade','gut']],dgXCleave:[[.5,'blade','chest'],[.98,'blade','chest']],dgHeadCrush:[[.3,'hL','head']],
   hvReapHead:[[.52,'blade','neck']],hvSoulRip:[[.35,'hL','chest']],hvImpale:[[.48,'tip','chest']],hvHookDown:[[.46,'blade','neck']],hvDoubleReap:[[.42,'blade','chest'],[.82,'blade','neck']],
   hvPinDrain:[[.4,'tip','chest']],hvSpinReap:[[.56,'blade','neck']],
+  hvFinalHarvest:[[.34,'pommel','gut'],[1.38,'blade','neck']],hvGallows:[[.42,'tip','chest']],hvThroatDrain:[[.3,'hL','neck']],hvTripReap:[[.38,'blade','shin']],
+  hvLanternSmash:[[.62,'tip','head']],hvReapersDance:[[.36,'blade','chest'],[.68,'blade','chest'],[1.1,'blade','neck']],hvHeadTaker:[[.5,'blade','neck']],
 });
-Object.assign(FIN_HIT_X,{thSoulBind:{1.6:'chest'},thButtCombo:{.27:'chest'},hvSoulRip:{1.25:'chest'},hvSoulBurst:{.45:'chest',.75:'chest',1.2:'chest'},hvWither:{.4:'chest',1.6:'chest'},hvScream:{.62:'head'}});
+Object.assign(FIN_HIT_X,{thSoulBind:{1.6:'chest'},thButtCombo:{.27:'chest'},hvSoulRip:{1.25:'chest'},hvSoulBurst:{.45:'chest',.75:'chest',1.2:'chest'},hvWither:{.4:'chest',1.6:'chest'},hvScream:{.62:'head'},
+  hvLevitate:{.35:'chest'},hvHeadTaker:{.72:'neck'},hvDeathSpiral:{.48:'chest',.88:'neck'},hvVaultKick:{.55:'chest'}});
 
 // ---- charges: 10 each. The run is how it carries itself at a sprint; the keys are the blow it crashes in with
 for(const t of ['thrall','dread','harvester']) CHG[t]=[];
@@ -292,15 +324,15 @@ chg('thrall','haftRam','Haft Ram',{R:[.22,0,.05],wR:[0,.3,-.95]},[{t:.1,twist:-.
 
 chg('dread','ramCharge','Iron Ram',{...DG.SHLD,lean:.35,twist:.4},[{t:.1,twist:.6,lean:.5,crouch:.12},{t:.24,e:'o',twist:.65,lean:.55,fwd:.9},{t:.4,twist:.2},R_(.85)],[HIT(.24,['shoulder','chest'],{dmg:1,kb:4.2,kd:1})]);
 chg('dread','leapCleave','Leaping Cleave',{...DG.UP},[{t:.08,crouch:.35},{t:.3,jump:.7,...DG.UPB,crouch:0,fwd:.4,lean:-.2},{t:.5,e:'o',jump:.15,...DG.CHOP,lean:.6,fwd:.9},{t:.6,jump:0,...DG.LOW,crouch:.4,fwd:1.0},R_(1.1)],
-  [HIT(.5,['blade','head'],{dmg:1.5,kb:3}),{t:.6,e:'land'}]);
+  [HIT(.5,['blade','head'],{arc:1,dmg:1.5,kb:3}),{t:.6,e:'land'}]);
 chg('dread','sweepRun','Reaping Run',{...DG.SIDEW},[{t:.1,twist:-.5},{t:.28,e:'o',...DG.SIDE,twist:.5,lean:.35,fwd:.6},{t:.44,...DG.SIDEF},R_(.95)],[{t:.28,e:'hit',arc:1,dmg:1,kb:3}]);
-chg('dread','spinRun','Whirling Charge',{...DG.SIDEW},[{t:.06,yaw:-.4},{t:.42,e:'l',yaw:6.28,...DG.SIDE,fwd:.5},{t:.56},R_(.95,{yaw:6.28})],[{t:.3,e:'hit',arc:1.2,dmg:.9,kb:3}]);
+chg('dread','spinRun','Whirling Charge',{...DG.SIDEW},[{t:.06,yaw:-.4},{t:.42,e:'l',yaw:6.28,...DG.SIDE,fwd:.5},{t:.56},R_(.95,{yaw:6.28})],[{t:.3,e:'hit',arc:1.3,around:1,dmg:.9,kb:3}]);
 chg('dread','haftRam','Haft Ram',{...DG.GUARD},[{t:.1,lean:.3},{t:.24,e:'o',...TW([.2,.2,.6],[.95,.2,.1],.3),lean:.5,fwd:.8},{t:.4},R_(.8)],[HIT(.24,['hL','chest'],{dmg:.8,kb:4})]);
-chg('dread','overRun','Overhead Charge',{...DG.UP},[{t:.12,...DG.UPB,lean:-.1},{t:.3,e:'o',...DG.CHOP,lean:.6,crouch:.25,fwd:.7},{t:.46,...DG.LOW},R_(.95)],[HIT(.3,['blade','head'],{dmg:1.4,kb:2.6})]);
-chg('dread','riseRush','Rising Ruin',{...DG.LOWW,lean:.3},[{t:.1,crouch:.3},{t:.26,e:'o',...DG.RISE,crouch:0,lean:-.15,fwd:.6},{t:.42},R_(.85)],[HIT(.26,['blade','chest'],{dmg:1.1,kb:2,up:2.6})]);
+chg('dread','overRun','Overhead Charge',{...DG.UP},[{t:.12,...DG.UPB,lean:-.1},{t:.3,e:'o',...DG.CHOP,lean:.6,crouch:.25,fwd:.7},{t:.46,...DG.LOW},R_(.95)],[HIT(.3,['blade','head'],{arc:1,dmg:1.4,kb:2.6})]);
+chg('dread','riseRush','Rising Ruin',{...DG.LOWW,lean:.3},[{t:.1,crouch:.3},{t:.26,e:'o',...DG.RISE,crouch:0,lean:-.15,fwd:.6},{t:.42},R_(.85)],[HIT(.26,['blade','chest'],{arc:1,dmg:1.1,kb:2,up:2.6})]);
 chg('dread','quakeLeap','Quake Leap',{...DG.UP},[{t:.1,crouch:.4},{t:.34,jump:.9,...DG.UPB,crouch:0,fwd:.5,lean:-.25},{t:.56,e:'o',jump:0,...DG.LOW,lean:.7,crouch:.45,fwd:.9},R_(1.2)],
   [{t:.56,e:'hit',aoe:.85,dmg:1.1,kb:3.6},{t:.56,e:'land'}]);
-chg('dread','backhandRush','Backhand Rush',{...DG.SIDEF},[{t:.1,twist:.5},{t:.26,e:'o',...TW([.3,0,.4],[.85,0,.5]),twist:-.45,lean:.3,fwd:.6},{t:.42},R_(.85)],[HIT(.26,['blade','chest'],{dmg:1.1,kb:2.8})]);
+chg('dread','backhandRush','Backhand Rush',{...DG.SIDEF},[{t:.1,twist:.5},{t:.26,e:'o',...TW([.3,0,.4],[.85,0,.5]),twist:-.45,lean:.3,fwd:.6},{t:.42},R_(.85)],[HIT(.26,['blade','chest'],{arc:1.2,dmg:1.1,kb:2.8})]);
 chg('dread','stompRush','Trampling Kick',{...DG.SHLD,lean:.25},[{t:.1,kick:.4},{t:.24,e:'o',kick:1,lean:-.3,fwd:.6},{t:.38,kick:0,lean:.1},R_(.8)],[HIT(.24,['foot','chest'],{dmg:.8,kb:4})]);
 
 chg('harvester','runBolt','Running Bolt',{...HV.POINT,lean:.15},[{t:.1,...HV.RAISE,lean:.1},{t:.3,e:'o',...HV.POINT,lean:.3,fwd:.5},{t:.5},R_(.9)],[{t:.3,e:'soul',dmg:1.2}]);

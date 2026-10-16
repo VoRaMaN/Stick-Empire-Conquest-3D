@@ -10,7 +10,7 @@ function enemyCommander(dt){
   const full=count(1)>=Math.min(POP_CAP*.9,Math.max(24,BATTLE_SIZES[game.size].start*1.15))&&game.bt>20;
   if(st!=='charge'&&(mine>Math.max(1500,theirs*1.25)||full||(threat&&mine>theirs))) { setStance(1,'charge'); if(game.mode==='battle'&&!game.demo){ showBanner(teamName(1).split(' ').pop()+' charges!','',1.4); sfx('hornEnemy'); }
     const archers=regs.filter(r=>r.team===0&&r.type==='archer'&&regAlive(r).length);
-    for(const r of regs) if(r.team===1&&(r.type==='sword'||r.type==='crawler')&&archers.length&&Math.random()<.45) r.order={kind:'attack',target:archers[Math.floor(Math.random()*archers.length)]}; }
+    for(const r of regs) if(r.team===1&&r.type==='sword'&&archers.length&&Math.random()<.45) r.order={kind:'attack',target:archers[Math.floor(Math.random()*archers.length)]}; }
   else if(st==='charge'&&mine<theirs*.6&&!full){ setStance(1,'defend'); for(const r of regs) if(r.team===1) r.order={kind:'army'}; }
 }
 // the nearest enemy on foot within r, by plain distance (nearestEnemy's crowd penalty would hide one already brawling with our own)

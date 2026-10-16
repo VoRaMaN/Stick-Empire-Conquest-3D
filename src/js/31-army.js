@@ -79,7 +79,7 @@ function nearestFoe(x,z,team,r,who){ let best=null,bd=r*r;
 function nearestEnemy(u,maxD){
   let best=null,bd=maxD?maxD*maxD:1e18;
   const test=o=>{ if(!o.alive||o.team===u.team||o.state==='stunned'||!canTarget(u,o)) return;
-    const dx=o.pos.x-u.pos.x,dz=o.pos.z-u.pos.z, crowd=(o.engaged||0)-(u.target===o?1:0), pen=Math.max(0,crowd-1)*2.6;
+    const dx=o.pos.x-u.pos.x,dz=o.pos.z-u.pos.z, crowd=(o.engaged||0)-(u.target===o?1:0), pen=Math.max(0,crowd-(u.T.swarm?3:1))*2.6;   // a Hellcrawler pack piles onto the front line, four to a victim
     const d=dx*dx+dz*dz+pen*pen; if(d<bd){bd=d;best=o;} };
   if(maxD){ gridEach(u.pos.x,u.pos.z,maxD,test); return best; }
   for(let r=9;;r*=3){ gridEach(u.pos.x,u.pos.z,r,test); if(best&&Math.sqrt(bd)<=r||r>=81) break; }
