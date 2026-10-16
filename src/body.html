@@ -1,0 +1,252 @@
+<div id="app">
+  <canvas id="c" aria-label="3D stick figure battlefield"></canvas>
+
+  <header class="top">
+    <div class="brand">
+      <button id="bPause" class="pausebtn" aria-label="Pause and menu"><i></i><i></i></button>
+      <span class="w">STICK EMPIRE <b>3D</b></span><span id="fps" class="fps" hidden>60 fps</span>
+    </div>
+    <div class="seg" role="tablist" aria-label="Mode">
+      <button id="mBattle" role="tab" aria-selected="true">Skirmish</button>
+      <button id="mCamp" role="tab" aria-selected="false">Campaign</button>
+      <button id="mDuel" role="tab" aria-selected="false"><span class="lg">Finisher </span>Lab</button>
+    </div>
+  </header>
+
+  <div id="hudBattle" class="hud">
+    <div class="hudrow">
+      <div class="side a">
+        <div class="row"><span class="lbl">Gold Legion</span><span class="gold"><b id="gA">0</b> gold<span class="mana"><i> · </i><b id="mA">150</b> mana</span></span></div>
+        <div class="bar"><i id="hpA"></i></div>
+        <div class="cnt" id="cA">0 units</div>
+      </div>
+      <div class="side b">
+        <div class="row"><span class="lbl">Crimson Horde</span><span class="gold"><b id="gB">0</b> gold<span class="mana"><i> · </i><b id="mB">150</b> mana</span></span></div>
+        <div class="bar"><i id="hpB"></i></div>
+        <div class="cnt" id="cB">0 units</div>
+      </div>
+    </div>
+    <canvas id="minimap" class="minimap" width="400" height="56" aria-label="Battlefield map: tap or drag to move the camera"></canvas>
+  </div>
+
+  <div id="callouts" aria-hidden="true"></div>
+  <div id="follow" class="follow" hidden><span id="followT">Following</span><button id="unfollow">Release</button></div>
+
+  <!-- building panel: tap one of your castle's buildings -->
+  <div id="bpanel" class="bpanel" hidden role="dialog" aria-label="Building">
+    <div class="bp-head"><i class="emb" id="bpEmb"></i><div class="bp-t"><b id="bpName">Barracks</b><span id="bpDesc"></span></div><button id="bpClose" aria-label="Close">Close</button></div>
+    <p class="bp-garr" id="bpGarr" hidden></p>
+    <div class="bp-sec" id="bpTrainSec"><h3>Train <small id="bpTrain"></small></h3><div class="bp-units" id="bpUnits"></div></div>
+    <div class="bp-sec"><h3>Research</h3><div class="bp-res" id="bpRes"></div></div>
+  </div>
+  <div id="btip" class="btip" hidden></div>
+
+  <div id="banner" class="banner" aria-live="polite"><div class="bt" id="bannerT"></div><div class="bs" id="bannerS"></div></div>
+
+  <div id="coach" class="coach" hidden role="status" aria-live="polite">
+    <div class="coach-top"><span id="coachStep">Training · 1 of 7</span><button id="coachSkip">Skip training</button></div>
+    <p id="coachText"></p>
+    <div class="coach-dots" id="coachDots"></div>
+  </div>
+
+  <footer class="dock" id="dock">
+    <div class="hint" id="hint">Drag to move the camera · pinch to zoom · twist two fingers to turn · tap your soldiers to command them</div>
+    <div class="chips" id="chips"></div>
+    <div class="orders" id="orders" role="group" aria-label="Army orders">
+      <span class="olbl">Orders</span>
+      <button id="oDefend" aria-pressed="true">Defend</button>
+      <button id="oHold" aria-pressed="false">Hold line</button>
+      <button id="oCharge" aria-pressed="false">Charge</button>
+    </div>
+    <div class="regbar" id="regbar" hidden>
+      <div class="rgname"><b id="rgTitle">Regiment I</b><span id="rgSub"></span></div>
+      <div class="rgbtns"><button id="rgHold">Hold</button><button id="rgCharge">Charge</button><button id="rgFollow">Follow</button><button id="rgRelease">Rejoin army</button><button id="rgClose" aria-label="Deselect">Done</button></div>
+    </div>
+    <div class="actions" id="actBattle">
+      <button id="bAuto">Auto-spawn: On</button>
+      <button id="bFin">Finishers: Sometimes</button>
+      <button id="bSettings" class="gear" aria-label="Settings">Settings</button>
+    </div>
+    <div class="actions" id="actDuel" hidden>
+      <button id="dFin" class="primary">Next finisher</button>
+      <button id="dIdle">Next idle</button>
+      <button id="dAtk">Next attack</button>
+      <button id="dChg">Next charge</button>
+      <button id="dWalk">Walk the hill</button>
+      <button id="dDef">Defender: On</button>
+      <button id="dSlow">Slow-mo: On</button>
+    </div>
+  </footer>
+
+  <div id="camp" class="camp" hidden>
+    <div class="campbox">
+      <div class="camp-head"><div><h2>Campaign</h2><span id="cTurn"></span></div><button id="cClose">Close map</button></div>
+      <svg id="cMap" viewBox="0 0 400 240" role="group" aria-label="Campaign map"></svg>
+      <div class="camp-legend"><span><i style="background:var(--gold)"></i>Yours</span><span><i style="background:var(--crimson)"></i>Crimson Horde</span><span><i style="background:#8f8270"></i>Rebels</span><span>● garrison strength · ★ capital</span></div>
+      <p id="cMsg" class="camp-msg"></p>
+      <div class="camp-actions"><button id="cGo" class="primary">March</button><button id="cReset">New campaign</button></div>
+    </div>
+  </div>
+
+  <!-- title screen: a live battle plays behind it -->
+  <div id="menu" class="menu" hidden>
+    <div class="menu-title">
+      <h1 class="logo"><span>Stick Empire</span><b>3D</b></h1>
+      <p class="tagline">Command the Gold Legion. Break the Crimson Horde.</p>
+    </div>
+    <div class="menu-panel" id="menuMain">
+      <button id="mmContinue" class="mm primary" hidden><span>Continue campaign</span><small id="mmContinueSub">Turn 1</small></button>
+      <button id="mmSkirmish" class="mm"><span>Skirmish</span><small>One battle, your rules</small></button>
+      <button id="mmCampaign" class="mm"><span>Campaign</span><small id="mmCampaignSub">Conquer eight territories</small></button>
+      <button id="mmTraining" class="mm"><span>Training</span><small>Learn to command in two minutes</small></button>
+      <button id="mmLab" class="mm"><span>Finisher Lab</span><small>50 finishers, 50 charges, every move</small></button>
+      <div class="mm-row">
+        <button id="mmSettings" class="mm small">Settings</button>
+        <button id="mmHelp" class="mm small">How to play</button>
+      </div>
+      <button id="mmInstall" class="mm small install" hidden>Install on this device</button>
+    </div>
+    <div class="menu-panel" id="menuSkirmish" hidden>
+      <h2 class="panel-h">Choose the battle size</h2>
+      <div class="sizes" role="radiogroup" aria-label="Battle size">
+        <button class="size" role="radio" data-size="0" aria-checked="true"><b>Normal</b><span>8 soldiers a side</span><small>Build your army from miners up</small></button>
+        <button class="size" role="radio" data-size="1" aria-checked="false"><b>Large</b><span>60 a side</span><small>Regiments from the first second</small></button>
+        <button class="size" role="radio" data-size="2" aria-checked="false"><b>Epic</b><span>200 a side</span><small>Full armies in ranks. Heavy on older phones</small></button>
+      </div>
+      <button id="skStart" class="mm primary"><span>Start battle</span></button>
+      <button id="skBack" class="mm small">Back</button>
+    </div>
+    <div class="menu-panel" id="menuInstall" hidden>
+      <h2 class="panel-h">Install on your iPhone or iPad</h2>
+      <ol class="steps">
+        <li>Open this game in <b>Safari</b>.</li>
+        <li>Tap the <b>Share</b> button at the bottom of the screen.</li>
+        <li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+      </ol>
+      <p class="note">It then opens full screen from your home screen and plays without an internet connection.</p>
+      <button id="inBack" class="mm small">Back</button>
+    </div>
+    <p class="ver" id="ver"></p>
+  </div>
+
+  <!-- pause -->
+  <div id="pause" class="overlay" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="pauseH">
+      <h2 id="pauseH" class="card-h">Paused</h2>
+      <p class="card-sub" id="pauseSub"></p>
+      <div class="stack">
+        <button id="pResume" class="mm primary"><span>Resume</span></button>
+        <button id="pRestart" class="mm small">Restart battle</button>
+        <button id="pSettings" class="mm small">Settings</button>
+        <button id="pHelp" class="mm small">How to play</button>
+        <button id="pMenu" class="mm small">Main menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- battle results -->
+  <div id="results" class="overlay results" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="resH">
+      <h2 id="resH" class="card-h big">Victory</h2>
+      <p class="card-sub" id="resSub"></p>
+      <dl class="stats" id="resStats"></dl>
+      <div class="stack">
+        <button id="rAgain" class="mm primary"><span>Play again</span></button>
+        <button id="rMenu" class="mm small">Main menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- settings -->
+  <div id="settings" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="setH">
+    <div class="hd"><h2 id="setH">Settings</h2><button id="setClose">Done</button></div>
+    <section class="set-sec">
+      <h3>Graphics</h3>
+      <div class="opt"><span id="qLbl">Quality</span>
+        <div class="pills" role="radiogroup" aria-labelledby="qLbl" id="qPills">
+          <button role="radio" data-q="auto">Auto</button><button role="radio" data-q="low">Low</button><button role="radio" data-q="medium">Medium</button><button role="radio" data-q="high">High</button>
+        </div>
+      </div>
+      <small class="opt-note" id="qNote">Auto lowers the resolution and shadows when the frame rate drops.</small>
+      <label class="tg" for="sFps">Show frame rate <input id="sFps" type="checkbox"></label>
+      <label class="tg" for="sBlood">Blood <input id="sBlood" type="checkbox" checked></label>
+    </section>
+    <section class="set-sec">
+      <h3>Sound</h3>
+      <div class="sl"><label for="sMaster">Master volume</label><output id="oMaster">80%</output><input id="sMaster" type="range" min="0" max="1" step="0.01" value="0.8"></div>
+      <div class="sl"><label for="sMusic">Music</label><output id="oMusic">50%</output><input id="sMusic" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+      <div class="sl"><label for="sSfx">Battle sounds</label><output id="oSfx">90%</output><input id="sSfx" type="range" min="0" max="1" step="0.01" value="0.9"></div>
+      <label class="tg" for="sVoice">Narrator and unit voices <input id="sVoice" type="checkbox" checked></label>
+      <small class="opt-note">On iPhone, sound follows the silent switch on the side of the phone.</small>
+    </section>
+    <section class="set-sec">
+      <h3>Controls</h3>
+      <div class="opt"><span id="dragLbl">One-finger drag</span>
+        <div class="pills" role="radiogroup" aria-labelledby="dragLbl" id="dragPills">
+          <button role="radio" data-drag="pan">Moves the camera</button><button role="radio" data-drag="orbit">Turns the camera</button>
+        </div>
+      </div>
+      <label class="tg" for="sMini">Battlefield map <input id="sMini" type="checkbox" checked></label>
+    </section>
+    <section class="set-sec">
+      <h3>Battle</h3>
+      <div class="opt"><span id="finLbl">Finishers</span>
+        <div class="pills" role="radiogroup" aria-labelledby="finLbl" id="finPills">
+          <button role="radio" data-fin="0">Off</button><button role="radio" data-fin="1">Sometimes</button><button role="radio" data-fin="2">Always</button>
+        </div>
+      </div>
+      <label class="tg" for="sAuto">Auto-spawn soldiers for my army <input id="sAuto" type="checkbox" checked></label>
+    </section>
+    <section class="set-sec">
+      <h3>More</h3>
+      <div class="set-btns">
+        <button id="setTune">Animation tuning</button>
+        <button id="setTutorial">Replay training</button>
+        <button id="setErase">Erase saved progress</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- how to play -->
+  <div id="help" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="helpH">
+    <div class="hd"><h2 id="helpH">How to play</h2><button id="helpClose">Done</button></div>
+    <div class="help">
+      <h3>Win the battle</h3>
+      <p>Destroy the Crimson statue on the far side of the field before they destroy yours. Miners bring gold; spend it on soldiers with the cards at the bottom.</p>
+      <h3>Your castle</h3>
+      <p>Behind your statue stands your castle. Each soldier you buy is trained in his own building and marches out through the gate: giants are let out of the prison, wing archers launch from the aerie's roof hatch. Archers on the battlements shoot anything that comes close.</p>
+      <p>Tap a building (or hover over it with a mouse) to train its soldiers and research upgrades, one at a time per building, for gold and mana: more castle archers, passive income, Rage for swordsmen, Shield Wall for Spartans, fire arrows, Giant Growth, and the wizard's, cleric's, ninja's and wing archer's special powers. Mana trickles in by itself.</p>
+      <h3>Your soldiers</h3>
+      <ul>
+        <li><b>Miner</b> digs gold. Keep a few working all battle.</li>
+        <li><b>Swordsman</b> is fast and cheap. Good for flanking archers.</li>
+        <li><b>Spartan</b> carries a shield that stops arrows from the front. Holds the line.</li>
+        <li><b>Archer</b> shoots from the back ranks. Weak if caught up close.</li>
+        <li><b>Ninja</b> is the fastest soldier. Shinobi turns him invisible; his first blows from hiding hit twice as hard and poison. Each blow on the same enemy hits harder (Fixate).</li>
+        <li><b>Cleric</b> heals the wounded and cures poison and fire. Keep him behind the line.</li>
+        <li><b>Wizard</b> throws exploding blasts, calls lightning, raises an Electric Wall and sprays poison. Fragile up close.</li>
+        <li><b>Wing Archer</b> flies over the battle on mechanical wings and shoots crossbow bolts, some of them burning. Swords and spears can't reach him; only archers, wizards and other wing archers can.</li>
+        <li><b>Giant</b> smashes whole groups. Slow and expensive.</li>
+      </ul>
+      <h3>Orders</h3>
+      <p><b>Defend</b> forms ranks by your statue. <b>Hold line</b> forms them where the army stands. <b>Charge</b> sends everyone at the enemy; soldiers who sprint in hit harder.</p>
+      <p>Tap one of your soldiers to command his whole regiment: tap the ground to march there, tap an enemy to attack, or use the buttons that appear.</p>
+      <h3>Tactics</h3>
+      <p>Attacks from the side or rear do more damage and break morale. Soldiers fighting downhill hit harder. A regiment that loses heart runs back to the statue.</p>
+      <h3>Camera</h3>
+      <p>Drag to move. Pinch or scroll to zoom. Twist two fingers to turn, or drag two fingers up and down to tilt. Double-tap the ground to zoom in there. Tap the map at the top to jump across the field.</p>
+    </div>
+  </div>
+
+  <div id="tune" class="sheet" hidden>
+    <div class="hd"><h2>Animation tuning</h2><button id="tClose">Done</button></div>
+    <div class="sl"><label for="sStep">Step length</label><output id="oStep">1.00×</output><input id="sStep" type="range" min="0.6" max="1.5" step="0.01" value="1"><small>How far a foot drifts before it takes a new step.</small></div>
+    <div class="sl"><label for="sBob">Body bounce</label><output id="oBob">1.00×</output><input id="sBob" type="range" min="0" max="2.5" step="0.01" value="1"><small>Pelvis bob on every step.</small></div>
+    <div class="sl"><label for="sLean">Run lean</label><output id="oLean">1.00×</output><input id="sLean" type="range" min="0" max="1.8" step="0.01" value="1"><small>How hard units lean into a sprint.</small></div>
+    <div class="sl"><label for="sSpring">Springiness</label><output id="oSpring">1.00×</output><input id="sSpring" type="range" min="0.4" max="2" step="0.01" value="1"><small>Lower is floppier: more overshoot on lean, head and hit reactions.</small></div>
+    <div class="sl"><label for="sSpeed">Game speed</label><output id="oSpeed">1.00×</output><input id="sSpeed" type="range" min="0.1" max="1.5" step="0.01" value="1"></div>
+    <label class="tg" for="sDbg">Show IK targets <input id="sDbg" type="checkbox"></label>
+  </div>
+
+  <div id="toast" class="toast" hidden role="status"><span id="toastT"></span><button id="toastBtn" hidden></button></div>
+</div>
