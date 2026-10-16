@@ -78,7 +78,7 @@ function gxInit(){
   GX.cbBolt=new THREE.CylinderGeometry(.011,.011,.36,5); GX.cbTip=new THREE.ConeGeometry(.022,.07,5);
 }
 function buildGearX(u,G,acc,acc2,steel){
-  if(u.type==='crawler'){ buildCrawler(u,G); return; }
+  if(u.T.crawler){ buildCrawler(u,G); return; }
   if(u.T.chaos){ buildChaosGear(u,G); return; }
   gxInit(); const team=u.team;
   switch(u.type){
@@ -128,7 +128,7 @@ function buildGearX(u,G,acc,acc2,steel){
 }
 const _gq=new V3(),_gs=new V3(),_gso=new V3(),_gm=new V3(),_ge=new V3(),_gch=new V3(),_gfl=new V3(),_gd=new V3();
 function updateGearX(u){
-  if(u.type==='crawler') return;   // a Hellcrawler's model is posed when it's drawn (drawCrawler), and only if it's on screen
+  if(u.T.crawler) return;   // a Hellcrawler's model is posed when it's drawn (drawCrawler), and only if it's on screen
   if(u.T.chaos){ updateChaosGear(u); return; }
   const G=u.G, j=u.j, s=u.s; if(!G) return;
   _gfl.copy(u.fwdW).addScaledVector(u.spine,-u.fwdW.dot(u.spine)); if(_gfl.lengthSq()<1e-6) _gfl.copy(u.fwdW); _gfl.normalize();

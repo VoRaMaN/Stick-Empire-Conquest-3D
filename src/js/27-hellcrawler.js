@@ -131,6 +131,7 @@ function crPart(name,s,k){
   for(const m in P){ const ms=mesh(P[m],m==='skin'?CRM.skin:CRM[m]); if(m==='skin') ms.userData.skin=1; if(m==='eye'||m==='maw') ms.castShadow=false; g.add(ms); }
   g.scale.setScalar(s*(k||1)); freezeGear(g); return g; }
 function buildCrawler(u,G){
+  if(u.T.hound){ buildHound(u,G); return; }
   crInit(); const s=u.s;
   for(const n of ['pel','abd','tor','nek']) G['c_'+n]=crPart(n,s);
   G.c_skl=crPart('skl',s,CR_HEAD); G.c_jaw=crPart('jaw',s,CR_HEAD);
@@ -307,10 +308,10 @@ function crTailStep(u,p,dt,alive){
     // the tail rides along with most of the body's movement, so running only sweeps the curl back a little
     _ct3.subVectors(T[0],_ct3); if(_ct3.lengthSq()<.25) for(let i=1;i<=n;i++) T[i].addScaledVector(_ct3,.85); }
   else { _ct1.subVectors(u.j.pelvis,u.j.chest); _ct1.y=0; if(_ct1.lengthSq()<1e-6) _ct1.set(-u.fwdW.x,0,-u.fwdW.z); _ct1.normalize(); T[0].copy(u.j.pelvis).addScaledVector(_ct1,.12*s); }
-  const al=alive?clamp(p.alt||0,-1,1.4):0, tw=alive?(p.twist||0):0, alw=clamp(al,0,1);
+  const al=alive?clamp((p.alt||0)+(u.T.tailLow||0),-1,1.4):0, tw=alive?(p.twist||0):0, alw=clamp(al,0,1);
   const sw=alive?Math.sin(game.time*2.3+u.id)*(.1+.16*(1-clamp(u.spd/u.T.speed,0,1))):0;
   for(let i=1;i<=n;i++){
-    const fi=crTi(i), L=CR_TL*CR_TK[i-1]*s, th=alive?crTh(fi,al):-.25, ps=alive?(-tw*1.1*(1-alw)+sw*i/n):0;
+    const fi=crTi(i), L=CR_TL*CR_TK[i-1]*s*(u.T.tailL||1), th=alive?crTh(fi,al):-.25, ps=alive?(-tw*1.1*(1-alw)+sw*i/n):0;
     crRot(_ct2,_ct1,th,ps); _ct3.copy(T[i-1]).addScaledVector(_ct2,L);
     const rate=alive?(al>.05?42:16-fi*.9):3;
     T[i].lerp(_ct3,1-Math.exp(-dt*rate));
@@ -366,6 +367,7 @@ function updateCrawlerModel(u){
   const T=cr.tail;
   for(let i=0;i<CR_TN;i++) orient(G['c_t'+i],T[i],_cm1.subVectors(T[i+1],T[i]),UP);
   orient(G.c_tt,T[CR_TN],_cm1.subVectors(T[CR_TN],T[CR_TN-1]),UP);
+  if(u.T.hound) houndModel(u);
 }
 function crSetHot(u,hot){ if(!!u.crHot===hot) return; u.crHot=hot; const G=u.G; if(!G) return;
   for(const k in G){ const g=G[k]; if(g&&g.isObject3D) for(const c of g.children) if(c.userData.skin) c.material=hot?CRM.hot:CRM.skin; } }
@@ -466,4 +468,5 @@ function drawCrawlerFx(u){
   if(!u.alive||!u.cr) return;
   const cr=u.cr, s=u.s, hr=_cm2.crossVectors(cr.hd,cr.hu).normalize();
   const k=CR_HEAD*s; for(const sd of [-1,1]){ _ce.copy(u.j.neck).addScaledVector(cr.hd,.16*k).addScaledVector(cr.hu,.058*k).addScaledVector(hr,sd*.075*k); glowAt(_ce,.032*k,u.crHot?'#ffb040':'#ff8a2a'); }
+  if(u.T.hound) houndFx(u);
 }

@@ -37,6 +37,8 @@ finishers and 10 charge attacks.
 | Hellcrawler | 150 souls | Fast pack hunter | Pounce, Pack Frenzy (below) |
 | Dreadguard | 150 souls | Heavy armoured axeman | Broad-shouldered and fully armoured: a horned great helm with a burning visor slit and a fanged grill, layered spiked pauldrons, a breastplate cracked with glowing magma, plate on every limb, hip plates and a crimson cape. Every swing of his axe cuts through all the enemies in its arc, and his spins cut all the way round. Hellforged Cleave: a white-hot sweep that interrupts and breaks a shield wall |
 | Soul Harvester | 120 souls | Ranged caster | A walking skeleton: a thin column of vertebrae, a rib cage with a captured soul glowing inside, a horned skull, a torn shroud and a lantern scythe. Enemies that get within arm's reach meet the scythe: 16 close-range strikes (reaps, an overhead Death Arc, a spin, ankle and hook trips, a cursed claw, a Soul Slash that curses) Throws soul fragments, a charged soul blast, and a wail that curses everyone around it |
+| Hellhound | 100 souls | Pack runner | A lean lava-rock demon dog with a flame mane and a burning tail; the fastest unit in the army, with the Hellcrawler's pounce, Pack Frenzy and moves |
+| Cerberus | 220 souls | Three-headed guardian | The great hound of the underworld: three heads, burning bites, and Triple Flame, a cone of fire from all three heads |
 | Bone Reaver | 140 souls | Fast skirmisher | A skeleton with a curved bone blade in each hand: flurries, thrusts, leaps, and a whirl that cuts all the way round |
 | Infernal Bomber | 160 souls | Explosives | A goggled imp with a barrel of hellfire bombs: lobbed, rolled and cluster bombs that blast and burn; explodes when it dies |
 | Fallen Oracle | 200 souls + 40 mana | Healer and hexer | Blindfolded seer with a third eye: Dark Mending, Mass Mending, Hex (+25% damage taken), Void Bolt |
@@ -61,8 +63,9 @@ a Dreadguard statue, and its own buildings: the Hellforge (Dreadguards), the Sou
 | Soul Spire | Soul Rend | Soul fragments curse what they hit: +25% damage taken for 5 s |
 
 The Thrall, Dreadguard and Soul Harvester each have 10 idles, 5 defence clips and 10 charges; the Thrall and Dreadguard
-have 10 finishers and 11 moves, the Soul Harvester 20 finishers and 23 moves (11 spells and casts, 12 more scythe strikes). Their own sound effects and voice lines are not recorded yet, so they use the stock sounds for now. The second wave (below) has 5 idles,
-8 moves, 5 or 6 finishers and 4 charges each so far.
+have 10 finishers and 11 moves, the Soul Harvester 20 finishers and 23 moves (11 spells and casts, 12 more scythe strikes). Their own sound effects and voice lines are not recorded yet, so they use the stock sounds for now. The Hellhound and Cerberus use the Hellcrawler's full move set (10 idles, 12–13 moves,
+10 finishers, 10 charges); the Bone Reaver, Bomber, Oracle, Grim Reaper and Hades have 5 idles, 8 moves, 5 or 6
+finishers and 4 charges each so far.
 
 ### The Hellcrawler
 

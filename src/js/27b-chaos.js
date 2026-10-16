@@ -224,7 +224,7 @@ function workerYield(u){ return u.type==='thrall'?(hasRes(u.team,'soulSiphon')?3
 // Hellcrawlers with Magma Claws set what they rake on fire
 function chaosHitMods(u,t,dm){ if(u.T.crawler&&hasRes(u.team,'magmaClaws')&&t.isUnit) applyBurn(t,u,4,2.5);
   if(u.type==='reaper'&&u.alive) u.hp=Math.min(u.maxHp,u.hp+dm*.25);   // the Grim Reaper drinks a quarter of every cut
-  if(u.type==='hades'&&t.isUnit) applyBurn(t,u,6,2.5); return dm; }
+  if((u.type==='hades'||u.T.heads)&&t.isUnit) applyBurn(t,u,6,2.5); return dm; }
 // Infernal Regeneration: four seconds without a wound and the flesh starts knitting back (1.2% a second)
 function chaosTick(u,dt){
   if(u.forgeT>0) u.forgeT-=dt; if(u.soulGlow>0) u.soulGlow=Math.max(0,u.soulGlow-dt*1.6); if(u.crystalT>0) u.crystalT-=dt; if(u.wispT>0) u.wispT-=dt;

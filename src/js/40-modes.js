@@ -54,7 +54,7 @@ function resetDuel(){
     u.feet.forEach((ft,i)=>{const sd=i?1:-1; ft.pos.set(u.pos.x+r.x*sd*.13*u.s,0,u.pos.z+r.z*sd*.13*u.s); ft.pos.y=H(ft.pos.x,ft.pos.z);}); }
   if(att.fl) flyInstant(att); if(att.cr) crPlace(att);
   game.duel={att,dum,q:null,home:{a:att.pos.clone(),d:dum.pos.clone()}};
-  cam.goal.set(DUEL_X,H(DUEL_X,DUEL_Z)+(ty==='wing'?2.2:1.1),DUEL_Z); cam.dGoal=ty==='giant'?10.5:ty==='wing'?11:ty==='crawler'||ty==='dread'?9:ty==='archer'||ty==='wizard'||ty==='harvester'?8.5:7.5;
+  cam.goal.set(DUEL_X,H(DUEL_X,DUEL_Z)+(ty==='wing'?2.2:1.1),DUEL_Z); cam.dGoal=ty==='giant'?10.5:ty==='wing'?11:ty==='cerberus'?12:TYPES[ty].crawler||ty==='dread'?9:ty==='archer'||ty==='wizard'||ty==='harvester'?8.5:7.5;
 }
 function duelDo(kind){
   const D=game.duel;

@@ -34,6 +34,10 @@ const UNIT_INFO={
     abil:['Dark Mending: heals the most wounded ally','Mass Mending: heals everyone nearby','Hex: cursed enemies take 25% more damage','Void Bolt and Eye of the Abyss']},
   reaper:{role:'Elite reaper',desc:'Death itself, hooded and robed, with a great scythe. The Grim Reaper reaps whole ranks in wide arcs, drinks a quarter of every cut as life, and steps through shadow to appear behind its prey.',
     abil:['Reaping arcs that hit everything in front','Life Drain: heals 25% of the damage it deals','Shadow Step: vanishes and reappears behind its target']},
+  hound:{role:'Pack runner',desc:'A lean demon dog of cracked lava rock with a mane of flame and a burning tail. Hellhounds are the fastest thing in the Chaos army and run in packs, pouncing on stragglers and frenzying together on a kill.',
+    abil:['Fastest unit in the army','Pounce and Pack Frenzy, like the Hellcrawler','Knocks light troops flat']},
+  cerberus:{role:'Three-headed guardian',desc:'The great hound that guards the gates of the underworld. Three heads, three sets of jaws: its bites set flesh alight, and all three heads breathe fire together.',
+    abil:['Triple Flame: all three heads breathe a cone of fire','Burning bites: every bite sets the target on fire','Big and tough: holds the line like a beast of war']},
   hades:{role:'Lord of the Underworld',desc:'The master of the Chaos Empire walks the field himself: a towering lord in bronze plate, crowned in fire, with a burning bident. Whoever stands near him burns, and his slams set the ground alight.',
     abil:['Burning aura: sets nearby enemies on fire','Hellfire Slam and Stomp: a ring of fire','Wave of Flame: burns everything in a cone','Every blow sets the target on fire']},
 };
@@ -61,9 +65,11 @@ function resetViewer(){
   u.face=u.faceGoal=.35; const f=new V3(Math.sin(u.face),0,Math.cos(u.face)), r=new V3(f.z,0,-f.x);
   u.feet.forEach((ft,i)=>{ const sd=i?1:-1; ft.pos.set(u.pos.x+r.x*sd*.13*u.s,0,u.pos.z+r.z*sd*.13*u.s); ft.pos.y=H(ft.pos.x,ft.pos.z); });
   if(u.fl) flyInstant(u); if(u.cr) crPlace(u);
-  VW.u=u; VW.idleI=-1; VW.home=u.pos.clone(); VW.h=ty==='wing'?2.3:ty==='giant'?2.3:ty==='crawler'?.75:1.05*u.s;
+  VW.u=u; VW.idleI=-1; VW.home=u.pos.clone(); VW.h=ty==='wing'?2.3:ty==='giant'?2.3:u.T.crawler?.75*u.s:1.05*u.s;
+  const big=u.s>1.5&&ty!=='giant'&&!u.T.crawler;
   cam.follow=null; cam.goal.set(u.pos.x,H(u.pos.x,u.pos.z)+VW.h,u.pos.z);
-  cam.dGoal=ty==='giant'?10:ty==='wing'?8:ty==='crawler'?5.4:ty==='dread'?5.6:4.8; cam.pitch=.14;
+  cam.dGoal=ty==='giant'?10:big?4.9*u.s:ty==='wing'?8:u.T.crawler?5.4*Math.max(1,u.s):ty==='dread'||ty==='reaper'?5.6:4.8; cam.pitch=.14;
+  cam.target.copy(cam.goal); cam.dist=cam.dGoal;   // open straight on the unit, no long pan from wherever the camera was
   viewerInfo(ty); syncViewerButtons();
 }
 function viewerCamera(rdt){
