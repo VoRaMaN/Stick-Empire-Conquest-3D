@@ -35,7 +35,7 @@ function refreshMenu(){
   menuEl.querySelectorAll&&menuEl.querySelectorAll('.size').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.size===menuSize)));
 }
 function startDemo(){
-  game.demo=true; game.mode='battle'; syncModeUI(); setTerrain('skirmish');
+  game.demo=true; game.mode='battle'; setFactions(settings.side); syncModeUI(); setTerrain('skirmish');
   const keep=game.size; game.size=0; resetBattle({gold:[2600,2600]}); game.size=keep;
   game.auto=[true,true]; game.demoT=0;
   cam.follow=null; cam.dGoal=22; cam.pitch=.36; cam.yaw=.5; demoCamera(5); cam.target.copy(cam.goal); cam.dist=cam.dGoal;
@@ -48,8 +48,8 @@ function demoTick(dt){
 const _dc=new V3();
 function demoCamera(rdt){
   let n=0; _dc.set(0,0,0);
-  for(const u of units){ if(!u.alive||!u.isUnit||u.type==='miner') continue; if(u.action&&!u.action.c.idle||u.target){ _dc.x+=u.pos.x; _dc.z+=u.pos.z; n++; } }
-  if(!n){ for(const u of units){ if(!u.alive||!u.isUnit||u.type==='miner') continue; _dc.x+=u.pos.x; _dc.z+=u.pos.z; n++; } }
+  for(const u of units){ if(!u.alive||!u.isUnit||u.T.worker) continue; if(u.action&&!u.action.c.idle||u.target){ _dc.x+=u.pos.x; _dc.z+=u.pos.z; n++; } }
+  if(!n){ for(const u of units){ if(!u.alive||!u.isUnit||u.T.worker) continue; _dc.x+=u.pos.x; _dc.z+=u.pos.z; n++; } }
   if(n){ _dc.multiplyScalar(1/n);
     // look at a point a little in front of the action so the soldiers sit in the top half, above the menu buttons
     const k=cam.dist*.42; _dc.x+=Math.sin(cam.yaw)*k; _dc.z+=Math.cos(cam.yaw)*k;
@@ -60,13 +60,18 @@ function demoCamera(rdt){
 function startSkirmish(size){
   game.size=size; settings.size=size; saveSettings();
   closeMenu(); game.campFight=null; game.tutorial=null;
-  game.mode='battle'; syncModeUI(); setTab('battle'); setTerrain('skirmish'); resetBattle();
+  game.mode='battle'; setFactions(settings.side); syncModeUI(); setTab('battle'); setTerrain('skirmish'); resetBattle();
   game.auto=[settings.auto,true]; syncBattleButtons();
   showBanner(BATTLE_SIZES[size].name+' battle',BATTLE_SIZES[size].start+' soldiers a side',1.8);
   sfx('horn');
 }
 function menuClick(id,fn){ const b=$('#'+id); if(b) b.onclick=()=>{ sfx('ui'); fn(); }; }
 menuClick('mmSkirmish',()=>showPanel('menuSkirmish'));
+// your side: Order or Chaos (the enemy fields the other); the battle behind the title switches with it
+function syncSideUI(){ if(menuEl.querySelectorAll) menuEl.querySelectorAll('.side-pick').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.side===(settings.side||'order')))); }
+if(menuEl.querySelectorAll) menuEl.querySelectorAll('.side-pick').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); const sd=b.dataset.side; if(sd===(settings.side||'order')) return;
+  settings.side=sd; saveSettings(); syncSideUI(); if(game.demo) startDemo(); }));
+syncSideUI();
 menuClick('skBack',()=>showPanel('menuMain'));
 menuClick('skStart',()=>startSkirmish(menuSize));
 if(menuEl.querySelectorAll) menuEl.querySelectorAll('.size').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); menuSize=+b.dataset.size; refreshMenu(); }));
@@ -88,7 +93,7 @@ function closeOverlays(){ $('#pause').hidden=true; $('#results').hidden=true; fo
 function pauseGame(){
   if(!menuEl.hidden||!$('#camp').hidden||!$('#results').hidden) return;
   game.paused=true; $('#pause').hidden=false;
-  $('#pauseSub').textContent=game.tutorial?'Training':game.mode==='duel'?'Finisher Lab':game.campFight?campT(game.campFight.id).name+' · campaign battle':BATTLE_SIZES[game.size].name+' skirmish · '+fmtTime(game.time-game.stats.t0);
+  $('#pauseSub').textContent=game.tutorial?'Training':game.mode==='duel'?'Finisher Lab':game.campFight?campName(game.campFight.id)+' · campaign battle':BATTLE_SIZES[game.size].name+' skirmish · '+fmtTime(game.time-game.stats.t0);
   $('#pRestart').textContent=game.mode==='duel'?'Reset the lab':'Restart battle';
 }
 function resumeGame(){ $('#pause').hidden=true; for(const s of ['settings','help','tune']) $('#'+s).hidden=true; $('#dock').hidden=false; game.paused=false; }
@@ -119,7 +124,7 @@ function showResults(){
   $('#resH').textContent=tut?(win?'Trained':'Defeated'):(win?'Victory':'Defeat');
   const time=fmtTime(game.time-S.t0);
   $('#resSub').textContent=tut?(win?'You can command an army. The field is yours.':'The training statue fell. Try again.'):
-    f?campT(f.id).name+(win?' is won':' is lost')+' after '+time+'.':(win?'The Crimson statue fell after '+time+'.':'Your statue fell after '+time+'.');
+    f?campName(f.id)+(win?' is won':' is lost')+' after '+time+'.':(win?'The '+teamName(1)+' statue fell after '+time+'.':'Your statue fell after '+time+'.');
   const rows=[['Enemies slain',S.kills[0]],['Soldiers lost',S.losses[0]],['Finishers',S.fins[0]],['Arrows loosed',S.arrows[0]],['Gold mined',Math.round(S.gold[0])],['Largest army',S.peak[0]]];
   $('#resStats').innerHTML=rows.map(r=>'<dt>'+r[0]+'</dt><dd>'+Number(r[1]).toLocaleString()+'</dd>').join('');
   $('#rAgain').innerHTML='<span>'+(tut?'Play a skirmish':f?'Back to the map':'Play again')+'</span>';

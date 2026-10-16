@@ -22,9 +22,9 @@ function spawnRaiders(t){
 function startTutorial(){
   closeMenu(); closeOverlays(); selectReg(null);
   game.demo=false; game.campFight=null; game.spent=false; game.paused=false;
-  game.mode='battle'; syncModeUI(); setTab('battle'); setTerrain('skirmish'); game.size=0;
+  game.mode='battle'; setFactions('order','order'); syncModeUI(); setTab('battle'); setTerrain('skirmish'); game.size=0;
   resetBattle({gold:[700,0],statueHp:[2600,650]});
-  for(const u of units) if(u.team===1&&u.type!=='miner'){ u.alive=false; destroyGear(u); }   // the enemy starts with only its miners
+  for(const u of units) if(u.team===1&&!u.T.worker){ u.alive=false; destroyGear(u); }   // the enemy starts with only its miners
   game.auto=[false,false]; syncBattleButtons();
   game.tutorial={i:-1,wait:0,raiders:[]};
   $('#coach').hidden=false; $('#follow').hidden=true;

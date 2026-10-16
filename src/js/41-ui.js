@@ -3,9 +3,9 @@ let bannerTimer=0;
 function showBanner(t,s,dur){ $('#bannerT').textContent=t; $('#bannerS').textContent=s||''; $('#banner').classList.add('show'); bannerTimer=dur||1.6; }
 function renderChips(){
   const box=$('#chips'); box.innerHTML='';
-  for(const t of (game.mode==='duel'?ORDER.concat(CHAOS):ORDER)){ const T=TYPES[t]; const b=document.createElement('button'); b.className='chip'+(T.chaos?' chaos':''); b.id='chip-'+t;
+  for(const t of (game.mode==='duel'?ORDER.concat(CHAOS):FAC(0).roster)){ const T=TYPES[t]; const b=document.createElement('button'); b.className='chip'+(T.chaos?' chaos':''); b.id='chip-'+t;
     const mc=game.mode==='battle'&&!game.classicMix?(MANA_COST[t]||0):0;
-    b.innerHTML='<span class="n">'+T.name+'</span><span class="s">'+(game.mode==='battle'?T.cost+' gold'+(mc?' · '+mc+' mana':''):'10 finishers · 10 charges')+'</span><span class="qn"></span>';
+    b.innerHTML='<span class="n">'+T.name+'</span><span class="s">'+(game.mode==='battle'?T.cost+' '+money(0)+(mc?' · '+mc+' mana':''):'10 finishers · 10 charges')+'</span><span class="qn"></span>';
     if(game.mode==='duel') b.setAttribute('aria-pressed',game.duelSel===t);
     b.addEventListener('click',()=>{
       if(game.mode==='battle'){ if(!buyUnit(t)){ b.classList.remove('no'); void b.offsetWidth; b.classList.add('no'); } }
@@ -44,5 +44,5 @@ for(const [id,key] of [['Step','step'],['Bob','bob'],['Lean','lean'],['Spring','
 $('#sDbg').addEventListener('change',e=>{tune.dbg=e.target.checked;});
 $('#sBlood').addEventListener('change',e=>{tune.blood=e.target.checked; settings.blood=tune.blood; saveSettings(); if(!tune.blood){ drops.length=0; splats.length=0; }});
 $('#unfollow').onclick=()=>{cam.follow=null; updateFollowUI();};
-function updateFollowUI(){ const f=cam.follow; $('#follow').hidden=!f||game.mode!=='battle'||!!selReg; if(f) $('#followT').textContent='Following '+TEAM[f.team].name.split(' ')[0]+' '+f.T.name; }
+function updateFollowUI(){ const f=cam.follow; $('#follow').hidden=!f||game.mode!=='battle'||!!selReg; if(f) $('#followT').textContent='Following '+teamName(f.team).split(' ')[0]+' '+f.T.name; }
 

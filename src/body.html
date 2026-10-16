@@ -16,12 +16,12 @@
   <div id="hudBattle" class="hud">
     <div class="hudrow">
       <div class="side a">
-        <div class="row"><span class="lbl">Gold Legion</span><span class="gold"><b id="gA">0</b> gold<span class="mana"><i> · </i><b id="mA">150</b> mana</span></span></div>
+        <div class="row"><span class="lbl" id="nA">Gold Legion</span><span class="gold"><b id="gA">0</b> <span id="cuA">gold</span><span class="mana"><i> · </i><b id="mA">150</b> mana</span></span></div>
         <div class="bar"><i id="hpA"></i></div>
         <div class="cnt" id="cA">0 units</div>
       </div>
       <div class="side b">
-        <div class="row"><span class="lbl">Crimson Horde</span><span class="gold"><b id="gB">0</b> gold<span class="mana"><i> · </i><b id="mB">150</b> mana</span></span></div>
+        <div class="row"><span class="lbl" id="nB">Chaos Empire</span><span class="gold"><b id="gB">0</b> <span id="cuB">souls</span><span class="mana"><i> · </i><b id="mB">150</b> mana</span></span></div>
         <div class="bar"><i id="hpB"></i></div>
         <div class="cnt" id="cB">0 units</div>
       </div>
@@ -82,7 +82,7 @@
     <div class="campbox">
       <div class="camp-head"><div><h2>Campaign</h2><span id="cTurn"></span></div><button id="cClose">Close map</button></div>
       <svg id="cMap" viewBox="0 0 400 240" role="group" aria-label="Campaign map"></svg>
-      <div class="camp-legend"><span><i style="background:var(--gold)"></i>Yours</span><span><i style="background:var(--crimson)"></i>Crimson Horde</span><span><i style="background:#8f8270"></i>Rebels</span><span>● garrison strength · ★ capital</span></div>
+      <div class="camp-legend"><span><i style="background:var(--gold)"></i>Yours</span><span><i style="background:var(--crimson)"></i>Enemy</span><span><i style="background:#8f8270"></i>Rebels</span><span>● garrison strength · ★ capital</span></div>
       <p id="cMsg" class="camp-msg"></p>
       <div class="camp-actions"><button id="cGo" class="primary">March</button><button id="cReset">New campaign</button></div>
     </div>
@@ -92,14 +92,18 @@
   <div id="menu" class="menu" hidden>
     <div class="menu-title">
       <h1 class="logo"><span>Stick Empire</span><b>3D</b></h1>
-      <p class="tagline">Command the Gold Legion. Break the Crimson Horde.</p>
+      <p class="tagline" id="tagline">Command the Gold Legion. Break the Chaos Empire.</p>
     </div>
     <div class="menu-panel" id="menuMain">
+      <div class="sides" role="radiogroup" aria-label="Your side">
+        <button class="side-pick order" role="radio" data-side="order" aria-checked="true"><b>Order Empire</b><small>Discipline, steel and formations</small></button>
+        <button class="side-pick chaos" role="radio" data-side="chaos" aria-checked="false"><b>Chaos Empire</b><small>Demons, souls and frenzy</small></button>
+      </div>
       <button id="mmContinue" class="mm primary" hidden><span>Continue campaign</span><small id="mmContinueSub">Turn 1</small></button>
       <button id="mmSkirmish" class="mm"><span>Skirmish</span><small>One battle, your rules</small></button>
       <button id="mmCampaign" class="mm"><span>Campaign</span><small id="mmCampaignSub">Conquer eight territories</small></button>
       <button id="mmTraining" class="mm"><span>Training</span><small>Learn to command in two minutes</small></button>
-      <button id="mmLab" class="mm"><span>Finisher Lab</span><small>50 finishers, 50 charges, every move</small></button>
+      <button id="mmLab" class="mm"><span>Finisher Lab</span><small>130 finishers, 130 charges, every move</small></button>
       <div class="mm-row">
         <button id="mmSettings" class="mm small">Settings</button>
         <button id="mmHelp" class="mm small">How to play</button>

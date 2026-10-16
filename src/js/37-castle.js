@@ -45,7 +45,8 @@ function applyCastleTextures(A){
   const L=new THREE.TextureLoader(), an=Math.min(8,renderer.capabilities&&renderer.capabilities.getMaxAnisotropy?renderer.capabilities.getMaxAnisotropy():1);
   for(const k in CTEX){ const b=A.tex[k]; if(!b) continue;
     const t=L.load('data:image/jpeg;base64,'+b); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=an;
-    const m=CM[k]; m.map=t; m.bumpMap=t; m.bumpScale=BUMP[k]||.2; m.color.set(CTINT[k]); m.needsUpdate=true; }
+    const m=CM[k]; m.map=t; m.bumpMap=t; m.bumpScale=BUMP[k]||.2; m.color.set(CTINT[k]); m.needsUpdate=true;
+    const mc=CMC[k]; if(mc){ mc.map=t; mc.bumpMap=t; mc.bumpScale=BUMP[k]||.2; mc.color.set(CTINT_C[k]); mc.needsUpdate=true; } }
   if(A.tex.emblems){ const t=L.load('data:image/jpeg;base64,'+A.tex.emblems); t.anisotropy=an; CM.emblem.map=t; CM.emblem.color.set('#ffffff'); CM.emblem.needsUpdate=true;
     EMBLEM_URL='data:image/jpeg;base64,'+A.tex.emblems; if(typeof refreshEmblemCss==='function') refreshEmblemCss(); }
 }
@@ -72,8 +73,10 @@ function mergeUV(list){
 // Kit: collects static parts per material; a building also keeps its own list for the hover outline
 function Kit(){ this.L={}; }
 Kit.prototype.put=function(mat,g,m){ (this.L[mat]||(this.L[mat]=[])).push([g,m]); };
+Kit.mats=null;   // the material set of the castle being built (Order or Chaos palette)
 Kit.prototype.build=function(parent,team,small){
-  for(const k in this.L){ const mat=k==='cloth'?CM.cloth[team]:k==='trim'?CM.trim[team]:CM[k]; const ms=new THREE.Mesh(mergeUV(this.L[k]),mat);
+  const KM=Kit.mats||CM;
+  for(const k in this.L){ const mat=k==='cloth'?KM.cloth[team]:k==='trim'?KM.trim[team]:KM[k]; const ms=new THREE.Mesh(mergeUV(this.L[k]),mat);
     ms.castShadow=!small&&k!=='paper'&&k!=='eyes'; ms.receiveShadow=!small; ms.matrixAutoUpdate=false; ms.updateMatrix(); parent.add(ms); }
   this.L={};
 };
@@ -92,7 +95,7 @@ const BUILDINGS=[
   {id:'aerie',name:'Aerie',emb:4,x:-28,row:1,w:7,d:8,trains:['wing'],desc:'Wing Archers, launched from the roof hatch'},
 ];
 const KEEP={id:'castle',name:'Castle',emb:8,desc:'Garrison archers, income and the statue'};
-const TRAINED_AT={}; for(const B of BUILDINGS) for(const ty of B.trains) TRAINED_AT[ty]=B.id;
+const TRAINED_AT={}; for(const B of BUILDINGS) for(const ty of B.trains) TRAINED_AT[ty]=B.id;   // (Chaos buildings: 37c)
 const ALLEYS=[-10,-17,-23.9];   // gaps between the front-row buildings
 const GATE_Z=6;
 // garrison posts on the wall-walk and the gate-tower tops (filled in this order)
@@ -128,7 +131,7 @@ function roundTower(K,x,z,r,h,roofH){
 }
 function flagPole(K,dyn,team,x,y,z,len){
   K.put('wood',gCyl(.06,.07,len,6,2),TM(x,y+len/2,z)); K.put('gold',new THREE.SphereGeometry(.13,8,6),TM(x,y+len+.08,z));
-  const fl=new THREE.Mesh(new THREE.PlaneGeometry(1.7,1.05,6,1),CM.cloth[team]); fl.geometry.translate(.85,0,0); fl.position.set(x,y+len-.62,z); dyn.push(fl); return fl;
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(1.7,1.05,6,1),(Kit.mats||CM).cloth[team]); fl.geometry.translate(.85,0,0); fl.position.set(x,y+len-.62,z); dyn.push(fl); return fl;
 }
 
 function buildWalls(C){
@@ -166,6 +169,7 @@ function buildWalls(C){
   // torches either side of the gate
   C.torches=[new V3(.5,4.4,GATE_Z-3.3),new V3(.5,4.4,GATE_Z+3.3)];
   for(const p of C.torches){ K.put('iron',gBox(.16,.5,.16,1),TM(p.x,p.y-.35,p.z)); }
+  if(C.fac==='chaos') chaosWalls(C);
 }
 
 /* ---------- the eight buildings ---------- */
@@ -290,30 +294,44 @@ const BUILD_FN={
 /* ---------- build one castle ---------- */
 const CASTLES=[];
 function buildCastle(t){
-  const C={team:t,group:new THREE.Group(),kit:new Kit(),flags:[],dyn:[],B:{},list:[],torches:[],garrison:[],q:[],res:{},resBusy:{},research:null};
+  const fac=facOf(t), chaos=fac==='chaos';
+  const C={team:t,fac,group:new THREE.Group(),kit:new Kit(),flags:[],dyn:[],B:{},list:[],torches:[],garrison:[],q:[],res:{},resBusy:{},research:null};
   C.group.position.set(t?CF:-CF,CGY[t],0); if(t) C.group.scale.x=-1;
+  Kit.mats=chaos?CMC:CM;
   buildWalls(C);
-  for(const D of BUILDINGS){ const b=Object.assign({},D,{team:t,bx:D.x,hullL:[],q:[],train:null,exitQ:[],glowL:[]}); const glow=[];
+  for(const D of BUILDINGS_OF[fac]){ const b=Object.assign({},D,{team:t,fac,bx:D.x,hullL:[],q:[],train:null,exitQ:[],glowL:[]}); const glow=[];
     BUILD_FN[D.id](C,b,glow);
-    if(glow.length){ b.glowMat=new THREE.MeshBasicMaterial({color:'#ffb35a'}); const gm=new THREE.Mesh(mergeUV(glow),b.glowMat); C.group.add(gm); b.glowMesh=gm; }
+    if(glow.length){ b.glowMat=new THREE.MeshBasicMaterial({color:chaos?'#ff5a2a':'#ffb35a'}); const gm=new THREE.Mesh(mergeUV(glow),b.glowMat); C.group.add(gm); b.glowMesh=gm; }
+    if(D.deco){ (C.deco||(C.deco=[])).push(b); continue; }   // scenery: no outline, no panel
     // hover outline: the building's own silhouette, scaled out ~0.2 m around its centre
     const hg=mergeGeo(b.hullL.map(([g,m])=>[g,m])); hg.computeBoundingBox(); const bb=hg.boundingBox.clone(), c=bb.getCenter(new V3()), sz=bb.getSize(new V3());
     const hull=new THREE.Mesh(hg,HULL_MAT); hull.position.copy(c); hull.geometry.translate(-c.x,-c.y,-c.z); hull.scale.set(1+.4/sz.x,1+.4/sz.y,1+.4/sz.z); hull.visible=false; hull.renderOrder=-1; C.group.add(hull);
     b.hull=hull; b.box=bb.clone(); b.hullL=null; b.wbox=new THREE.Box3();
     C.B[D.id]=b; C.list.push(b); }
   // the keep's pick box covers the gatehouse
-  C.keep=Object.assign({},KEEP,{team:t,box:new THREE.Box3(new V3(-4,0,.5),new V3(1,TOWER_H+1,11.5)),wbox:new THREE.Box3(),bx:-1.5});
+  C.keep=Object.assign({},chaos?KEEP_C:KEEP,{team:t,fac,box:new THREE.Box3(new V3(-4,0,.5),new V3(1,TOWER_H+1,11.5)),wbox:new THREE.Box3(),bx:-1.5});
   C.kit.build(C.group,t);
   for(const m of C.dyn) C.group.add(m);
+  Kit.mats=null;
   scene.add(C.group); C.group.updateMatrixWorld(true);
   for(const b of [...C.list,C.keep]) b.wbox.copy(b.box).applyMatrix4(C.group.matrixWorld);
   CASTLES[t]=C;
+  if(chaos) buildPit(C);
 }
-function castleGround(){ if(!castleReady) return; for(const C of CASTLES){ C.group.position.y=CGY[C.team]; C.group.updateMatrixWorld(true);
+// a battle between different factions than the last one: tear the castle down and raise the other kind
+function disposeTree(o){ o.traverse(c=>{ if(c.geometry&&!c.geometry.userData.keep) c.geometry.dispose(); }); }
+function rebuildCastle(t){
+  const C=CASTLES[t]; if(C){ for(const g of C.garrison) destroyGear(g); C.garrison.length=0; scene.remove(C.group); disposeTree(C.group);
+    if(C.pit){ scene.remove(C.pit.grp); disposeTree(C.pit.grp); } if(panelB&&panelB.team===t) closePanel(); if(hoverB&&hoverB.team===t) setHover(null); }
+  buildCastle(t);
+}
+// three.js draws Math.random for every new object's id: a rebuild between battles must not shift the battle's random stream
+let _lrs=97; function withOwnRandom(fn){ const R=Math.random; Math.random=()=>(_lrs=(_lrs*16807)%2147483647)/2147483647; try{ fn(); } finally{ Math.random=R; } }
+function ensureCastles(){ let ch=false; for(let t=0;t<2;t++) if(!CASTLES[t]||CASTLES[t].fac!==facOf(t)){ withOwnRandom(()=>rebuildCastle(t)); ch=true; } if(ch){ castleGround(); applyEmissive(); } }
+function castleGround(){ if(!castleReady) return; for(const C of CASTLES){ if(!C) continue; C.group.position.y=CGY[C.team]; C.group.updateMatrixWorld(true);
   if(typeof placePit==='function') placePit(C);
   for(const b of [...C.list,C.keep]) b.wbox.copy(b.box).applyMatrix4((b.grp||C.group).matrixWorld); } }
-buildCastle(0); buildCastle(1); castleReady=true;
-loadAssets().then(A=>{ if(A) applyCastleTextures(A); });
+loadAssets().then(A=>{ if(A) applyCastleTextures(A); });   // (the castles themselves are raised at the end of 37c)
 
 /* ---------- castle state: training queues, doors, garrison ---------- */
 const TRAIN_T={miner:2.2,sword:2.4,spear:3.4,archer:2.8,ninja:3.2,cleric:3.6,wizard:4.4,wing:4.4,giant:7,crawler:1.1};
@@ -386,7 +404,7 @@ function updateCastles(dt){
       if(b.eyes){ const e=b.eyes[0], ph=(game.time*.37)%1; e.visible=!(ph>.93)&&!!(b.q.length||b.train||Math.sin(game.time*.21)>-.6); }
       if(b.orb){ const p=.5+.5*Math.sin(game.time*2.2+t); b.orb.scale.setScalar(.9+.25*p); }
       if(b.gear) b.gear.rotation.z+=dt*(b.train?1.6:.25);
-      if(b.chimney&&on&&crand()<dt*1.2){ _tp.set(cwx(t,b.chimney.x),CGY[t]+b.chimney.y,b.chimney.z); puff(_tp,1,.35,.35,'#8a8478'); }
+      if(b.chimney&&on&&crand()<dt*1.2){ _tp.set(cwx(t,b.chimney.x),CGY[t]+b.chimney.y,b.chimney.z); puff(_tp,1,.35,.35,C.fac==='chaos'?'#3a2e2a':'#8a8478'); }
       // doors swing toward their goal; they shut again once nobody is coming through
       const D=b.door; if(D){ D.hold-=dt; if(D.hold<=0) D.goal=0; const sp=D.kind==='portcullis'?.8:2.2; const o0=D.open; D.open=clamp(D.open+(D.goal>D.open?1:-1)*dt*sp,0,1); if(D.open!==o0) poseDoor(b); }
       if(!on) continue;
@@ -396,6 +414,8 @@ function updateCastles(dt){
       if(b.exitQ.length&&b.pit){ b.emT=(b.emT||0)-dt; if(b.emT<=0){ b.emT=.5; pitEmerge(b,b.exitQ.shift()); } }
       else if(b.exitQ.length){ openDoor(b,2.2); if(D&&D.open>.62){ const ty=b.exitQ.shift(); emerge(b,ty); if(D) D.hold=Math.max(D.hold,1.4); } }
     }
+    // Chaos scenery: braziers and altar fires
+    if(C.deco&&on) for(const b of C.deco) if(b.fires) for(const f of b.fires) if(crand()<dt*7){ _tp.set(cwx(t,f.x+(crand()-.5)*.6),CGY[t]+f.y,f.z+(crand()-.5)*.6); puff(_tp,1,.18,1.2,crand()<.6?'#ff7a2a':'#2a201c'); }
     // the gate's portcullis lifts while soldiers pass beneath it
     let near=false; if(on) for(const u of units){ if(u.team===t&&u.inCastle&&!u.fl&&Math.abs(u.pos.x-cwx(t,-1))<6&&Math.abs(u.pos.z-GATE_Z)<5){ near=true; break; } }
     const po=C.portOpen||0; C.portOpen=clamp(po+(near?1:-.6)*dt*.9,0,1); if(po===0&&C.portOpen>0) sfx('gate',_tp.set(cwx(t,0),CGY[t]+3,GATE_Z),.9);
@@ -411,7 +431,7 @@ function garrisonSize(team){ return 2+2*(CASTLES[team].res.castleArchers||0); }
 function syncGarrison(C){
   const want=Math.min(POSTS.length,garrisonSize(C.team));
   while(C.garrison.length<want){ const P=POSTS[C.garrison.length], t=C.team;
-    const keep=uid, u=makeUnit('archer',t,cwx(t,P[0]),P[2],{gy:CGY[t]+P[1],ai:false}); uid=keep; u.id=-(++garrisonId);   // own ids: never shift the army's
+    const keep=uid, u=makeUnit(FACTIONS[C.fac].garrison,t,cwx(t,P[0]),P[2],{gy:CGY[t]+P[1],ai:false}); uid=keep; u.id=-(++garrisonId);   // own ids: never shift the army's
     u.garrison=true; u.post=P; u.face=u.faceGoal=t?-Math.PI/2:Math.PI/2; u.gT=rand(0,.5);
     for(let i=0;i<20;i++){ u.spd=0; buildSkel(u,computePose(u),.016); } updateGear(u); C.garrison.push(u); }
 }
@@ -421,7 +441,7 @@ function updateGarrison(C,dt){
   for(const g of C.garrison){
     g.gT-=dt; if(g.gT<=0){ g.gT=.35+Math.random()*.2; g.target=nearestFoe(g.pos.x,g.pos.z,g.team,GARRISON_R,g); if(g.target&&g.target.inCastle) g.target=null; }
     const t=g.target&&g.target.alive?g.target:null;
-    if(t){ g.faceGoal=Math.atan2(t.pos.x-g.pos.x,t.pos.z-g.pos.z); if(!g.action&&g.cdT<=0&&Math.abs(wrapA(g.faceGoal-g.face))<.35) startAttack(g,t,'shoot'); }
+    if(t){ g.faceGoal=Math.atan2(t.pos.x-g.pos.x,t.pos.z-g.pos.z); if(!g.action&&g.cdT<=0&&Math.abs(wrapA(g.faceGoal-g.face))<.35) startAttack(g,t,FACTIONS[C.fac].garrisonAtk); }
     else if(!g.action) g.faceGoal=g.team?-Math.PI/2:Math.PI/2;
     updateUnit(g,dt);
   }

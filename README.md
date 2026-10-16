@@ -1,9 +1,13 @@
 # Stick Empire 3D
 
-A 3D, Total War–style battle game with stick-figure armies, built for the browser with three.js. The whole Order
-army takes the field: miners, swordsmen, Spartans, archers, ninjas, clerics, wizards, wing archers and giants, all
-animated with procedural IK (90 finishers, 90 charge attacks). It plays on phones and desktops and installs as an
-app from the browser.
+A 3D, Total War–style battle game with stick-figure armies, built for the browser with three.js. Two empires take
+the field. The Order: miners, swordsmen, Spartans, archers, ninjas, clerics, wizards, wing archers and giants. The
+Chaos Empire: Soulbound Thralls, Hellcrawlers, Dreadguards and Soul Harvesters. Every unit is animated with
+procedural IK (130 finishers, 130 charge attacks). It plays on phones and desktops and installs as an app from the
+browser.
+
+Pick your side on the title screen (Order Empire or Chaos Empire); Skirmish, the Campaign and the Lab use it, and
+the enemy fields the other empire.
 
 ## Units
 
@@ -22,9 +26,40 @@ app from the browser.
 Every fighting unit has 10 idles, 10 to 11 moves, 5 defence clips (block, parry, dodge, flinch, recoil), 10
 finishers and 10 charge attacks.
 
-## Chaos: the Hellcrawler
+## The Chaos Empire
 
-The Crimson Horde has made a pact with the abyss. Its first Chaos unit, the Hellcrawler, is not a stick soldier
+| Unit | Cost | Role | Abilities |
+| --- | --- | --- | --- |
+| Soulbound Thrall | 50 souls | Mines soul crystals | A hooded, chained slave with a mattock; fights only when cornered |
+| Hellcrawler | 150 souls | Fast pack hunter | Pounce, Pack Frenzy (below) |
+| Dreadguard | 150 souls | Heavy armoured axeman | Horned helm, spiked pauldrons, plate. Hellforged Cleave: a white-hot sweep that interrupts and breaks a shield wall |
+| Soul Harvester | 120 souls | Ranged caster | A bone figure with a lantern scythe. Throws soul fragments, a charged soul blast, and a wail that curses everyone around it |
+
+Chaos pays in **souls** instead of gold. Souls come in at 0.42 of the gold rate (thralls dig red soul crystals, and
+the passive trickle is scaled the same way), so the sheet prices weigh the same as the Order's gold prices. There is
+no population cap.
+
+Every Chaos unit heals itself (Infernal Regeneration: 1.2% of its health a second after 4 s without being hurt).
+The Chaos castle is the Black Citadel: dark stone, bone spikes and skulls on the walls, a lava moat, a burning sigil,
+a Dreadguard statue, and its own buildings: the Hellforge (Dreadguards), the Soul Quarry (Thralls), the Soul Spire
+(Harvesters) and the Hellpit (Hellcrawlers). Wall Harvesters man its battlements. Its research:
+
+| Building | Research | Effect |
+| --- | --- | --- |
+| Soul Quarry | Soul Siphon | Thralls dig faster and carry more a trip |
+| Hellpit | Magma Claws | Hellcrawler claws set their prey on fire |
+| Hellforge | Hellforged Cleave | The Dreadguard's cleave breaks lines and shield walls |
+| Hellforge | Infernal Plate | Dreadguards take 20% less damage |
+| Soul Spire | Soul Rend | Soul fragments curse what they hit: +25% damage taken for 5 s |
+
+The Thrall, Dreadguard and Soul Harvester each have 10 idles, 11 moves, 5 defence clips, 10 finishers and 10
+charges. Their own sound effects and voice lines are not recorded yet, so they use the stock sounds for now. The rest
+of the Chaos roster (Hellhound, Bone Reaver, Infernal Bomber, Grim Reaper, Cerberus, Fallen Oracle, Hades) comes
+later.
+
+### The Hellcrawler
+
+The Hellcrawler is not a stick soldier
 but a four-limbed demon: cracked black rock with magma glowing in the cracks, long ape-like forelimbs with hooked
 claws, digitigrade hind legs, a horned skull with a hinged, fanged jaw, bone spikes down its spine and a long
 spiked tail, carried like a scorpion's: arched high over its back with the bone blade hanging over its skull.
@@ -39,9 +74,8 @@ time; every other crawler on the same enemy speeds their claws up (Pack Frenzy, 
 brighter. They are weak to Spartan shields and area attacks. 10 idles, 5 defence clips, 10 finishers and 10
 charges, like the other units; pick it in the Finisher Lab to see them all.
 
-The Horde fields them in skirmishes and the campaign: they replace some of its swordsmen, and the ones it buys
-climb out of the Hellpit, a magma pool in a ring of cracked rock and bone outside the Crimson castle, in packs
-of up to three.
+The ones Chaos buys climb out of the Hellpit, a magma pool in a ring of cracked rock and bone outside the Chaos
+castle, in packs of up to three.
 
 ## Castles and research
 
@@ -140,7 +174,9 @@ Main source files:
 | `40`–`42` | Game modes, battle UI, camera and touch input |
 | `43` | Graphics quality and the Auto frame-rate ladder, FPS counter, settings screen; `43b`: presets, post-processing chain (SSAO, bloom, sun shafts, depth of field, motion blur, tone mapping, grading, FXAA/SMAA/MSAA) and the Advanced Graphics panel |
 | `13c`, `27` | The Hellcrawler: stats and every clip; its rig, gait, tail, procedural model and behaviour |
-| `37`–`39` | Castles (walls, gatehouse, buildings, doors, training queues, garrison), the Hellpit (`37b`); research, mana, narrator and building panel; unit portraits |
+| `13d`, `27b` | The Thrall, Dreadguard and Soul Harvester: stats and every clip; their gear, souls, curses, cleave, regeneration and brains |
+| `36b` | Factions: rosters, souls economy, team names, starting armies, the side picker's state |
+| `37`–`39` | Castles (walls, gatehouse, buildings, doors, training queues, garrison), the Hellpit (`37b`), the Black Citadel and Chaos buildings (`37c`); research, mana, narrator and building panel; unit portraits |
 | `44` | Sound: recorded effects with synthesized fallbacks, voices, procedural music (Web Audio) |
 | `45` | Title screen, pause, battle results |
 | `46` | Battlefield map |
@@ -159,7 +195,8 @@ orders, the campaign from start to victory, effects, finisher aim accuracy, char
 400-soldier battle, big-army formations, every idle, move, finisher and charge of the four newer units, castles
 (every unit walks out of its building and through the gate, research, garrison archers, enemy research), the
 Hellcrawler (every attack, finisher and charge lands, the gait keeps its feet on the ground, crawlers climb out of
-the Hellpit in a battle), a seeded
+the Hellpit in a battle), the Chaos Empire (Order against Chaos castle battles both ways, every Thrall, Dreadguard
+and Harvester clip, finisher aim), a seeded
 fingerprint proving the original five units still behave exactly as before, and a simulation cost report.
 
 ## Controls

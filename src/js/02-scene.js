@@ -25,7 +25,7 @@ let skyDome=null, sunDisc=null;
   sunDisc.position.set(-90,60,-170); sunDisc.lookAt(0,0,0); scene.add(sunDisc);
 }
 // ground (rebuilt whenever the battlefield changes)
-let groundMesh=null, rocksIM=null; const rockData=[], mineMeshes=[];
+let groundMesh=null, rocksIM=null; const rockData=[], mineMeshes=[], MINE_X={};   // MINE_X: Chaos soul-crystal mines (31-army)
 function buildTerrain(){
   bakeH(); for(let t=0;t<2;t++){ let m=-1e9; for(let x=46;x<=82;x+=2) for(let z=-21;z<=16;z+=1) m=Math.max(m,H(t?x:-x,z)); CGY[t]=m+.05; }
   if(!groundMesh){
@@ -48,6 +48,7 @@ function buildTerrain(){
   const m=new THREE.Matrix4();
   rockData.forEach((r,i)=>{ m.compose(new V3(r.x,H(r.x,r.z)+r.s*.2,r.z),r.q,new V3(r.s*r.k,r.s,r.s)); rocksIM.setMatrixAt(i,m); }); rocksIM.instanceMatrix.needsUpdate=true;
   for(const mm of mineMeshes) mm.m.position.y=H(mm.m.position.x,mm.m.position.z)+mm.dy;
+  for(const t in MINE_X) MINE_X[t].position.y=H(MINE_X[t].position.x,MINE_X[t].position.z);
   if(typeof castleGround==='function') castleGround();
 }
 buildTerrain();

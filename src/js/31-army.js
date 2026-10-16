@@ -8,9 +8,11 @@ function setupStatues(hpArr){
     b1.receiveShadow=b2.receiveShadow=true; ped.add(b1,b2);
     const band=mesh(new THREE.BoxGeometry(3.24,.18,3.24),TEAM[t].acc,0,1.15,0); ped.add(band);
     ped.position.set(x,gy,0); scene.add(ped);
-    const fig=makeUnit('sword',t,x,0,{s:3,statue:true,ai:false,gy:gy+1.8,col:STONE_C,thick:1});
+    const sty=FAC(t).statue, fig=makeUnit(sty,t,x,0,{s:sty==='dread'?2.55:3,statue:true,ai:false,gy:gy+1.8,col:STONE_C,thick:1});
     fig.face=fig.faceGoal=t===0?Math.PI/2:-Math.PI/2;
-    fig.statuePose=fillPose({R:[.12,.62,.14],wR:[0,1,.12],L:[-.24,-.32,.14],lean:-.04,crouch:0},POSES.sword.idle);
+    // the Order raises a swordsman; Chaos a Dreadguard leaning on his planted axe
+    fig.statuePose=sty==='dread'?fillPose({R:[.1,-.25,.42],wR:[0,-1,.08],L:[-.04,-.22,.42],lean:.05,crouch:.03},POSES.dread.idle)
+      :fillPose({R:[.12,.62,.14],wR:[0,1,.12],L:[-.24,-.32,.14],lean:-.04,crouch:0},POSES.sword.idle);
     for(let i=0;i<40;i++){ fig.spd=0; buildSkel(fig,fig.statuePose,.016); }
     updateGear(fig);
     const shp=(hpArr&&hpArr[t])||2600; statues.push({team:t,pos:new V3(x,gy,0),hp:shp,max:shp,ped,fig,isStatue:true});
@@ -18,7 +20,22 @@ function setupStatues(hpArr){
   // gold mines
   if(!setupStatues.mines){ setupStatues.mines=true;
     for(let t=0;t<2;t++){ const c=MINE[t]; c.y=H(c.x,c.z);
-      for(let i=0;i<7;i++){ const a=i/7*Math.PI*2, r=i?rand(.5,1.1):0, s=i?rand(.35,.6):.85; const m=mesh(GEO.goldRock,M.gold,c.x+Math.cos(a)*r,c.y+s*.5,c.z+Math.sin(a)*r); m.scale.setScalar(s); m.rotation.set(rand(0,3),rand(0,3),0); m.receiveShadow=true; scene.add(m); mineMeshes.push({m,dy:s*.5});} } }
+      for(let i=0;i<7;i++){ const a=i/7*Math.PI*2, r=i?rand(.5,1.1):0, s=i?rand(.35,.6):.85; const m=mesh(GEO.goldRock,M.gold,c.x+Math.cos(a)*r,c.y+s*.5,c.z+Math.sin(a)*r); m.scale.setScalar(s); m.rotation.set(rand(0,3),rand(0,3),0); m.receiveShadow=true; scene.add(m); mineMeshes.push({m,dy:s*.5,t}); } } }
+  syncMines();
+}
+// a Chaos army's mine is a cluster of soul crystals glowing red out of the ground (its own seeded shapes)
+let crystalMat=null;
+function syncMines(){
+  for(let t=0;t<2;t++){ const chaos=facOf(t)==='chaos';
+    if(chaos&&!MINE_X[t]){ const c=MINE[t], g=new THREE.Group(); let sd=11+t; const R=()=>(sd=(sd*16807)%2147483647)/2147483647;
+      crystalMat=crystalMat||new THREE.MeshPhongMaterial({color:'#ff6a4a',emissive:'#9a1408',specular:'#ffd0c0',shininess:70});
+      const geo=new THREE.OctahedronGeometry(1,0);
+      for(let i=0;i<9;i++){ const a=i/9*Math.PI*2, r=i?.45+R()*.7:0, h=i?.5+R()*.6:1.25, m=new THREE.Mesh(geo,crystalMat);
+        m.position.set(Math.cos(a)*r,h*.45,Math.sin(a)*r); m.scale.set(.18+R()*.1,h,.18+R()*.1); m.rotation.set((R()-.5)*.7,R()*3,(R()-.5)*.7); m.castShadow=true; g.add(m); }
+      const base=new THREE.Mesh(new THREE.CircleGeometry(1.5,20),new THREE.MeshLambertMaterial({color:'#2a1612'})); base.rotation.x=-Math.PI/2; base.position.y=.03; g.add(base);
+      g.position.set(c.x,H(c.x,c.z),c.z); scene.add(g); MINE_X[t]=g; emitReg(crystalMat,'e'); }
+    if(MINE_X[t]){ MINE_X[t].visible=chaos; MINE_X[t].position.y=H(MINE[t].x,MINE[t].z); }
+    for(const mm of mineMeshes) if(mm.t===t) mm.m.visible=!chaos; }
 }
 function hitStatue(st,dmg){
   if(game.mode!=='battle'||st.hp<=0||game.over>0) return;
@@ -39,13 +56,12 @@ function count(team,type){let n=0; for(const u of units) if(u.alive&&u.team===te
 function autoSpend(team){
   if(count(team)>=POP_CAP) return;
   let pick;
-  const cq=castleOn();
-  if(count(team,'miner')+(cq?queuedType(team,'miner'):0)<3) pick='miner';
+  const cq=castleOn(), wk=FAC(team).worker;
+  if(count(team,wk)+(cq?queuedType(team,wk):0)<3) pick=wk;
   else if(game.classicMix){ const r=Math.random(); pick=r<.38?'sword':r<.62?'archer':r<.82?'spear':'giant'; }   // the original four-type army (regression tests)
-  else { const r=Math.random(); pick=r<.3?'sword':r<.48?'archer':r<.62?'spear':r<.72?'ninja':r<.8?'wizard':r<.87?'cleric':r<.94?'wing':'giant';
-    if(team===1&&cq&&(pick==='sword'||pick==='ninja')&&Math.random()<.6) pick='crawler'; }   // the Horde's Hellcrawlers come up out of their pit in packs
+  else pick=factionPick(team);   // Hellcrawlers come up out of their pit in packs (below)
   const cost=TYPES[pick].cost;
-  if(cq&&pick!=='miner'&&aiSaving(team)) return;   // saving up for research
+  if(cq&&pick!==wk&&aiSaving(team)) return;   // saving up for research
   if(cq&&pick==='crawler'){ const n=Math.min(3,Math.floor(game.gold[team]/cost),POP_CAP-count(team)-queued(team)); if(n>0&&queuedType(team,pick)<4){ game.gold[team]-=cost*n; for(let i=0;i<n;i++) recruit(pick,team); } }
   else if(cq){ const m=unitMana(pick); if(game.gold[team]>=cost&&game.mana[team]>=m&&count(team)+queued(team)<POP_CAP&&queuedType(team,pick)<3){ game.gold[team]-=cost; game.mana[team]-=m; recruit(pick,team); } }
   else if(game.gold[team]>=cost){ game.gold[team]-=cost; spawn(pick,team); }
@@ -75,7 +91,7 @@ const DIRX=[1,-1];
 // rank offsets behind the line: spears in front, swords next, giants, archers at the back
 const RANK={spear:0,sword:-1.8,giant:-3.9,archer:-6.2};
 function setStance(team,st){
-  if(st==='hold'){ const xs=units.filter(u=>u.alive&&u.team===team&&u.isUnit&&u.type!=='miner').map(u=>u.pos.x);
+  if(st==='hold'){ const xs=units.filter(u=>u.alive&&u.team===team&&u.isUnit&&!u.T.worker).map(u=>u.pos.x);
     game.holdX[team]=xs.length?clamp(xs.reduce((a,b)=>a+b,0)/xs.length+DIRX[team]*2.5,-28,28):BASE_X[team]+DIRX[team]*10; }
   game.stance[team]=st;
   if(team===0) for(const [id,v] of [['oDefend','defend'],['oHold','hold'],['oCharge','charge']]) $('#'+id).setAttribute('aria-pressed',st===v);

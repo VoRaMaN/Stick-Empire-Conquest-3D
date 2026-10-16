@@ -3,14 +3,14 @@ function enemyCommander(dt){
   if(game.tutorial) return;
   game.aiT-=dt; if(game.aiT>0) return; game.aiT=2;
   aiResearch(1); if(game.demo) aiResearch(0);
-  const power=t=>units.filter(u=>u.alive&&u.team===t&&u.isUnit&&u.type!=='miner'&&!u.routing).reduce((a,u)=>a+u.T.cost,0);
+  const power=t=>units.filter(u=>u.alive&&u.team===t&&u.isUnit&&!u.T.worker&&!u.routing).reduce((a,u)=>a+u.T.cost/econ(t),0);
   const mine=power(1), theirs=power(0), st=game.stance[1];
-  const threat=units.some(u=>u.alive&&u.team===0&&u.type!=='miner'&&u.pos.x>14);
+  const threat=units.some(u=>u.alive&&u.team===0&&!u.T.worker&&u.pos.x>14);
   game.bt=(game.bt||0)+2;   // seconds since the battle began (this runs every 2s)
   const full=count(1)>=Math.min(POP_CAP*.9,Math.max(24,BATTLE_SIZES[game.size].start*1.15))&&game.bt>20;
-  if(st!=='charge'&&(mine>Math.max(1500,theirs*1.25)||full||(threat&&mine>theirs))) { setStance(1,'charge'); if(game.mode==='battle'&&!game.demo){ showBanner('Crimson charges!','',1.4); sfx('hornEnemy'); }
+  if(st!=='charge'&&(mine>Math.max(1500,theirs*1.25)||full||(threat&&mine>theirs))) { setStance(1,'charge'); if(game.mode==='battle'&&!game.demo){ showBanner(teamName(1).split(' ').pop()+' charges!','',1.4); sfx('hornEnemy'); }
     const archers=regs.filter(r=>r.team===0&&r.type==='archer'&&regAlive(r).length);
-    for(const r of regs) if(r.team===1&&r.type==='sword'&&archers.length&&Math.random()<.45) r.order={kind:'attack',target:archers[Math.floor(Math.random()*archers.length)]}; }
+    for(const r of regs) if(r.team===1&&(r.type==='sword'||r.type==='crawler')&&archers.length&&Math.random()<.45) r.order={kind:'attack',target:archers[Math.floor(Math.random()*archers.length)]}; }
   else if(st==='charge'&&mine<theirs*.6&&!full){ setStance(1,'defend'); for(const r of regs) if(r.team===1) r.order={kind:'army'}; }
 }
 function brain(u,dt){
@@ -26,11 +26,11 @@ function brain(u,dt){
   if(u.routing){ // fleeing back to the statue, arms flailing
     const gx=BASE_X[u.team]+DIRX[u.team]*3, dx=gx-u.pos.x, dz=-u.pos.z*.3, d=Math.hypot(dx,dz)||1, sp=u.T.speed*1.1;
     u.desired.set(dx/d*sp,0,dz/d*sp); u.faceGoal=Math.atan2(dx,dz); return; }
-  if(u.type==='miner'){ const near=u.target&&Math.hypot(u.target.pos.x-u.pos.x,u.target.pos.z-u.pos.z)<4.5; if(!near){ minerLogic(u,dt); return; } }
+  if(u.T.worker){ const near=u.target&&Math.hypot(u.target.pos.x-u.pos.x,u.target.pos.z-u.pos.z)<4.5; if(!near){ minerLogic(u,dt); return; } }
   const ro=u.reg&&game.mode==='battle'?u.reg.order:null;
   if(ro&&(ro.kind==='move'||ro.kind==='hold'||ro.kind==='attack')&&regBrain(u,ro)) return;
   const st=ro&&ro.kind==='charge'?'charge':(game.mode==='battle'?game.stance[u.team]:'charge');
-  if(st!=='charge'&&u.type!=='miner'&&u.slot){
+  if(st!=='charge'&&!u.T.worker&&u.slot){
     const ranged=u.T.ranged, sl=u.slot, guard=ranged?u.T.range:7.5, leash=ranged?3:11;
     u.sfT=(u.sfT||0)-dt; if(u.sfT<=0||u.sFoe&&!u.sFoe.alive){ u.sfT=.25+Math.random()*.1; u.sFoe=nearestFoe(sl.x,sl.z,u.team,ranged?guard+4:guard+.5,u); }
     const foe=u.sFoe&&u.sFoe.alive?u.sFoe:null, fd=foe?Math.hypot(foe.pos.x-sl.x,foe.pos.z-sl.z):1e9;
@@ -91,7 +91,7 @@ function minerLogic(u,dt){
   if(u.mstate==='toMine'){
     _goal.set(m.x+Math.cos(u.slot)*1.7,0,m.z+Math.sin(u.slot)*1.7);
     const dx=_goal.x-u.pos.x,dz=_goal.z-u.pos.z,d=Math.hypot(dx,dz);
-    if(d<.35){ u.mstate='mining'; u.mineT=hasRes(u.team,'hustle')?2.6:4; }
+    if(d<.35){ u.mstate='mining'; u.mineT=workerDig(u); }
     else { const sp=u.T.speed*clamp(d/1.2,.3,1); u.desired.set(dx/d*sp,0,dz/d*sp); u.faceGoal=Math.atan2(dx,dz); }
   } else if(u.mstate==='mining'){
     u.faceGoal=Math.atan2(m.x-u.pos.x,m.z-u.pos.z); u.mining=true;
@@ -100,7 +100,7 @@ function minerLogic(u,dt){
     u.mining=false;
     _goal.set(BASE_X[u.team]+(u.team?-2.6:2.6),0,u.zoff*.3);
     const dx=_goal.x-u.pos.x,dz=_goal.z-u.pos.z,d=Math.hypot(dx,dz);
-    if(d<.8){ u.carry=false; u.mstate='toMine'; if(game.mode==='battle'){ const g=hasRes(u.team,'hustle')?80:60; game.gold[u.team]+=g; onGold(u.team,g); if(u.team===0) sfx('coin',u.pos,.8); } }
+    if(d<.8){ u.carry=false; u.mstate='toMine'; if(game.mode==='battle'){ const g=workerYield(u); game.gold[u.team]+=g; onGold(u.team,g); if(u.team===0){ if(u.type==='thrall') crSfx('crystal','coin',u.pos,.8); else sfx('coin',u.pos,.8); } } }
     else { const sp=u.T.speed*.85; u.desired.set(dx/d*sp,0,dz/d*sp); u.faceGoal=Math.atan2(dx,dz); }
   }
 }

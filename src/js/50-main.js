@@ -23,7 +23,7 @@ function step(rdt){
       enemyCommander(dt);
     }
     game.statT=(game.statT||0)-dt; if(game.statT<=0){ game.statT=1; statsTick(); }
-    if(game.over<=0) for(let t=0;t<2;t++){ game.gold[t]+=22*dt; if(game.auto[t]||(t===1&&!game.tutorial)){ game.spawnT[t]-=dt; if(game.spawnT[t]<=0){ game.spawnT[t]=rand(1,1.8); autoSpend(t);} } }
+    if(game.over<=0) for(let t=0;t<2;t++){ game.gold[t]+=22*dt*econ(t); if(game.auto[t]||(t===1&&!game.tutorial)){ game.spawnT[t]-=dt; if(game.spawnT[t]<=0){ game.spawnT[t]=rand(1,1.8); autoSpend(t);} } }
   } else if(game.duel&&game.duel.q){
     const q=game.duel.q; q.t-=dt; if(q.t<=0){ game.duel.q=null; const D=game.duel;
       if(q.kind==='fin'&&D.att.alive&&D.dum.alive){ D.dum.hp=1; startFinisher(D.att,D.dum,q.name); }
@@ -48,7 +48,7 @@ function step(rdt){
   game.regT=(game.regT||0)-dt; if(game.regT<=0){ game.regT=.4; cleanRegs(); if(selReg) updateRegbar(); }
   if(game.mode==='battle'){ updateCastles(dt); castleIncome(dt); } else if(castleReady) updateCastles(dt);
   if(panelB) panelTick(rdt);
-  updateArrows(dt); updateSpells(dt); updateBlood(dt); updateLoose(dt);
+  updateArrows(dt); updateSpells(dt); updateChaos(dt); updateBlood(dt); updateLoose(dt);
   { const half=capes.length>24; game.capeF=(game.capeF||0)+1; for(let i=0;i<capes.length;i++) if(!half||((i+game.capeF)&1)===0) stepCape(capes[i],half?dt*2:dt); }
   for(let i=puffs.length-1;i>=0;i--){ const p=puffs[i]; p.age+=dt; const t=p.age/p.life;
     if(t>=1){ puffs.splice(i,1); continue; }
@@ -70,7 +70,7 @@ function draw(){
   for(const C of CASTLES) for(const g of C.garrison) drawUnit(g);
   castleFx();
   for(const list of [units,corpses,CASTLES[0].garrison,CASTLES[1].garrison]) for(const u of list){ const st=u.G&&u.G.str; if(st&&st.vis&&!u.G.o.dropped){ cyl(st.a,st.m,.006*u.s,WHITE,strIM); cyl(st.m,st.b,.006*u.s,WHITE,strIM); } }
-  drawPuffs(); drawSpells();
+  drawPuffs(); drawSpells(); drawChaos();
   for(const [im,n] of CNT){ im.count=n; im.instanceMatrix.needsUpdate=true; if(im.instanceColor) im.instanceColor.needsUpdate=true; }
   if(game.mode==='battle'){
     const s=game.stance.join()+Math.floor(game.gold[0])+'|'+Math.floor(game.gold[1])+'|'+Math.floor(game.mana[0])+'|'+Math.floor(game.mana[1])+'|'+Math.ceil(statues[0].hp)+'|'+Math.ceil(statues[1].hp)+'|'+count(0)+'|'+count(1);
@@ -78,7 +78,7 @@ function draw(){
       const mOn=!game.classicMix; if(hudEls.mA){ hudEls.mA.textContent=Math.floor(game.mana[0]); hudEls.mB.textContent=Math.floor(game.mana[1]); if(hudEls.mA.parentNode) hudEls.mA.parentNode.hidden=!mOn; if(hudEls.mB.parentNode) hudEls.mB.parentNode.hidden=!mOn; }
       hudEls.hpA.style.width=(statues[0].hp/statues[0].max*100)+'%'; hudEls.hpB.style.width=(statues[1].hp/statues[1].max*100)+'%';
       const SN={defend:'defending',hold:'holding',charge:'charging'}; hudEls.cA.textContent=count(0)+' units · '+SN[game.stance[0]]; hudEls.cB.textContent=count(1)+' units · '+SN[game.stance[1]];
-      for(const t of ORDER){ const el=document.getElementById('chip-'+t); if(el){ el.style.opacity=game.gold[0]>=TYPES[t].cost&&game.mana[0]>=unitMana(t)?1:.55; const q=el.querySelector&&el.querySelector('.qn'); if(q){ const n=castleOn()?queuedType(0,t):0; q.textContent=n?'×'+n:''; } } } }
+      for(const t of FAC(0).roster){ const el=document.getElementById('chip-'+t); if(el){ el.style.opacity=game.gold[0]>=TYPES[t].cost&&game.mana[0]>=unitMana(t)?1:.55; const q=el.querySelector&&el.querySelector('.qn'); if(q){ const n=castleOn()?queuedType(0,t):0; q.textContent=n?'×'+n:''; } } } }
   }
   drawArrows(); drawBlood(); updateBanners(); drawSelection(1/60); updateCallouts(1/60);
   drawMinimap();
@@ -97,7 +97,7 @@ function frame(now){
   step(rdt); if(game.demo&&!game.paused) demoCamera(rdt); updateCamera(rdt); updateAudio(); draw();
 }
 // debug and test hooks (used by tests/ and the browser checks)
-window.__SE3D={closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes}),
+window.__SE3D={closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
   renderer,sceneRef:scene,sunScreen,applyQuality,GFX_PRESETS,GFX_DEF,post,GFX:()=>GFX,CASTLES,recruit,buyUnit,startResearch,resLvl,hasRes,openPanel,closePanel,pickBuilding,setHover,queued,ICONS,makeUnitIcons,VOX,narrate,loadAssets,BUILDINGS};
 // start: apply saved settings, then open on the title screen with a battle playing behind it
 game.finMode=settings.finMode; game.auto[0]=settings.auto; game.size=settings.size; tune.blood=settings.blood;

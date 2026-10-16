@@ -29,7 +29,7 @@ function computePose(u){
   if(P.swingL){p.L=[p.L[0],p.L[1]+Math.abs(sw)*.04,p.L[2]+sw*P.swingL];}
   if(P.swingR){p.R=[p.R[0],p.R[1]+Math.abs(sw)*.03,p.R[2]-sw*P.swingR];}
   p.twist-=sw*.22;
-  if(u.type==='miner'&&u.carry){p.L=[-.08,.28,-.05];}
+  if(u.T.worker&&u.carry){p.L=[-.08,.28,-.05];}
   if(u.chg&&u.chgW>.002&&!u.action){ // charging: carry the weapon the charge's way at a full sprint
     const C=CHG[u.type][u.chg.i], k=u.chgW, run=C.anim?Object.assign({},C.run,C.anim(game.time+u.id*.37,C.run)):C.run;
     for(const f of ['R','L','wR','wL']) if(run[f]){ const a=p[f]||run[f], b=run[f]; p[f]=[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]; }
@@ -221,7 +221,7 @@ function updateGear(u){
     else orient(G.o,j.hL,_tmp.copy(u.spine).addScaledVector(u.wLw,-u.spine.dot(u.wLw)),u.wLw);
   }
   if(G.h&&!G.h.dropped){ _tmp.subVectors(j.head,j.neck); const lk=u.alive?(u.look||0):0; if(lk){ fl.multiplyScalar(Math.cos(lk)).addScaledVector(u.rightW,Math.sin(lk)).normalize(); } orient(G.h,j.head,_tmp,fl); }
-  if(G.b){ _tmp.copy(j.chest).addScaledVector(fl,-.19*u.s).addScaledVector(u.spine,-.1*u.s); orient(G.b,_tmp,u.spine,fl); if(u.type==='miner') G.b.visible=u.carry; }
+  if(G.b){ _tmp.copy(j.chest).addScaledVector(fl,-.19*u.s).addScaledVector(u.spine,-.1*u.s); orient(G.b,_tmp,u.spine,fl); if(u.T.worker) G.b.visible=u.carry; }
   if(G.str&&!G.o.dropped){
     G.o.updateMatrixWorld(); const a=G.str.a.copy(BOW_TOP).applyMatrix4(G.o.matrixWorld), b=G.str.b.copy(BOW_BOT).applyMatrix4(G.o.matrixWorld);
     const d=u.alive?u.draw:0;

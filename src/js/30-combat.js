@@ -35,6 +35,7 @@ function damage(t,amt,src,dirW,kb,up,blocked,at){
   if(!blocked&&amt>0) bleed(at||_tmp.copy(t.j.chest).lerp(t.j.neck,Math.random()).clone(),dirW.clone().setY(.25).normalize(),clamp(Math.round(amt/6),2,9),2.4,.55);
   if(!blocked&&amt>0&&t.T.crawler) puff(at||t.j.chest,3,.09,2.6,'#ff7a2a');   // magma spills from a wounded Hellcrawler
   if(t.invuln) return;
+  if(amt>0) t.hurtAt=game.time;   // Chaos regeneration waits for the wounds to stop
   t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)); if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
   if(t.hp<=0){ kill(t,dirW.clone().multiplyScalar(2.5*(kb||1)).add(new V3(0,1.8+(kb||1)*.6+(up||0),0)),{}); }
 }
@@ -66,7 +67,7 @@ function updateCharge(u,dt){
   if(game.mode==='battle'&&u.state==='ok'&&!u.routing){ const ro=u.reg?u.reg.order:null; mode=ro&&ro.kind!=='army'?(ro.kind==='charge'||ro.kind==='attack'):game.stance[u.team]==='charge'; }
   else if(game.mode==='duel') mode=!!u.chgLab;
   const t=u.target, d=t&&t.isUnit&&t.alive?Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z):99, fast=u.spd>.5*u.T.speed;
-  if(mode&&!u.chg&&!u.chgCD&&fast&&!u.action&&d>3.5&&d<30&&(u.type!=='miner'||d<12)) u.chg={i:Math.floor(Math.random()*CHG[u.type].length)};
+  if(mode&&!u.chg&&!u.chgCD&&fast&&!u.action&&d>3.5&&d<30&&(!u.T.worker||d<12)) u.chg={i:Math.floor(Math.random()*CHG[u.type].length)};
   if(u.chg&&!mode&&game.mode==='battle') u.chg=null;
   if(u.chg&&!u.action&&u.spd<.2*u.T.speed){ u.chgStop=(u.chgStop||0)+dt; if(u.chgStop>.8&&game.mode==='battle') u.chg=null; } else u.chgStop=0;
   const want=u.chg&&!u.action&&u.spd>.45*u.T.speed?1:0;
@@ -155,7 +156,7 @@ function handleEvent(u,e){
   if(e.fx) spellFx(u,e,v);
   switch(e.e){
     case 'hit':{
-      if(u.mining){ const tip=_tmp.copy(u.j.hR).addScaledVector(u.wRw,.7*u.s); puff(tip,3,.08,2.2,'#ffd34d'); u.mineT--; sfx('mine',tip,.6); break; }
+      if(u.mining){ const tip=_tmp.copy(u.j.hR).addScaledVector(u.wRw,.7*u.s); puff(tip,3,.08,2.2,u.type==='thrall'?'#ff5a3a':'#ffd34d'); u.mineT--; sfx('mine',tip,.6); break; }
       const t=u.atkTarget, dm=T.dmg*(e.dmg||1)*rand(.88,1.12);
       const aoe=e.aoe||(T.aoe&&!e.arc&&!e.single?1:0);
       if(aoe){
@@ -173,7 +174,8 @@ function handleEvent(u,e){
       if(e.arc){
         const Rr=T.reach+.75+(e.arc-1)*1.6+(e.tail?.9:0);
         for(const o of units){ if(!o.alive||o.team===u.team) continue; const dx=o.pos.x-u.pos.x,dz=o.pos.z-u.pos.z,d=Math.hypot(dx,dz)||1;
-          if(d<Rr+(o.s-1)*.4&&(dx*u.fwdW.x+dz*u.fwdW.z)/d*(e.tail?-1:1) >.25){ if(meleeHit(u,o,e,dm)==='parry') break; } }
+          if(d<Rr+(o.s-1)*.4&&(dx*u.fwdW.x+dz*u.fwdW.z)/d*(e.tail?-1:1) >.25){ const r=meleeHit(u,o,e,dm); if(r==='parry') break; if(e.cleave&&r!=='dodge'&&r!=='miss') cleaveHit(u,o); } }
+        if(e.cleave) cleaveFx(u);
         const st=statues[1-u.team]; if(st&&Math.hypot(st.pos.x-u.pos.x,st.pos.z-u.pos.z)<Rr+2) hitStatue(st,dm);
         break; }
       if(t&&t.isUnit){ if(t.alive&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)<T.reach+.5+(t.s-1)*.5){ const r=meleeHit(u,t,e,dm); if(e.kd&&r==='hit') knockDown(t,u); } }
@@ -230,6 +232,7 @@ function handleEvent(u,e){
       else if(e.at==='tk') pinRag(rg,1,out=>out.copy(uu.j.hL).addScaledVector(uu.fwdW,1.05*s).addScaledVector(UP,.1*s));
       else if(e.at==='jaw') pinRag(rg,2,out=>out.copy(uu.j.head).addScaledVector(uu.cr.hd,.06*s));
       else if(e.at==='tail') pinRag(rg,1,out=>out.copy(uu.cr.tailTip));
+      else if(e.at==='haft') pinRag(rg,2,out=>out.copy(uu.j.hR).addScaledVector(uu.wRw,-.2*s));
       else pinRag(rg,1,out=>out.copy(uu.j.hL).addScaledVector(uu.spine,-.12*s));
       puff(cp,4,.16,2); shakeAt(v.pos,.1); hitSfx(u,e,cp,1); break; }
     case 'release':{

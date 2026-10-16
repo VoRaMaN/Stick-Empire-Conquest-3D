@@ -14,6 +14,7 @@ function updateUnit(u,dt){
   }
   if(u.type==='sword'&&!game.classicMix&&game.mode==='battle') rageTick(u,dt);
   if(u.T.crawler) crawlerTick(u,dt);   // Rage research (never in the classic battle)
+  if(u.T.chaos) chaosTick(u,dt);       // Infernal Regeneration, glows
   const acc=u.T.acc||(u.type==='giant'?3:9);
   u.vel.lerp(u.desired,1-Math.exp(-dt*acc));
   u.last.copy(u.pos);

@@ -3,7 +3,9 @@
    render target, keyed out to transparency and kept as a PNG data URL for the dock chips and building panel. */
 const ICONS={};
 const ICON_POSE={sword:{R:[.22,-.05,.32],wR:[.1,.9,.3],L:[-.24,-.3,.18],wL:[0,1,0],lean:.06,crouch:.04},
-  spear:null,archer:null,miner:null,giant:null,wizard:null,cleric:null,ninja:null,wing:null,crawler:{lean:-.3,draw:.8,crouch:.04,look:-.25}};
+  spear:null,archer:null,miner:null,giant:null,wizard:null,cleric:null,ninja:null,wing:null,crawler:{lean:-.3,draw:.8,crouch:.04,look:-.25},
+  thrall:{R:[.18,-.1,.3],wR:[.05,.8,-.6],L:[-.12,-.05,.36],lean:.25,crouch:.05},dread:{R:[.22,.12,.1],wR:[.08,.35,-.93],L:[-.24,-.4,.2],lean:.08},
+  harvester:{R:[.24,-.2,.22],wR:[.05,1,.15],L:[-.2,-.3,.25],lean:.04}};
 function makeUnitIcons(){
   if(!renderer.readRenderTargetPixels||!THREE.WebGLRenderTarget||typeof document.createElement!=='function') return;
   const S=192, rt=new THREE.WebGLRenderTarget(S,S), cam2=new THREE.PerspectiveCamera(26,1,.1,60), px=new Uint8Array(S*S*4);
@@ -22,7 +24,7 @@ function makeUnitIcons(){
       const st=u.G&&u.G.str; if(st&&st.vis){ cyl(st.a,st.m,.006*u.s,WHITE,strIM); cyl(st.m,st.b,.006*u.s,WHITE,strIM); }
       for(const [im,n] of CNT){ im.count=n; im.instanceMatrix.needsUpdate=true; if(im.instanceColor) im.instanceColor.needsUpdate=true; }
       // frame the whole figure: head to feet, a little wider for the giant and the wing archer
-      const top=u.j.head.y+(ty==='crawler'?.55:.3)*u.s, bot=Math.min(u.j.fL.y,u.j.fR.y)-.05, mid=(top+bot)/2, h=(top-bot)*(ty==='wing'?1.25:ty==='crawler'?1.55:1.12);
+      const top=u.j.head.y+(ty==='crawler'?.55:ty==='dread'?.45:.3)*u.s, bot=Math.min(u.j.fL.y,u.j.fR.y)-.05, mid=(top+bot)/2, h=(top-bot)*(ty==='wing'?1.25:ty==='crawler'?1.55:ty==='dread'?1.22:1.12);
       const dist=h/2/Math.tan(13*Math.PI/180);
       cam2.position.set(u.pos.x+Math.sin(.15)*dist,mid+h*.08,u.pos.z+Math.cos(.15)*dist); cam2.lookAt(u.pos.x,mid,u.pos.z);
       renderer.setRenderTarget(rt); renderer.setClearColor(0x00ff00,1); renderer.clear(); renderer.render(scene,cam2); renderer.setRenderTarget(null);

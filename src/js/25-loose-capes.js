@@ -20,27 +20,29 @@ function updateLoose(dt){
 const capes=[];
 // all capes of a team share one mesh: each cape owns a 24-vertex slot (unused slots collapse to a point)
 const CAPE_MAX=200, capeSets=[];
-function capeSet(team){
-  if(capeSets[team]) return capeSets[team];
+function capeSet(team,kind){
+  const key=kind?kind+team:team; if(capeSets[key]) return capeSets[key];
   const pos=new Float32Array(CAPE_MAX*24*3), nor=new Float32Array(CAPE_MAX*24*3), idx=[];
   for(let k=0;k<CAPE_MAX;k++){ const o=k*24; for(let iy=0;iy<5;iy++) for(let ix=0;ix<3;ix++){ const a=o+ix+4*iy, b=o+ix+4*(iy+1), c=o+ix+1+4*(iy+1), d=o+ix+1+4*iy; idx.push(a,b,d,b,c,d); } }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); g.setAttribute('normal',new THREE.BufferAttribute(nor,3)); g.setIndex(idx);
   g.attributes.position.setUsage(THREE.DynamicDrawUsage); g.attributes.normal.setUsage(THREE.DynamicDrawUsage);
-  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:TEAM[team].cape,side:THREE.DoubleSide})); m.castShadow=true; m.frustumCulled=false; scene.add(m);
-  return capeSets[team]={g,m,free:Array.from({length:CAPE_MAX},(_,i)=>CAPE_MAX-1-i)}; }
-function makeCape(u){
-  const cs=capeSet(u.team); if(!cs.free.length) return;
+  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:kind==='r'?REAPER_CAPE[team]:TEAM[team].cape,side:THREE.DoubleSide})); m.castShadow=true; m.frustumCulled=false; scene.add(m);
+  return capeSets[key]={g,m,free:Array.from({length:CAPE_MAX},(_,i)=>CAPE_MAX-1-i)}; }
+capeSet(0); capeSet(1);   // made up front: creating them mid-battle would draw random ids and shift a seeded battle
+// kind 'r': the Soul Harvester's longer, ragged reaper cape (its own mesh and colour)
+function makeCape(u,kind){
+  const cs=capeSet(u.team,kind); if(!cs.free.length) return;
   const P=[]; for(let i=0;i<24;i++) P.push(new V3());
-  u.cape={u,cs,slot:cs.free.pop(),P,O:P.map(v=>v.clone()),init:false,t:0}; capes.push(u.cape);
+  u.cape={u,cs,slot:cs.free.pop(),P,O:P.map(v=>v.clone()),init:false,t:0,w:kind==='r'?.38:.34,len:kind==='r'?1.08:.8}; capes.push(u.cape);
 }
 function freeCape(cp){ const pa=cp.cs.g.attributes.position.array; pa.fill(0,cp.slot*72,cp.slot*72+72); cp.cs.g.attributes.position.needsUpdate=true; cp.cs.free.push(cp.slot); }
-function capeAnchor(u,c,out){ const s=u.s; return out.copy(u.j.chest).addScaledVector(u.rightW,(c/3-.5)*.34*s).addScaledVector(u.fwdW,-.13*s).addScaledVector(u.spine,.04*s); }
+function capeAnchor(u,c,out,w){ const s=u.s; return out.copy(u.j.chest).addScaledVector(u.rightW,(c/3-.5)*(w||.34)*s).addScaledVector(u.fwdW,-.13*s).addScaledVector(u.spine,.04*s); }
 function stepCape(cp,dt){
-  const u=cp.u, s=u.s, dx=.34*s/3, dy=.8*s/5, P=cp.P, O=cp.O; cp.t+=dt;
-  if(!cp.init){ for(let r=0;r<6;r++) for(let c=0;c<4;c++){ capeAnchor(u,c,P[r*4+c]).addScaledVector(u.spine,-dy*r).addScaledVector(u.fwdW,-.02*r*s); O[r*4+c].copy(P[r*4+c]); } cp.init=true; }
+  const u=cp.u, s=u.s, dx=(cp.w||.34)*s/3, dy=(cp.len||.8)*s/5, P=cp.P, O=cp.O; cp.t+=dt;
+  if(!cp.init){ for(let r=0;r<6;r++) for(let c=0;c<4;c++){ capeAnchor(u,c,P[r*4+c],cp.w).addScaledVector(u.spine,-dy*r).addScaledVector(u.fwdW,-.02*r*s); O[r*4+c].copy(P[r*4+c]); } cp.init=true; }
   const g=-12*dt*dt, wind=Math.sin(cp.t*2.3+u.id)*.004*s;
   for(let i=4;i<24;i++){ const p=P[i],o=O[i]; const vx=(p.x-o.x)*.96, vy=(p.y-o.y)*.96, vz=(p.z-o.z)*.96; o.copy(p); p.x+=vx+u.rightW.x*wind; p.y+=vy+g; p.z+=vz+u.rightW.z*wind; }
-  for(let c=0;c<4;c++){ capeAnchor(u,c,P[c]); O[c].copy(P[c]); }
+  for(let c=0;c<4;c++){ capeAnchor(u,c,P[c],cp.w); O[c].copy(P[c]); }
   for(let it=0;it<3;it++){
     for(let r=0;r<6;r++) for(let c=0;c<4;c++){ const i=r*4+c;
       if(c<3&&r>0) link(P,i,i+1,dx,false); if(r<5) link(P,i,i+4,dy,r===0); }

@@ -41,8 +41,7 @@ function buildPit(C){
   C.B.pit=b; C.list.push(b); C.pit=b;
 }
 function placePit(C){ const b=C&&C.pit; if(!b) return; const g=b.grp; g.position.y=H(g.position.x,g.position.z); g.updateMatrixWorld(true); }
-buildPit(CASTLES[1]);
-TRAINED_AT.crawler='pit';
+TRAINED_AT.crawler='pit';   // a Chaos castle digs its pit when it is built (buildCastle)
 // a Hellcrawler rises out of the magma, claws hooked over the rim, and drags itself out toward the field
 function pitEmerge(b,type){
   const t=b.team, g=b.grp, s=TYPES[type].s, a=rand(-.75,.75), fx=DIRX[t]*Math.cos(a), fz=Math.sin(a);

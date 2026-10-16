@@ -32,7 +32,7 @@ S.orderMove(r,{x:-12,z:6}); run(60*8);
 const sl=S.regAlive(r).map(u=>{const s=S.regSlot(r,u); return Math.hypot(s.x-u.pos.x,s.z-u.pos.z).toFixed(2);});
 console.log('after move: order',r.order.kind,'slot dists',sl.join(','),'faces',S.regAlive(r).map(u=>u.face.toFixed(2)).join(','));
 // 3. attack an enemy regiment
-const er=S.regs.find(r=>r.team===1&&r.type==='sword');
+const er=S.regs.find(r=>r.team===1&&r.type==='sword')||S.regs.find(r=>r.team===1&&!S.TYPES[r.type].ranged&&!S.TYPES[r.type].worker);   // the enemy may be Chaos
 S.orderAttack(r,er,null); let calls=new Set();
 const tm0=S.tacticMods; 
 run(60*15,()=>{ for(const c of S.callouts) if(c.age<1) calls.add(c.el.textContent); });

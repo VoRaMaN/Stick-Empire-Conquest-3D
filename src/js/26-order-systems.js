@@ -12,6 +12,7 @@ function canTarget(u,o){
 }
 // per-blow modifiers: the ninja's Fixate stacks and his Shinobi poison
 function hitMods(u,t,dm,mul){
+  if(u.T.chaos) dm=chaosHitMods(u,t,dm);
   if(u.type==='ninja'){
     if(u.fixT===t) u.fixN=Math.min(5,(u.fixN||1)+1); else { u.fixT=t; u.fixN=1; }
     dm*=1+.16*(u.fixN-1); if(u.fixN>=3&&mul===1) callout(t,'Fixate ×'+u.fixN,'#c9a6ff');
@@ -78,6 +79,7 @@ function gxInit(){
 }
 function buildGearX(u,G,acc,acc2,steel){
   if(u.type==='crawler'){ buildCrawler(u,G); return; }
+  if(u.type==='thrall'||u.type==='dread'||u.type==='harvester'){ buildChaosGear(u,G); return; }
   gxInit(); const team=u.team;
   switch(u.type){
     case 'wizard':{
@@ -127,6 +129,7 @@ function buildGearX(u,G,acc,acc2,steel){
 const _gq=new V3(),_gs=new V3(),_gso=new V3(),_gm=new V3(),_ge=new V3(),_gch=new V3(),_gfl=new V3(),_gd=new V3();
 function updateGearX(u){
   if(u.type==='crawler') return;   // a Hellcrawler's model is posed when it's drawn (drawCrawler), and only if it's on screen
+  if(u.T.chaos){ updateChaosGear(u); return; }
   const G=u.G, j=u.j, s=u.s; if(!G) return;
   _gfl.copy(u.fwdW).addScaledVector(u.spine,-u.fwdW.dot(u.spine)); if(_gfl.lengthSq()<1e-6) _gfl.copy(u.fwdW); _gfl.normalize();
   if(u.type==='cleric'){
@@ -250,6 +253,7 @@ function updateStatus(u,dt){
     if(Math.random()<dt*(k==='poison'?4:10)){ const J=[u.j.chest,u.j.head,u.j.pelvis,u.j.hR,u.j.hL][Math.floor(Math.random()*5)];
       puff(J,1,.1*u.s,.7,k==='poison'?'#6fd25a':(Math.random()<.5?'#ff9b2e':'#ffd25a')); } }
   if(S.healF>0) S.healF-=dt;
+  if(S.rend){ S.rend.t-=dt; if(S.rend.t<=0) S.rend=null; }   // Soul Rend wears off
   if(u.cloak){ u.cloak.t-=dt; if(Math.random()<dt*3) puff(u.j.chest,1,.12*u.s,.3,'#3a3550'); if(u.cloak.t<=0) endCloak(u); }
 }
 function setGearVis(u,on){ const G=u.G; if(!G) return; for(const k in G) if(G[k]&&G[k].isObject3D&&!G[k].dropped) G[k].visible=on; }
@@ -373,6 +377,7 @@ function spellFx(u,e,v){
     case 'pillar': pillarFx(P,e.col); break;
     case 'holy': holyFx(P); break;
     case 'flash': flashes.push({p:u.j.hR.clone(),r0:.2,r1:1.4,t:0,life:.18,col:'#ffffff'}); sfx('flash',u.pos,.8); break;
+    default: if(FX_X[e.fx]) FX_X[e.fx](u,e,v,P);
   }
 }
 const EXTRA_EV={
@@ -437,6 +442,7 @@ function drawUnit(u){
   if(S&&u.alive){ const tc=u.tc||(u.tc=new THREE.Color());
     if(S.poison){ tc.copy(u.col).lerp(scol('#57c447'),.35+.15*Math.sin(game.time*7+u.id)); col=tc; }
     else if(S.burn){ tc.copy(u.col).lerp(scol('#ff6a1a'),.3+.2*Math.sin(game.time*19+u.id)); col=tc; }
+    else if(S.rend){ tc.copy(u.col).lerp(scol('#8a4ad8'),.3+.15*Math.sin(game.time*5+u.id)); col=tc; }
     if(S.healF>0){ tc.copy(col).lerp(scol('#fff3a8'),Math.min(1,S.healF*2)); col=tc; } }
   drawFigure(u.j,u.s,col,u.thick,u.fwdW,u.cloak&&u.alive?GHOST:null,!!u.T.robe);
 }
@@ -484,7 +490,7 @@ TYPES.cleric.brain=(u,dt)=>{
   // nobody needs healing: keep behind the fighting
   const ro=u.reg?u.reg.order:null, charging=ro&&ro.kind!=='army'?(ro.kind==='charge'||ro.kind==='attack'):game.stance[u.team]==='charge';
   let gx,gz;
-  if(charging){ let best=null,bd=1e9; for(const o of units){ if(!o.alive||o.team!==u.team||!o.isUnit||o.T.support||o.type==='miner') continue; const d=Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z); if(d<bd){bd=d;best=o;} }
+  if(charging){ let best=null,bd=1e9; for(const o of units){ if(!o.alive||o.team!==u.team||!o.isUnit||o.T.support||o.T.worker) continue; const d=Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z); if(d<bd){bd=d;best=o;} }
     if(best){ gx=best.pos.x-DIRX[u.team]*4; gz=best.pos.z; } }
   else if(ro&&(ro.kind==='move'||ro.kind==='hold')){ const sl=regSlot(u.reg,u); gx=sl.x; gz=sl.z; }
   else if(u.slot){ gx=u.slot.x; gz=u.slot.z; }

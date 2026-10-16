@@ -9,7 +9,7 @@
    ragdolls, aiming, arrows, blood and finishers treat it like any other body.
    The model is built from shaped parts (one gear group per bone), so every Hellcrawler on the field is drawn
    in a handful of instanced batches. */
-const CHAOS=['crawler'];
+const CHAOS=['thrall','crawler','dread','harvester'];   // the Chaos Empire's roster, in dock order
 const CRB={pm:.4,mc:.36,ua:.5,fa:.58,th:.36,sh:.38,mt:.27,hipH:.66,metaA:1.0}, CR_HEAD=1.22;   // CR_HEAD: skull and jaw scale
 // tail: CR_TN segments (about 2 m at scale 1) tapering base → tip, plus the bone blade; CR_TK has one more entry for the tip
 const CR_TN=16, CR_TK=Array.from({length:CR_TN+1},(_,i)=>1-.56*i/CR_TN), CR_TL=.17;
