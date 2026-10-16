@@ -10,6 +10,7 @@ function step(rdt){
   if(game.mode==='battle'&&cam.follow&&cam.follow.fin) slow=.45;
   game.ts=lerp(game.ts,slow,1-Math.exp(-rdt*8));
   let dt=Math.min(rdt*game.ts*tune.speed,1/30);
+  if(!(dt>0)) return;   // no time passed (the first frame): velocities divided by dt would be NaN
   if(game.hitstop>0){ game.hitstop-=rdt; dt*=.08; } // brief freeze-frame on heavy blows
   game.time+=dt;
 
@@ -92,6 +93,7 @@ function frame(now){
   if(GFX.fpsCap){ const iv=1000/GFX.fpsCap; if(now-capT<iv-2) return; capT=now; }
   const ms=now-last, rdt=Math.min(.05,Math.max(0,ms/1000)); last=now;
   perfTick(ms);
+  if(window.innerWidth!==vpW||window.innerHeight!==vpH||!isFinite(camera.aspect)) resize();   // a resize event can be missed when the page is hidden and shown again
   step(rdt); if(game.demo&&!game.paused) demoCamera(rdt); updateCamera(rdt); updateAudio(); draw();
 }
 // debug and test hooks (used by tests/ and the browser checks)

@@ -66,7 +66,7 @@ function applyEmissive(){
 function applyGfx(cfg){
   GFX=cfg;
   const pr=clamp(Math.min(DPR,2)*cfg.res,.5,3);
-  if(Math.abs(curPR-pr)>.01){ curPR=pr; renderer.setPixelRatio(pr); renderer.setSize(window.innerWidth,window.innerHeight,false); }
+  if(Math.abs(curPR-pr)>.01){ curPR=pr; renderer.setPixelRatio(pr); if(vpW>0) renderer.setSize(vpW,vpH,false); }
   const maxT=renderer.capabilities&&renderer.capabilities.maxTextureSize||4096;
   setShadows(cfg.shadows>0,Math.min(maxT,[1024,1024,2048,4096][cfg.shadows]||2048),cfg.soft);
   sun.intensity=.92*cfg.sun; hemi.intensity=.78*cfg.sky;

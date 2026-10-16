@@ -22,6 +22,7 @@ function toRagdoll(u,impWorld,opt){
   return rg;
 }
 function stepRag(rg,dt){
+  if(!(dt>1e-7)) return;   // velocities are (new−old)/dt
   const P=rg.p,Q=rg.q,V=rg.v,W=rg.w,n=P.length, sink=rg.age>16&&!rg.keep;
   rg.age+=dt;
   if(tune.blood){

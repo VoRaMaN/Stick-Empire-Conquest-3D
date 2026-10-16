@@ -69,6 +69,7 @@ function pick(x,y){
   cam.follow=best; if(best) cam.dGoal=Math.min(cam.dGoal,best.s>1.5?14:9);
   updateFollowUI();
 }
+const CAM_HOME=new V3(0,1.2,0), camOK=v=>isFinite(v.x+v.y+v.z);
 function updateCamera(rdt){
   const D=game.duel;
   if(game.mode==='duel'&&D){
@@ -80,6 +81,10 @@ function updateCamera(rdt){
     const f=cam.follow; const p=f.rag?f.j.pelvis:f.pos; cam.goal.set(p.x,H(p.x,p.z)+1.1*Math.sqrt(f.s),p.z);
     if(!f.alive&&f.rag&&f.rag.age>3){ cam.follow=null; updateFollowUI(); }
   }
+  // never let a bad number stick: a non-finite goal keeps the last good one, and a broken camera snaps back
+  if(!camOK(cam.goal)) cam.goal.copy(camOK(cam.target)?cam.target:CAM_HOME);
+  if(!isFinite(cam.dGoal)) cam.dGoal=12; if(!isFinite(cam.yaw)) cam.yaw=.5; if(!isFinite(cam.pitch)) cam.pitch=.36;
+  if(!camOK(cam.target)||!isFinite(cam.dist)){ cam.target.copy(cam.goal); cam.dist=cam.dGoal; }
   const k=1-Math.exp(-rdt*5);
   cam.target.lerp(cam.goal,k); cam.dist=lerp(cam.dist,cam.dGoal,1-Math.exp(-rdt*6));
   const cp=Math.cos(cam.pitch);
@@ -92,6 +97,10 @@ function updateCamera(rdt){
 function layoutTop(){ const t=document.querySelector('.top'); if(!t||!t.getBoundingClientRect) return; const b=t.getBoundingClientRect().bottom, root=document.documentElement.style; if(b>0) root.setProperty('--hudTop',Math.round(b+6)+'px');
   const h=$('#hudBattle'); if(h&&h.getBoundingClientRect){ const r=h.getBoundingClientRect(); root.setProperty('--hudBottom',Math.round(!h.hidden&&r.bottom>0?r.bottom+8:b+10)+'px'); } }
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layoutTop);
-function resize(){ layoutTop(); const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.fov=w<h?60:45; camera.updateProjectionMatrix(); }
+// a hidden or collapsed page reports a 0×0 window: keep the last real size (a zero size made the camera's aspect
+// NaN and the screen showed nothing but the sky colour); the main loop re-checks the size every frame
+let vpW=0, vpH=0;
+function resize(){ const w=window.innerWidth,h=window.innerHeight; if(!(w>0&&h>0)) return;
+  layoutTop(); vpW=w; vpH=h; renderer.setSize(w,h,false); camera.aspect=w/h; camera.fov=w<h?60:45; camera.updateProjectionMatrix(); }
 window.addEventListener('resize',resize); window.addEventListener('orientationchange',()=>setTimeout(resize,250)); resize();
 
