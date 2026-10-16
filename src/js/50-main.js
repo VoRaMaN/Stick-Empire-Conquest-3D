@@ -48,7 +48,7 @@ function step(rdt){
   game.regT=(game.regT||0)-dt; if(game.regT<=0){ game.regT=.4; cleanRegs(); if(selReg) updateRegbar(); }
   if(game.mode==='battle'){ updateCastles(dt); castleIncome(dt); } else if(castleReady) updateCastles(dt);
   if(panelB) panelTick(rdt);
-  updateArrows(dt); updateSpells(dt); updateChaos(dt); updateBlood(dt); updateLoose(dt);
+  updateArrows(dt); updateSpells(dt); updateChaos(dt); updateFire(dt); updateBlood(dt); updateLoose(dt);
   { const half=capes.length>24; game.capeF=(game.capeF||0)+1; for(let i=0;i<capes.length;i++) if(!half||((i+game.capeF)&1)===0) stepCape(capes[i],half?dt*2:dt); }
   for(let i=puffs.length-1;i>=0;i--){ const p=puffs[i]; p.age+=dt; const t=p.age/p.life;
     if(t>=1){ puffs.splice(i,1); continue; }
@@ -70,7 +70,7 @@ function draw(){
   for(const C of CASTLES) for(const g of C.garrison) drawUnit(g);
   castleFx();
   for(const list of [units,corpses,CASTLES[0].garrison,CASTLES[1].garrison]) for(const u of list){ const st=u.G&&u.G.str; if(st&&st.vis&&!u.G.o.dropped){ cyl(st.a,st.m,.006*u.s,WHITE,strIM); cyl(st.m,st.b,.006*u.s,WHITE,strIM); } }
-  drawPuffs(); drawSpells(); drawChaos();
+  drawPuffs(); drawSpells(); drawChaos(); drawFire();
   for(const [im,n] of CNT){ im.count=n; im.instanceMatrix.needsUpdate=true; if(im.instanceColor) im.instanceColor.needsUpdate=true; }
   if(game.mode==='battle'){
     const s=game.stance.join()+Math.floor(game.gold[0])+'|'+Math.floor(game.gold[1])+'|'+Math.floor(game.mana[0])+'|'+Math.floor(game.mana[1])+'|'+Math.ceil(statues[0].hp)+'|'+Math.ceil(statues[1].hp)+'|'+count(0)+'|'+count(1);

@@ -250,8 +250,8 @@ function updateStatus(u,dt){
   const S=u.st;
   for(const k of ['poison','burn']){ const e=S[k]; if(!e) continue; e.t-=dt; if(e.t<=0){ S[k]=null; continue; }
     e.acc+=e.dps*dt; if(e.acc>=2){ const a=e.acc; e.acc=0; damage(u,a,e.src&&e.src.alive?e.src:u,UP,.01,0,true); if(!u.alive) return; }
-    if(Math.random()<dt*(k==='poison'?4:10)){ const J=[u.j.chest,u.j.head,u.j.pelvis,u.j.hR,u.j.hL][Math.floor(Math.random()*5)];
-      puff(J,1,.1*u.s,.7,k==='poison'?'#6fd25a':(Math.random()<.5?'#ff9b2e':'#ffd25a')); } }
+    if(Math.random()<dt*(k==='poison'?4:16)){ const J=[u.j.chest,u.j.head,u.j.pelvis,u.j.hR,u.j.hL][Math.floor(Math.random()*5)];
+      if(k==='poison') puff(J,1,.1*u.s,.7,'#6fd25a'); else emitFire(J,2,.11*u.s,0,.9,0,.35,.55); } }
   if(S.healF>0) S.healF-=dt;
   if(S.rend){ S.rend.t-=dt; if(S.rend.t<=0) S.rend=null; }   // Soul Rend wears off
   if(u.cloak){ u.cloak.t-=dt; if(Math.random()<dt*3) puff(u.j.chest,1,.12*u.s,.3,'#3a3550'); if(u.cloak.t<=0) endCloak(u); }
@@ -274,7 +274,9 @@ glowIM.renderOrder=4; boltIM.renderOrder=4;
 const SC={}; const scol=c=>SC[c]||(SC[c]=new THREE.Color(c));
 function glowAt(p,r,c){ _s.set(r,r,r); _m.compose(p,_qi,_s); put(glowIM,scol(c)); }
 function staffTip(u,out){ return out.copy(u.j.hR).addScaledVector(u.wRw,.7*u.s); }
-function puffDir(p,dir,n,speed,spread,col,size,life){ for(let k=0;k<n;k++){ if(puffs.length>=MAXPUFF) puffs.shift();
+function puffDir(p,dir,n,speed,spread,col,size,life){
+  if(isFireCol(col)){ for(let k=0;k<n;k++){ const s=speed*rand(.6,1.1); emitFire(p,2,size*1.4,dir.x*s,dir.y*s,dir.z*s,spread*.8,(life||1)*.75); } return; }
+  for(let k=0;k<n;k++){ if(puffs.length>=MAXPUFF) puffs.shift();
   const v=dir.clone().multiplyScalar(speed*rand(.6,1.1)).add(new V3(rand(-1,1),rand(-.3,1),rand(-1,1)).multiplyScalar(spread));
   puffs.push({p:p.clone(),c:scol(col).clone(),v,age:0,life:(life||1)*rand(.8,1.3),size:size*rand(.7,1.2)}); } }
 function aimPoint(t,out){ if(!t) return null; if(t.isStatue) return out.set(t.pos.x,t.pos.y+3,t.pos.z); if(t.alive) return out.copy(t.j.chest); return t.rag?out.copy(t.rag.p[1]):out.copy(t.pos); }

@@ -126,9 +126,9 @@ function crGeometry(){
 }
 
 /* ---------- a Hellcrawler's model: one gear group per bone (batched with all the others) ---------- */
-function crPart(name,s,k){
+function crPart(name,s,k,skinM){
   const g=grp(), P=CRG[name];
-  for(const m in P){ const ms=mesh(P[m],m==='skin'?CRM.skin:CRM[m]); if(m==='skin') ms.userData.skin=1; if(m==='eye'||m==='maw') ms.castShadow=false; g.add(ms); }
+  for(const m in P){ const ms=mesh(P[m],m==='skin'?(skinM||CRM.skin):CRM[m]); if(m==='skin'&&!skinM) ms.userData.skin=1; if(m==='eye'||m==='maw') ms.castShadow=false; g.add(ms); }
   g.scale.setScalar(s*(k||1)); freezeGear(g); return g; }
 function buildCrawler(u,G){
   if(u.T.hound){ buildHound(u,G); return; }
@@ -262,6 +262,7 @@ function buildCrawlSkel(u,p,dt){
     ik2(hip,_cq2,CRB.th*s,CRB.sh*s,_cqh,kn,ank);
     _cq1.subVectors(toe,ank); const L=_cq1.length(); if(L>1e-5) toe.copy(ank).addScaledVector(_cq1,CRB.mt*s/L); }
   cr.jaw+=(clamp(p.draw,0,1)-cr.jaw)*(1-Math.exp(-dt*25));
+  if(u.T.heads){ const k=1-Math.exp(-dt*16); for(const c of ['hbY','hbP','hbJ','hcY','hcP','hcJ']) cr[c]=(cr[c]||0)+((p[c]||0)-(cr[c]||0))*k; }   // Cerberus' side heads
   crTailStep(u,p,dt,true);
 }
 

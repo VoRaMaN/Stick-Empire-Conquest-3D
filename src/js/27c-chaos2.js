@@ -115,8 +115,8 @@ function throwBomb(u,e){
   crSfx('bombThrow','swing',o,.6);
 }
 function boomFx(p,k){
-  flashes.push({p:p.clone(),r0:.3*k,r1:1.6*k,t:0,life:.35,col:'#ffb347'});
-  puffDir(p,UP,Math.round(10*k),2.6,1.6,'#ff8a2a',.35*k,.6); puffDir(p,UP,Math.round(8*k),1.6,1.2,'#3a2a22',.5*k,1.3);
+  flashes.push({p:p.clone(),r0:.2*k,r1:.7*k,t:0,life:.25,col:'#ffb347'}); fireBurst(p,Math.round(22*k),.32*k,4.5*k,.65);
+  puffDir(p,UP,Math.round(6*k),2.6,1.6,'#ff8a2a',.35*k,.6); puffDir(p,UP,Math.round(8*k),1.6,1.2,'#3a2a22',.5*k,1.3);
   const c=p.clone(); c.y=H(c.x,c.z); ring(c,1.8*k); shakeAt(p,.3*k); crSfx('bombBlast','blast',p,.9);
 }
 function explode(p,r,dmg,team,src){
@@ -159,13 +159,13 @@ function massMend(u){
 function hellfire(u,e){
   const c=u.pos.clone().addScaledVector(u.fwdW,(e.at||1.1)*u.s); c.y=H(c.x,c.z); const r=e.r||3;
   ring(c,r); for(let i=0;i<14;i++){ const a=i/14*Math.PI*2, p=c.clone(); p.x+=Math.cos(a)*r*.7; p.z+=Math.sin(a)*r*.7; p.y+=.2; puffDir(p,UP,2,2.2,.5,i%2?'#ff7a1a':'#ffb347',.3,.7); }
-  flashes.push({p:c.clone().setY(c.y+.5),r0:.4,r1:r,t:0,life:.4,col:'#ff8a2a'});
+  flashes.push({p:c.clone().setY(c.y+.5),r0:.3,r1:r*.35,t:0,life:.3,col:'#ff8a2a'});
   for(const o of units){ if(!o.alive||o.team===u.team||isAir(o)) continue; if(Math.hypot(o.pos.x-c.x,o.pos.z-c.z)<r) applyBurn(o,u,7,3.5); }
 }
 function flameWave(u){
   const o=u.j.hR.clone().addScaledVector(u.wRw,1.7*u.s), f=u.fwdW, len=8;
   for(let i=1;i<=10;i++){ const p=o.clone().addScaledVector(f,i*len/10); p.y=H(p.x,p.z)+.5; puffDir(p,f,3,2,.5+i*.06,i%2?'#ff7a1a':'#ffb347',.3+i*.03,.6); }
-  flashes.push({p:o.clone(),r0:.3,r1:1.2,t:0,life:.3,col:'#ff8a2a'}); shakeAt(o,.2); crSfx('flameWave','blast',o,.8);
+  flashes.push({p:o.clone(),r0:.2,r1:.5,t:0,life:.25,col:'#ff8a2a'}); shakeAt(o,.2); crSfx('flameWave','blast',o,.8);
   for(const t of units){ if(!t.alive||t.team===u.team||isAir(t)) continue; const dx=t.pos.x-u.pos.x, dz=t.pos.z-u.pos.z, d=Math.hypot(dx,dz)||1;
     if(d<len+1&&(dx*f.x+dz*f.z)/d>.82){ damage(t,u.T.dmg*.8,u,new V3(dx/d,0,dz/d),2.6,.8); applyBurn(t,u,8,4); } }
 }
@@ -236,7 +236,7 @@ Object.assign(PREY,{oracle:3,bomber:2.4});
 /* ---------- per-frame: bombs, the burning aura, a Bomber that dies goes off ---------- */
 function updateChaos2(dt){
   updateBombs(dt);
-  for(const u of units){ if(u.bombT>0) u.bombT-=dt;
+  for(const u of units){ if(u.bombT>0) u.bombT-=dt; if(u.cbBreath) cbBreathTick(u,dt);
     if(u.type==='hades'&&u.alive&&game.mode==='battle'){ u.auraT=(u.auraT||0)-dt; if(u.auraT<=0){ u.auraT=.5;
       for(const o of units){ if(!o.alive||o.team===u.team||isAir(o)) continue; if(Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z)<2.8) applyBurn(o,u,3,1.2); } } } }
   for(const c of corpses) if(c.type==='bomber'&&!c._boom&&!c.statue){ c._boom=true; explode(c.j.chest.clone(),2.0,c.T.dmg*1.1,c.team,c); }

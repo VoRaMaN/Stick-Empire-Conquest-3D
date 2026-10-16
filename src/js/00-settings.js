@@ -13,6 +13,7 @@ const SETTINGS_DEFAULTS={
   voice:true,       // narrator and unit voices
   drag:'pan',       // one-finger drag on the battlefield: pan | orbit
   minimap:true,
+  shake:1,          // screen shake strength (0 off … 2 double)
   tutorialDone:false,
   played:0          // battles finished, for the menu's subtitle
 };

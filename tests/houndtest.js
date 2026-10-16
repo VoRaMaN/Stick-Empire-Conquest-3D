@@ -46,7 +46,7 @@ for(const [f0,f1] of [['order','chaos'],['chaos','order']]){
   console.log('thrall trips',thrallTrips,'regen ticks',regen,'cursed-frames',cursed,'souls in flight max',maxSouls,'chaos finishers seen',Object.keys(finBy).length,'harvester melee',hvMelee);
 }
 console.log('events',JSON.stringify(ev));
-const need=['cerbFlame'];
+const need=['cbFire'];
 const missing=need.filter(k=>!ev[k]);
 console.log('battle nan',nan,'missing powers',missing.join(',')||'none');
 

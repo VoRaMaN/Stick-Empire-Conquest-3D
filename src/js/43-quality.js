@@ -53,6 +53,7 @@ function syncSettingsUI(){
   setPills($('#qPills'),'q',settings.quality); setPills($('#dragPills'),'drag',settings.drag); setPills($('#finPills'),'fin',game.finMode);
   $('#sFps').checked=settings.fps; if($('#sVoice')) $('#sVoice').checked=settings.voice!==false; $('#sBlood').checked=tune.blood; $('#sMini').checked=settings.minimap; $('#sAuto').checked=game.auto[0];
   for(const [id,k] of [['Master','master'],['Music','music'],['Sfx','sfx']]){ $('#s'+id).value=settings[k]; $('#o'+id).textContent=Math.round(settings[k]*100)+'%'; }
+  if($('#sShake')){ const k=settings.shake===undefined?1:settings.shake; $('#sShake').value=k; $('#oShake').textContent=Math.round(k*100)+'%'; }
   if(fpsEl) fpsEl.hidden=!settings.fps;
 }
 function pillClicks(box,fn){ if(box&&box.addEventListener) box.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('button'); if(b){ sfx('ui'); fn(b); syncSettingsUI(); } }); }
@@ -64,6 +65,7 @@ $('#sFps').addEventListener('change',e=>{ settings.fps=e.target.checked; saveSet
 $('#sMini').addEventListener('change',e=>{ settings.minimap=e.target.checked; saveSettings(); syncMinimap(); });
 $('#sAuto').addEventListener('change',e=>setAutoSpawn(e.target.checked));
 for(const [id,k] of [['Master','master'],['Music','music'],['Sfx','sfx']]) $('#s'+id).addEventListener('input',e=>{ settings[k]=+e.target.value; $('#o'+id).textContent=Math.round(settings[k]*100)+'%'; applyVolumes(); saveSettings(); });
+if($('#sShake')) $('#sShake').addEventListener('input',e=>{ settings.shake=+e.target.value; $('#oShake').textContent=Math.round(settings.shake*100)+'%'; saveSettings(); if(settings.shake>0) cam.shake=Math.max(cam.shake,.12*settings.shake); });
 $('#setTutorial').onclick=()=>{ sfx('ui'); closeSheet('settings'); $('#dock').hidden=false; startTutorial(); };
 $('#setErase').onclick=()=>{ const b=$('#setErase');
   if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent='Tap again to erase'; return; }

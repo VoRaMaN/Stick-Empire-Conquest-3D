@@ -38,7 +38,7 @@ finishers and 10 charge attacks.
 | Dreadguard | 150 souls | Heavy armoured axeman | Broad-shouldered and fully armoured: a horned great helm with a burning visor slit and a fanged grill, layered spiked pauldrons, a breastplate cracked with glowing magma, plate on every limb, hip plates and a crimson cape. Every swing of his axe cuts through all the enemies in its arc, and his spins cut all the way round. Hellforged Cleave: a white-hot sweep that interrupts and breaks a shield wall |
 | Soul Harvester | 120 souls | Ranged caster | A walking skeleton: a thin column of vertebrae, a rib cage with a captured soul glowing inside, a horned skull, a torn shroud and a lantern scythe. Enemies that get within arm's reach meet the scythe: 16 close-range strikes (reaps, an overhead Death Arc, a spin, ankle and hook trips, a cursed claw, a Soul Slash that curses) Throws soul fragments, a charged soul blast, and a wail that curses everyone around it |
 | Hellhound | 100 souls | Pack runner | A lean lava-rock demon dog with a flame mane and a burning tail; the fastest unit in the army, with the Hellcrawler's pounce, Pack Frenzy and moves |
-| Cerberus | 220 souls | Three-headed guardian | The great hound of the underworld: three heads, burning bites, and Triple Flame, a cone of fire from all three heads |
+| Cerberus | 220 souls | Three-headed guardian | The great hound of the underworld: shaggy dark fur, three horned wolf heads in spiked bronze collars, a burning mane and a serpent for a tail. Breathes streams of fire from all three mouths |
 | Bone Reaver | 140 souls | Fast skirmisher | A skeleton with a curved bone blade in each hand: flurries, thrusts, leaps, and a whirl that cuts all the way round |
 | Infernal Bomber | 160 souls | Explosives | A goggled imp with a barrel of hellfire bombs: lobbed, rolled and cluster bombs that blast and burn; explodes when it dies |
 | Fallen Oracle | 200 souls + 40 mana | Healer and hexer | Blindfolded seer with a third eye: Dark Mending, Mass Mending, Hex (+25% damage taken), Void Bolt |
@@ -63,8 +63,11 @@ a Dreadguard statue, and its own buildings: the Hellforge (Dreadguards), the Sou
 | Soul Spire | Soul Rend | Soul fragments curse what they hit: +25% damage taken for 5 s |
 
 The Thrall, Dreadguard and Soul Harvester each have 10 idles, 5 defence clips and 10 charges; the Thrall and Dreadguard
-have 10 finishers and 11 moves, the Soul Harvester 20 finishers and 23 moves (11 spells and casts, 12 more scythe strikes). Their own sound effects and voice lines are not recorded yet, so they use the stock sounds for now. The Hellhound and Cerberus use the Hellcrawler's full move set (10 idles, 12–13 moves,
-10 finishers, 10 charges); the Bone Reaver, Bomber, Oracle, Grim Reaper and Hades have 5 idles, 8 moves, 5 or 6
+have 10 finishers and 11 moves, the Soul Harvester 20 finishers and 23 moves (11 spells and casts, 12 more scythe strikes). Their own sound effects and voice lines are not recorded yet, so they use the stock sounds for now. The Hellhound uses the Hellcrawler's full move set (10 idles, 12–13 moves,
+10 finishers, 10 charges). Cerberus has his own: 10 moves (Triple Bite, Skull Ram, Paw Maul, Rear Stomp,
+Fire Sweep, Serpent Lash, Cyclone, Crushing Leap, Rend and Shake, Infernal Howl), 6 idles in which the three heads
+sniff, bicker and howl independently, 8 finishers (among them a three-headed tug of war and a cremation) and 6
+charges, with the side heads animated on their own channels so each head moves for itself; the Bone Reaver, Bomber, Oracle, Grim Reaper and Hades have 5 idles, 8 moves, 5 or 6
 finishers and 4 charges each so far.
 
 ### The Hellcrawler
@@ -141,6 +144,10 @@ half-float HDR chain: scene (MSAA 4× target on WebGL 2) → a half-resolution d
 occlusion and sun shafts, with depth of field and camera motion blur gathered in one pass → bloom → tone mapping
 and colour grade → FXAA or SMAA. Auto picks a preset from the frame rate and steps it down or up as you play.
 
+Fire is drawn as glowing billboard flames: a soft alpha-blended body under an additive core and halo that shift
+from white-hot to orange to dark red as each flame rises, sways and burns out, trailing a little smoke. Burning
+units, bombs, Hades' hellfire and Cerberus' breath and mane all use it, and bloom makes it glow further.
+
 ## Play locally
 
 ```bash
@@ -179,7 +186,7 @@ Main source files:
 | `00-settings` | Saved settings (quality, sound, controls, battle options) |
 | `01`–`03` | Terrain, renderer and scene, instanced stick bodies |
 | `10`–`14` | Unit types, attacks, finishers, charges, blow aiming (`13a`/`13b`: the Ninja, Cleric, Wizard and Wing Archer) |
-| `20`–`26` | Skeleton and IK, ragdolls, blood, arrows, dropped gear, capes; `26`: the new units' gear, wing-flight model, spells, status effects and brains |
+| `20`–`26` | Skeleton and IK, ragdolls, blood, arrows, dropped gear, capes; `23b`: glowing fire particles; `26`: the new units' gear, wing-flight model, spells, status effects and brains |
 | `30`–`36` | Combat, armies and formations, regiments and tactics, campaign, AI, per-unit update and drawing; `36`: the new units' regiments and formation places |
 | `40`–`42` | Game modes, battle UI, camera and touch input; `40b`: the Unit Viewer (descriptions, stats card, turntable) |
 | `43` | Graphics quality and the Auto frame-rate ladder, FPS counter, settings screen; `43b`: presets, post-processing chain (SSAO, bloom, sun shafts, depth of field, motion blur, tone mapping, grading, FXAA/SMAA/MSAA) and the Advanced Graphics panel |
@@ -220,3 +227,5 @@ fingerprint proving the original five units still behave exactly as before, and 
 | Zoom to a spot | Double-tap the ground | |
 | Jump across the field | Tap the map at the top | |
 | Pause | Pause button | Esc |
+
+Settings → Controls has a **Screen shake** slider (0–200 %); 0 turns camera shake off.
