@@ -441,8 +441,10 @@ function updateGarrison(C,dt){
   for(const g of C.garrison){
     g.gT-=dt; if(g.gT<=0){ g.gT=.35+Math.random()*.2; g.target=nearestFoe(g.pos.x,g.pos.z,g.team,GARRISON_R,g); if(g.target&&g.target.inCastle) g.target=null; }
     const t=g.target&&g.target.alive?g.target:null;
-    if(t){ g.faceGoal=Math.atan2(t.pos.x-g.pos.x,t.pos.z-g.pos.z); if(!g.action&&g.cdT<=0&&Math.abs(wrapA(g.faceGoal-g.face))<.35) startAttack(g,t,FACTIONS[C.fac].garrisonAtk); }
+    if(t){ g.faceGoal=Math.atan2(t.pos.x-g.pos.x,t.pos.z-g.pos.z); if(!g.action&&g.cdT<=0&&Math.abs(wrapA(g.faceGoal-g.face))<.35){ startAttack(g,t,FACTIONS[C.fac].garrisonAtk); g.fwdScale=0; } }
     else if(!g.action) g.faceGoal=g.team?-Math.PI/2:Math.PI/2;
     updateUnit(g,dt);
+    // a sentry never leaves its post: no lunging after its shots, no drifting off the battlements
+    g.pos.x=cwx(g.team,g.post[0]); g.pos.z=g.post[2]; if(g.vel) g.vel.set(0,0,0);
   }
 }
