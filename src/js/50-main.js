@@ -83,18 +83,20 @@ function draw(){
   drawMinimap();
   // the sun's shadow box follows the camera along the field, so the castles get shadows when you look at them
   { const sx=clamp(Math.round(cam.target.x/1.9765625)*1.9765625,-40,40); if(sx!==sun.userData.sx){ sun.userData.sx=sx; sun.position.set(-16+sx,30,16); sun.target.position.set(sx,0,0); sun.target.updateMatrixWorld(); } }
-  renderer.render(scene,camera);
+  renderFrame();
 }
 let last=performance.now();
+let capT=0;
 function frame(now){
   requestAnimationFrame(frame);
+  if(GFX.fpsCap){ const iv=1000/GFX.fpsCap; if(now-capT<iv-2) return; capT=now; }
   const ms=now-last, rdt=Math.min(.05,Math.max(0,ms/1000)); last=now;
   perfTick(ms);
   step(rdt); if(game.demo&&!game.paused) demoCamera(rdt); updateCamera(rdt); updateAudio(); draw();
 }
 // debug and test hooks (used by tests/ and the browser checks)
 window.__SE3D={closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes}),
-  renderer,CASTLES,recruit,buyUnit,startResearch,resLvl,hasRes,openPanel,closePanel,pickBuilding,setHover,queued,ICONS,makeUnitIcons,VOX,narrate,loadAssets,BUILDINGS};
+  renderer,sceneRef:scene,sunScreen,applyQuality,GFX_PRESETS,GFX_DEF,post,GFX:()=>GFX,CASTLES,recruit,buyUnit,startResearch,resLvl,hasRes,openPanel,closePanel,pickBuilding,setHover,queued,ICONS,makeUnitIcons,VOX,narrate,loadAssets,BUILDINGS};
 // start: apply saved settings, then open on the title screen with a battle playing behind it
 game.finMode=settings.finMode; game.auto[0]=settings.auto; game.size=settings.size; tune.blood=settings.blood;
 syncBattleButtons(); syncSettingsUI(); syncMinimap(); applyQuality();

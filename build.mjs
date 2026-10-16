@@ -36,6 +36,12 @@ for (const [kind, ext] of [['sfx', '.mp3'], ['vox', '.mp3'], ['tex', '.jpg']]) {
 }
 const assetJson = JSON.stringify(assetData);
 const assetName = `assets.${hash(assetJson)}.json`;
+// three.js r128 post-processing (EffectComposer, bloom, FXAA, SMAA) from node_modules, minified and run before the
+// game parts: each file is a self-contained IIFE that attaches its classes to THREE.
+const FX_FILES = ['postprocessing/EffectComposer.js', 'shaders/CopyShader.js', 'postprocessing/ShaderPass.js', 'postprocessing/RenderPass.js',
+  'shaders/LuminosityHighPassShader.js', 'postprocessing/UnrealBloomPass.js', 'shaders/FXAAShader.js', 'shaders/SMAAShader.js', 'postprocessing/SMAAPass.js'];
+const fxSrc = FX_FILES.map(f => fs.readFileSync(path.join(ROOT, 'node_modules/three/examples/js', f), 'utf8')).join(';\n');
+const fxJs = (await transform(fxSrc, { minify: true, target: 'es2017', legalComments: 'none' })).code;
 const gameJs = (target, assets) => "(function(){\n'use strict';\n" +
   `const BUILD={target:'${target}',version:'${pkg.version}',assets:'${assets}'};\n` + parts + '})();\n';
 
@@ -46,7 +52,7 @@ const FONTS_CDN = '<link rel="preconnect" href="https://fonts.googleapis.com">\n
   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600&family=Barlow+Semi+Condensed:wght@500;600&display=swap">\n';
 const artifact = '<title>Stick Empire 3D</title>\n' + FONTS_CDN + '<style>\n' + css + '</style>\n\n' + body + '\n' +
   '<script type="application/json" id="se3d-assets">' + assetJson + '</script>\n' +
-  '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>\n<script>\n' + gameJs('artifact', '#se3d-assets') + '</script>\n';
+  '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>\n<script>\n' + fxJs + ';\n' + gameJs('artifact', '#se3d-assets') + '</script>\n';
 fs.mkdirSync(DIST, { recursive: true });
 fs.writeFileSync(path.join(DIST, 'artifact.html'), artifact);
 if (artifactOut) fs.writeFileSync(artifactOut, artifact);
@@ -70,7 +76,7 @@ for (const [fam, id, w] of FONT_FILES) { const f = `${id}-latin-${w}-normal.woff
 fs.writeFileSync(path.join(WEB, 'fonts/fonts.css'), fontCss);
 
 fs.writeFileSync(path.join(WEB, assetName), assetJson);
-const min = await transform(gameJs('web', assetName), { minify: true, target: 'safari14', legalComments: 'none' });
+const min = await transform(fxJs + ';\n' + gameJs('web', assetName), { minify: true, target: 'safari14', legalComments: 'none' });
 const gameName = `game.${hash(min.code)}.js`;
 fs.writeFileSync(path.join(WEB, gameName), min.code);
 

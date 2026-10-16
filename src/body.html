@@ -164,10 +164,11 @@
       <h3>Graphics</h3>
       <div class="opt"><span id="qLbl">Quality</span>
         <div class="pills" role="radiogroup" aria-labelledby="qLbl" id="qPills">
-          <button role="radio" data-q="auto">Auto</button><button role="radio" data-q="low">Low</button><button role="radio" data-q="medium">Medium</button><button role="radio" data-q="high">High</button>
+          <button role="radio" data-q="auto">Auto</button><button role="radio" data-q="low">Low</button><button role="radio" data-q="medium">Medium</button><button role="radio" data-q="high">High</button><button role="radio" data-q="ultra">Ultra</button><button role="radio" data-q="custom">Custom</button>
         </div>
       </div>
-      <small class="opt-note" id="qNote">Auto lowers the resolution and shadows when the frame rate drops.</small>
+      <small class="opt-note" id="qNote">Auto steps the resolution, shadows and effects down when the frame rate drops, and back up when it recovers.</small>
+      <div class="set-btns"><button id="setGfx">Advanced graphics</button></div>
       <label class="tg" for="sFps">Show frame rate <input id="sFps" type="checkbox"></label>
       <label class="tg" for="sBlood">Blood <input id="sBlood" type="checkbox" checked></label>
     </section>
@@ -205,6 +206,12 @@
         <button id="setErase">Erase saved progress</button>
       </div>
     </section>
+  </div>
+
+  <!-- advanced graphics: a side panel on wide screens so the battle stays in view while you tune it -->
+  <div id="gfx" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="gfxH">
+    <div class="hd"><h2 id="gfxH">Advanced graphics</h2><button id="gfxClose">Done</button></div>
+    <div id="gfxBody" class="gfx-body"></div>
   </div>
 
   <!-- how to play -->

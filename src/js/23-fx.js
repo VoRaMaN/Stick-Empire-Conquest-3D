@@ -10,6 +10,7 @@ function drawPuffs(){ let n=0;
     _pc.copy(q.c).lerp(HORIZON,t*.9); puffIM.setColorAt(n,_pc); n++; }
   puffIM.count=n; puffIM.instanceMatrix.needsUpdate=true; if(puffIM.instanceColor) puffIM.instanceColor.needsUpdate=true; }
 function puff(pos,n,size,speed,color){
+  if(partK!==1) n=Math.max(1,Math.round(n*partK));
   for(let k=0;k<n;k++){
     if(puffs.length>=MAXPUFF) puffs.shift();
     const p=new V3().copy(pos); p.y+=.05;

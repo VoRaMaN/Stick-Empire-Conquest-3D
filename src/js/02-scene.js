@@ -7,20 +7,21 @@ const scene=new THREE.Scene();
 const HORIZON=new THREE.Color('#e3c79a');
 scene.background=HORIZON; scene.fog=new THREE.Fog(HORIZON,38,105);
 const camera=new THREE.PerspectiveCamera(45,1,0.1,400);
-scene.add(new THREE.HemisphereLight('#fff4dd','#6e5437',0.78));
+const hemi=new THREE.HemisphereLight('#fff4dd','#6e5437',0.78); scene.add(hemi);
 const sun=new THREE.DirectionalLight('#ffe0ad',0.92); sun.position.set(-16,30,16); sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 Object.assign(sun.shadow.camera,{left:-46,right:46,top:24,bottom:-24,near:1,far:95});
 sun.shadow.bias=-0.0006; scene.add(sun);
 
 // sky dome
+let skyDome=null, sunDisc=null;
 {
   const g=new THREE.SphereGeometry(220,24,12); const c=[]; const p=g.attributes.position;
   const top=new THREE.Color('#9fb9c6'), mid=new THREE.Color('#e8cfa2'), tmp=new THREE.Color();
   for(let i=0;i<p.count;i++){const y=p.getY(i)/220; tmp.copy(mid).lerp(top,clamp(y*1.6,0,1)); c.push(tmp.r,tmp.g,tmp.b);}
   g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));
-  scene.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false})));
-  const sunDisc=new THREE.Mesh(new THREE.CircleGeometry(9,32),new THREE.MeshBasicMaterial({color:'#fff1cf',fog:false}));
+  skyDome=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false})); scene.add(skyDome);
+  sunDisc=new THREE.Mesh(new THREE.CircleGeometry(9,32),new THREE.MeshBasicMaterial({color:'#fff1cf',fog:false}));
   sunDisc.position.set(-90,60,-170); sunDisc.lookAt(0,0,0); scene.add(sunDisc);
 }
 // ground (rebuilt whenever the battlefield changes)

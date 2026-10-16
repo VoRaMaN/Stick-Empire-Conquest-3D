@@ -5,7 +5,7 @@ const LADDER=[
   {pr:.7,sh:0},{pr:.85,sh:0},{pr:1,sh:0},{pr:1,sh:1,map:1024},{pr:1.25,sh:1,map:1024},
   {pr:1.5,sh:1,map:1024},{pr:1.75,sh:1,map:2048},{pr:2,sh:1,map:2048,soft:1}
 ];
-const PRESET={low:1,medium:4,high:7};
+const PRESET={low:1,medium:4,high:7,ultra:7,custom:7};
 const isTouch=(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
 const qa={rung:-1,start:isTouch?5:7,win:[],t:0,good:0,lockUp:0,shown:''};
 function rungFor(){ return settings.quality==='auto'?(qa.rung<0?qa.start:qa.rung):PRESET[settings.quality]; }
@@ -20,13 +20,8 @@ function setShadows(on,map,soft){
   if(sun.shadow.mapSize.x!==map){ sun.shadow.mapSize.set(map,map); if(sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map=null; } }
   if(recompile) scene.traverse(o=>{ const m=o.material; if(!m) return; (Array.isArray(m)?m:[m]).forEach(x=>x.needsUpdate=true); });
 }
-function applyQuality(){
-  const r=Math.max(0,Math.min(LADDER.length-1,rungFor())), L=LADDER[r];
-  const pr=Math.min(DPR,L.pr);
-  if(Math.abs(curPR-pr)>.01){ curPR=pr; renderer.setPixelRatio(pr); renderer.setSize(window.innerWidth,window.innerHeight,false); }
-  setShadows(!!L.sh,L.map,L.soft);
-  qa.shown=(settings.quality==='auto'?'Auto · ':'')+(L.sh?'':'no shadows · ')+pr.toFixed(2).replace(/\.?0+$/,'')+'×';
-}
+// the Quality choice (or Auto's current rung) becomes a full graphics configuration: see 43b-graphics
+function applyQuality(){ applyGfx(gfxCfg()); if(typeof gfxSync==='function') gfxSync(); }
 // called every animation frame with the real time since the last one (ms)
 const fpsEl=$('#fps'); let fpsAcc=0, fpsN=0, fpsT=0;
 function perfTick(ms){
@@ -45,7 +40,7 @@ function perfTick(ms){
 
 /* ---------- sheets (settings, how to play, animation tuning) ---------- */
 let sheetBack=null;
-function openSheet(id,back){ for(const s of ['settings','help','tune']) $('#'+s).hidden=s!==id; $('#dock').hidden=true; sheetBack=back||null; if(id==='settings') syncSettingsUI(); }
+function openSheet(id,back){ for(const s of ['settings','help','tune','gfx']) $('#'+s).hidden=s!==id; $('#dock').hidden=true; sheetBack=back||null; if(id==='settings') syncSettingsUI(); }
 function closeSheet(id){ $('#'+id).hidden=true; if(sheetBack){ const b=sheetBack; sheetBack=null; openSheet(b); return; } $('#dock').hidden=false; }
 $('#setClose').onclick=()=>{ sfx('ui'); closeSheet('settings'); };
 $('#helpClose').onclick=()=>{ sfx('ui'); closeSheet('help'); };

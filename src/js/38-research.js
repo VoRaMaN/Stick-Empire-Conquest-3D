@@ -198,7 +198,7 @@ function castleFx(){
   const tt=game.time;
   for(const C of CASTLES) for(const b of C.list){ const on=b===hoverB||b===panelB;
     if(b.hull){ b.hull.visible=on; if(on) b.hull.material.opacity=.55+.3*Math.sin(tt*5); }
-    if(b.glowMat){ b.glowMat.color.copy(_wgc).lerp(_wgh,on?.6+.4*Math.sin(tt*6):.05+.05*Math.sin(tt*2.3+b.bx)); } }
+    if(b.glowMat){ b.glowMat.color.copy(_wgc).lerp(_wgh,on?.6+.4*Math.sin(tt*6):.05+.05*Math.sin(tt*2.3+b.bx)); if(emitK!==1) b.glowMat.color.multiplyScalar(emitK); } }
   // torches by the gates
   for(const C of CASTLES) for(const p of C.torches){ _tp.set(cwx(C.team,p.x+.05),CGY[C.team]+p.y,p.z); glowAt(_tp,.22+.05*Math.sin(tt*13+p.z),'#ffa040'); }
   drawPits();

@@ -256,3 +256,14 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .chip.chaos{border-color:rgba(255,106,30,.55);background:linear-gradient(180deg,rgba(80,20,10,.85),rgba(40,12,8,.88))}
 .chip.chaos .n{color:#ffb38a}
 .chip.chaos[aria-pressed="true"]{border-color:#ff7a2a;box-shadow:0 0 0 1px #ff7a2a inset}
+
+/* ---------- advanced graphics panel ---------- */
+#gfx{max-height:62%}
+.gfx-body{display:flex;flex-direction:column;gap:12px}
+.gfx-body .pills button{padding:7px 8px;font-size:13px}
+.tg-n span{display:flex;flex-direction:column;gap:2px}
+.tg-n small{font-size:12px;font-weight:500;color:var(--muted)}
+@media (min-width:760px){
+  #gfx{left:auto;top:0;width:min(400px,42vw);max-height:none;border-radius:16px 0 0 16px;border-top:0;border-left:1px solid var(--line);
+    padding-top:calc(env(safe-area-inset-top,0px) + 14px)}
+}

@@ -76,6 +76,26 @@ generated with Artlist (Nano Banana 2.1), then cut, made tileable and compressed
 from the game's own 3D soldiers. Everything lives in `assets/` and is embedded by the build; if a recording can't
 be decoded, the synthesized sound plays instead.
 
+## Graphics
+
+Settings → Quality offers Auto, Low, Medium, High, Ultra and Custom, and **Advanced graphics** opens a panel (at
+the side on wide screens, so the battle stays in view) where every option can be changed live:
+
+| Group | Options |
+| --- | --- |
+| Display | Resolution, anti-aliasing (off, FXAA, SMAA, MSAA 4×), frame rate limit (30, 60, unlimited), texture filtering |
+| Lighting and shadows | Shadow quality (off to 4096² maps), soft shadow edges, sunlight, sky light, distance haze |
+| Ambient occlusion | SSAO on/off, intensity, radius |
+| Bloom and glow | Bloom on/off, strength, spread, threshold; emissive glow (magma, Hellpit, torches, windows, eyes, spells) |
+| Camera | Depth of field, motion blur, sun shafts (each with its strength), vignette, chromatic aberration, film grain, sharpen |
+| Colour | Tone mapping (off, filmic ACES, Reinhard, Cineon), exposure, saturation, contrast, brightness, warmth |
+| Effects | Dust and debris density |
+
+With every effect off the game draws straight to the screen as before. Any effect routes the frame through a
+half-float HDR chain: scene (MSAA 4× target on WebGL 2) → a half-resolution depth and normal pass feeding ambient
+occlusion and sun shafts, with depth of field and camera motion blur gathered in one pass → bloom → tone mapping
+and colour grade → FXAA or SMAA. Auto picks a preset from the frame rate and steps it down or up as you play.
+
 ## Play locally
 
 ```bash
@@ -117,7 +137,7 @@ Main source files:
 | `20`–`26` | Skeleton and IK, ragdolls, blood, arrows, dropped gear, capes; `26`: the new units' gear, wing-flight model, spells, status effects and brains |
 | `30`–`36` | Combat, armies and formations, regiments and tactics, campaign, AI, per-unit update and drawing; `36`: the new units' regiments and formation places |
 | `40`–`42` | Game modes, battle UI, camera and touch input |
-| `43` | Graphics quality (Auto/Low/Medium/High), FPS counter, settings screen |
+| `43` | Graphics quality and the Auto frame-rate ladder, FPS counter, settings screen; `43b`: presets, post-processing chain (SSAO, bloom, sun shafts, depth of field, motion blur, tone mapping, grading, FXAA/SMAA/MSAA) and the Advanced Graphics panel |
 | `13c`, `27` | The Hellcrawler: stats and every clip; its rig, gait, tail, procedural model and behaviour |
 | `37`–`39` | Castles (walls, gatehouse, buildings, doors, training queues, garrison), the Hellpit (`37b`); research, mana, narrator and building panel; unit portraits |
 | `44` | Sound: recorded effects with synthesized fallbacks, voices, procedural music (Web Audio) |
