@@ -8,7 +8,7 @@
 Object.assign(TYPES,{
   thrall:{name:'Soulbound Thrall',engage:1.5,reach:.95,s:.93,hp:55,dmg:8,range:1.0,speed:3.0,cd:1.0,cost:50,thick:.88,turn:9,
     worker:true,chaos:true,gearX:true,body:[new THREE.Color('#2e2824'),new THREE.Color('#2e2824')]},
-  dread:{name:'Dreadguard',engage:2.15,reach:1.35,s:1.18,hp:190,dmg:30,range:1.4,speed:2.5,cd:1.4,cost:150,thick:1.28,turn:6.5,armor:.2,
+  dread:{name:'Dreadguard',engage:2.15,reach:1.35,s:1.18,hp:190,dmg:30,range:1.4,speed:2.5,cd:1.4,cost:150,thick:1.28,turn:6.5,armor:.2,plateLimbs:true,shW:.105,
     chaos:true,gearX:true,body:[new THREE.Color('#141112'),new THREE.Color('#1c0e10')]},
   harvester:{name:'Soul Harvester',engage:7,reach:1.4,s:1,hp:60,dmg:11,range:11,speed:2.7,cd:1.8,cost:120,thick:.86,turn:8,
     ranged:true,kite:4.2,finR:4,chgStop:6,chaos:true,gearX:true,skel:true,body:[new THREE.Color('#d6c9ab'),new THREE.Color('#d6c9ab')]},

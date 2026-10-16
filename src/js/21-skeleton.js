@@ -95,8 +95,9 @@ function buildSkel(u,p,dt){
   // shoulders twist
   const tw=p.twist+(p.look||0)*.25;
   _rt.copy(_r).multiplyScalar(Math.cos(tw)).addScaledVector(_f,Math.sin(tw));
-  j.sR.copy(j.chest).addScaledVector(_rt,.07*s);
-  j.sL.copy(j.chest).addScaledVector(_rt,-.07*s);
+  const shw=(u.T.shW||.07)*s;   // half the shoulder width (the Dreadguard is built broad)
+  j.sR.copy(j.chest).addScaledVector(_rt,shw);
+  j.sL.copy(j.chest).addScaledVector(_rt,-shw);
   // arms
   toW(u.hand.R,j.chest,p.R,s); toW(u.hand.L,j.chest,p.L,s);
   dirW(u.wRw,p.wR); dirW(u.wLw,p.wL);

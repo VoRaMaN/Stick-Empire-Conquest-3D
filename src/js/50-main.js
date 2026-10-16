@@ -63,7 +63,7 @@ function draw(){
   for(const L of [units,corpses]) for(const u of L) if(u.cr) crPrep(u);   // Hellcrawler models: posed only when on screen
   drawGear();
   _cr.set(1,0,0).applyQuaternion(camera.quaternion); _cb.set(0,0,1).applyQuaternion(camera.quaternion);
-  for(const st of statues){ const f=st.fig; if(!f.rag) drawFigure(f.j,f.s,f.col,f.thick,f.fwdW); }
+  for(const st of statues){ const f=st.fig; if(!f.rag){ drawFigure(f.j,f.s,f.col,f.thick,f.fwdW); if(f.T.plateLimbs) drawPlateLimbs(f,f.col,f.col); } }
   for(const u of units) if(u.alive){ drawUnit(u); if(tune.dbg) drawDebug(u);
     if(u.isUnit&&(u.hp<u.maxHp||u.morale<99||cam.follow===u)&&!u.invuln) drawBar(u); }
   for(const u of corpses) drawUnit(u);

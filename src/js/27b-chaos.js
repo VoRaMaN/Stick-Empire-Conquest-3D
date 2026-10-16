@@ -1,11 +1,11 @@
 /* ================= Chaos Empire systems: gear, soul fragments, Soul Rend, Infernal Regeneration, brains =================
    Thrall: hood, mattock, shackle and chain, a sack of soul crystals when it carries · Dreadguard: horned helm,
-   plate, spiked pauldrons, executioner's axe · Soul Harvester: a skeleton (rib cage around a trapped soul, pelvis), horned skull, torn shroud, scythe with a soul lantern, cape.
+   plate with molten cracks, layered spiked pauldrons, limb plate, tassets, a crimson cape, executioner's axe · Soul Harvester: a skeleton (rib cage around a trapped soul, pelvis), horned skull, torn shroud, scythe with a soul lantern, cape.
    Every Chaos soldier slowly knits back together once it has gone a few seconds without being hurt. */
 const CGX={};
 const CH_ACC=['#e0782a','#b3141f'];          // team accents: ember and blood red
 const CH_GLOW=['#ffb040','#ff3a2a'];
-const REAPER_CAPE=['#2c1a12','#3d0b14'];
+const REAPER_CAPE=['#2c1a12','#3d0b14'], DREAD_CAPE=['#3a1a10','#4c0d12'];
 function cgxInit(){
   if(CGX.ok) return; CGX.ok=true; gxInit();
   const tube=(pts,r)=>new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),16,r,4,false);
@@ -38,11 +38,27 @@ function cgxInit(){
   CGX.wrap=(()=>{ const g=new THREE.TorusGeometry(.042,.012,4,10); g.rotateX(Math.PI/2); return g; })();
   CGX.pauldron=new THREE.SphereGeometry(.15,10,8,0,Math.PI*2,0,Math.PI*.55);
   CGX.pSpike=new THREE.ConeGeometry(.028,.18,5);
-  CGX.plate=new THREE.CylinderGeometry(.168,.152,.46,14,1,true,-Math.PI*.58,Math.PI*1.16);
-  CGX.backPlate=new THREE.CylinderGeometry(.162,.15,.42,12,1,true,Math.PI*.42,Math.PI*1.16);
+  CGX.plate=new THREE.CylinderGeometry(.19,.152,.46,14,1,true,-Math.PI*.58,Math.PI*1.16);
+  CGX.backPlate=new THREE.CylinderGeometry(.186,.15,.42,12,1,true,Math.PI*.42,Math.PI*1.16);
   CGX.belt=(()=>{ const g=new THREE.TorusGeometry(.152,.026,5,18); g.rotateX(Math.PI/2); return g; })();
   CGX.skull=new THREE.SphereGeometry(.05,8,6);
   CGX.tabard=new THREE.BoxGeometry(.16,.36,.02);
+  // Dreadguard armour, pelvis-local like the plate: gorget, centre ridge, two stomach bands and five hip plates (tassets),
+  // molten cracks glowing through the breastplate; on the helm: cheek guards, a fanged grill, a spiked crest
+  { const cmp=(p,e,sc)=>new THREE.Matrix4().compose(p,new THREE.Quaternion().setFromEuler(e||new THREE.Euler()),sc||new V3(1,1,1)), Z=new V3(), S=[];
+    S.push([new THREE.CylinderGeometry(.1,.165,.085,12,1,true),cmp(new V3(0,.56,0))]);
+    S.push([new THREE.BoxGeometry(.03,.4,.03),cmp(new V3(0,.31,.172),new THREE.Euler(.083,0,0))]);
+    for(const [y,r] of [[.155,.166],[.105,.162]]) S.push([new THREE.CylinderGeometry(r,r-.002,.05,14,1,true,-Math.PI*.55,Math.PI*1.1),cmp(new V3(0,y,0))]);
+    for(let i=1;i<6;i++){ const c=i/6*Math.PI*2; S.push([new THREE.CylinderGeometry(.168,.218,i===3?.24:.2,3,1,true,c-.43,.86),cmp(new V3(0,-.045-(i===3?.02:0),0))]); }
+    CGX.dSteel=mergeGeo(S);
+    const rr=y=>.152+(y-.07)/.46*.038+.006, on=(x,y)=>new V3(x,y,Math.sqrt(Math.max(0,rr(y)*rr(y)-x*x)));
+    const crack=(pts,w)=>new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(([x,y])=>on(x,y)),false,'catmullrom',0),pts.length*4,w,4,false);
+    CGX.dMolten=mergeGeo([[crack([[-.11,.48],[-.065,.42],[-.085,.35],[-.03,.29],[-.045,.22],[.02,.16],[.01,.11]],.0075),new THREE.Matrix4()],
+      [crack([[-.065,.42],[-.02,.44],[.03,.4]],.006),new THREE.Matrix4()],[crack([[-.03,.29],[.04,.31],[.09,.26],[.12,.28]],.006),new THREE.Matrix4()]]);
+    const H=[]; for(const sd of [-1,1]) H.push([new THREE.BoxGeometry(.035,.17,.13),cmp(new V3(sd*.155,-.08,.12),new THREE.Euler(0,sd*.42,sd*.08))]);
+    for(let i=0;i<4;i++) H.push([new THREE.ConeGeometry(.024,.11,4),cmp(new V3(0,.27-i*.012,.12-i*.1),new THREE.Euler(-.25-i*.18,0,0))]);
+    CGX.dHelmX=mergeGeo(H);
+    CGX.dFangs=mergeGeo([-2,-1,0,1,2].map(i=>[new THREE.ConeGeometry(.014,i?.055:.07,4),cmp(new V3(i*.034,-.175,.215),new THREE.Euler(Math.PI,0,0))])); }
   // Soul Harvester: horned skull, scythe with a caged soul lantern
   CGX.cranium=new THREE.SphereGeometry(.205,16,12);
   CGX.jaw=new THREE.BoxGeometry(.19,.065,.15);
@@ -89,11 +105,15 @@ function buildChaosGear(u,G){
       const w=grp(); w.add(mesh(CGX.haft,LD('#2a1d16'),0,.3,0),mesh(CGX.topSpike,iron,0,1.28,0),mesh(CGX.axeBlade,steel),mesh(CGX.axeEdge,E('#ff6a2a','#ff3a0a')),mesh(CGX.backSpike,iron),
         mesh(CGX.wrap,iron,0,.68,0),mesh(CGX.wrap,iron,0,.2,0));
       for(let i=0;i<3;i++){ const l=mesh(CGX.link,iron,-.1,.64-i*.045,0); l.rotation.y=i%2?Math.PI/2:0; w.add(l); } G.w=w;
-      const h=grp(); h.add(mesh(CGX.helm,iron,0,.0,0),mesh(CGX.visor,iron,0,-.07,.19),mesh(CGX.slit,black,0,-.04,.222),mesh(CGX.crest,iron,0,.2,-.02),mesh(CGX.hornL,bone),mesh(CGX.hornR,bone)); G.h=h;
-      const r=grp(); r.add(mesh(CGX.plate,iron,0,.3,0),mesh(CGX.backPlate,iron,0,.3,0),mesh(CGX.belt,iron,0,.06,0),mesh(CGX.skull,bone,0,.07,.16),mesh(CGX.tabard,acc,0,-.13,.165));
+      const h=grp(); h.add(mesh(CGX.helm,iron,0,.0,0),mesh(CGX.visor,iron,0,-.07,.19),mesh(CGX.slit,E('#ff4a1a','#d0200a'),0,-.04,.222),mesh(CGX.crest,iron,0,.2,-.02),mesh(CGX.hornL,bone),mesh(CGX.hornR,bone),
+        mesh(CGX.dHelmX,iron),mesh(CGX.dFangs,bone)); G.h=h;
+      const r=grp(); r.add(mesh(CGX.plate,iron,0,.3,0),mesh(CGX.backPlate,iron,0,.3,0),mesh(CGX.belt,iron,0,.06,0),mesh(CGX.skull,bone,0,.07,.16),mesh(CGX.tabard,acc,0,-.13,.165),
+        mesh(CGX.dSteel,st?M.stone:lamOf('#3c3b43',{side:THREE.DoubleSide})),mesh(CGX.dMolten,E('#ff6a2a','#ff3a0a')));
       for(let i=0;i<5;i++){ const l=mesh(CGX.link,iron,-.12+i*.06,.42-i*.06,.165); l.rotation.y=i%2?Math.PI/2:0; r.add(l); } G.r=r;
-      for(const [k,sd] of [['pl',-1],['pr',1]]){ const g=grp(); const p=mesh(CGX.pauldron,iron); p.scale.set(1,.75,1.15); g.add(p);
-        for(let i=0;i<3;i++){ const sp=mesh(CGX.pSpike,bone,sd*.05,.08,-.07+i*.07); sp.rotation.z=-sd*.55; g.add(sp); } G[k]=g; }
+      for(const [k,sd] of [['pl',-1],['pr',1]]){ const g=grp(); const p=mesh(CGX.pauldron,iron); p.scale.set(1.22,.85,1.28); g.add(p);
+        const p2=mesh(CGX.pauldron,L('#3c3b43'),sd*.05,-.065,0); p2.scale.set(1.1,.7,1.2); p2.rotation.z=-sd*.4; g.add(p2);
+        for(let i=0;i<3;i++){ const sp=mesh(CGX.pSpike,bone,sd*.065,.095,-.08+i*.08); sp.rotation.z=-sd*.55; g.add(sp); } G[k]=g; }
+      if(!st) makeCape(u,'d');
       break; }
     case 'harvester':{
       const bone=L('#e3d6b8');
@@ -109,12 +129,25 @@ function buildChaosGear(u,G){
   for(const k of ['r','pl','pr']) if(G[k]){ G[k].scale.setScalar(u.s); freezeGear(G[k]); }
 }
 const _ch1=new V3(),_ch2=new V3(),_ch3=new V3();
+// the Dreadguard's limb plate: vambraces, couters and gauntlets; cuisses, poleyns, greaves and sabatons
+const PL_IRON=new THREE.Color('#3c3b43'), PL_DARK=new THREE.Color('#26242b'), _pa=new V3(), _pb=new V3();
+function drawPlateLimbs(u,c1,c2){
+  if(u.cloak&&u.alive) return;
+  const j=u.j, s=u.s, rl=.068*s*u.thick, ra=rl*.86, A=c1||PL_IRON, B=c2||PL_DARK;
+  for(const [el,ha] of [[j.eL,j.hL],[j.eR,j.hR]]){
+    cyl(_pa.copy(el).lerp(ha,.12),_pb.copy(el).lerp(ha,.8),ra*1.2,A,limbIM); sph(el,ra*1.16,B,jointIM); sph(ha,ra*1.2,A,jointIM); }
+  _ff.set(u.fwdW.x,0,u.fwdW.z); if(_ff.lengthSq()<1e-4) _ff.set(0,0,1); _ff.normalize(); _fq.setFromUnitVectors(_fz,_ff);
+  for(const [hp,kn,ft] of [[j.hipL,j.kL,j.fL],[j.hipR,j.kR,j.fR]]){
+    cyl(_pa.copy(hp).lerp(kn,.3),_pb.copy(hp).lerp(kn,.86),rl*1.13,B,limbIM); sph(kn,rl*1.18,A,jointIM);
+    cyl(_pa.copy(kn).lerp(ft,.1),_pb.copy(kn).lerp(ft,.86),rl*1.15,A,limbIM);
+    _fp.copy(ft).addScaledVector(_ff,.06*s); _fp.y-=.004*s; _s.set(rl*1.18,rl*.82,rl*1.95); _m.compose(_fp,_fq,_s); put(jointIM,A); }
+}
 function updateChaosGear(u){
   const G=u.G, j=u.j, s=u.s; if(!G) return;
   _gfl.copy(u.fwdW).addScaledVector(u.spine,-u.fwdW.dot(u.spine)); if(_gfl.lengthSq()<1e-6) _gfl.copy(u.fwdW); _gfl.normalize();
   if(G.r) orient(G.r,j.pelvis,u.spine,_gfl);
   for(const [k,sh,sd] of [['pl',j.sL,-1],['pr',j.sR,1]]){ const g=G[k]; if(!g) continue;
-    if(u.alive&&!u.rag) _ch1.copy(sh); else _ch1.copy(j.chest).addScaledVector(u.rightW,sd*.17*s);
+    if(u.alive&&!u.rag) _ch1.copy(sh); else _ch1.copy(j.chest).addScaledVector(u.rightW,sd*((u.T.shW||.07)+.1)*s);
     _ch1.addScaledVector(u.rightW,sd*.05*s).addScaledVector(u.spine,.02*s); orient(g,_ch1,u.spine,_gfl); }
 }
 

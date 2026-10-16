@@ -32,7 +32,7 @@ finishers and 10 charge attacks.
 | --- | --- | --- | --- |
 | Soulbound Thrall | 50 souls | Mines soul crystals | A hooded, chained slave with a mattock; fights only when cornered |
 | Hellcrawler | 150 souls | Fast pack hunter | Pounce, Pack Frenzy (below) |
-| Dreadguard | 150 souls | Heavy armoured axeman | Horned helm, spiked pauldrons, plate. Hellforged Cleave: a white-hot sweep that interrupts and breaks a shield wall |
+| Dreadguard | 150 souls | Heavy armoured axeman | Broad-shouldered and fully armoured: a horned great helm with a burning visor slit and a fanged grill, layered spiked pauldrons, a breastplate cracked with glowing magma, plate on every limb, hip plates and a crimson cape. Hellforged Cleave: a white-hot sweep that interrupts and breaks a shield wall |
 | Soul Harvester | 120 souls | Ranged caster | A walking skeleton: a thin column of vertebrae, a rib cage with a captured soul glowing inside, a horned skull, a torn shroud and a lantern scythe. Throws soul fragments, a charged soul blast, and a wail that curses everyone around it |
 
 Chaos pays in **souls** instead of gold. Souls come in at 0.42 of the gold rate (thralls dig red soul crystals, and

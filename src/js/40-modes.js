@@ -4,6 +4,7 @@ function clearAll(){
   for(const u of corpses) if(!u.statue||!statues.some(s=>s.fig===u)) destroyGear(u);
   corpses.length=0;
   arrows.length=0; drops.length=0; splats.length=0; for(const L of loose) dropRoot(L.g); loose.length=0; souls.length=0; wisps.length=0;
+  orbs.length=0; walls.length=0; clouds.length=0; zaps.length=0; beams.length=0; flashes.length=0;   // spells in flight must not follow you into the next battle or the Lab
   for(const r of regs) if(r.banner) dropRoot(r.banner); regs.length=0; regNum[0]=regNum[1]=0; selectReg(null);
   for(const c of callouts) c.age=1;
   cam.follow=null; updateFollowUI();
