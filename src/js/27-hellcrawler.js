@@ -150,8 +150,8 @@ function crInitRig(u){
 }
 function crLimbs(u){ return [u.feet[0],u.feet[1],u.paws[0],u.paws[1]]; }
 function crHome(u,i,ahead,out){
-  const s=u.s, sf=Math.sin(u.face), cf=Math.cos(u.face), h=CR_HOME[i];
-  out.set(u.pos.x+(sf*h[0]+cf*h[1])*s+u.av.x*ahead,0,u.pos.z+(cf*h[0]-sf*h[1])*s+u.av.z*ahead); out.y=groundAt(u,out.x,out.z); return out; }
+  const s=u.s, sf=Math.sin(u.face), cf=Math.cos(u.face), h=CR_HOME[i], w=h[1]*(i>1?(u.T.foreW||.8):(u.T.hindW||1));   // fore paws: a hound plants them under its shoulders
+  out.set(u.pos.x+(sf*h[0]+cf*w)*s+u.av.x*ahead,0,u.pos.z+(cf*h[0]-sf*w)*s+u.av.z*ahead); out.y=groundAt(u,out.x,out.z); return out; }
 // put all four feet down where they belong and lay the tail out straight behind (spawning, teleports)
 function crPlace(u){
   if(!u.cr) return; const L=crLimbs(u);
@@ -241,7 +241,7 @@ function buildCrawlSkel(u,p,dt){
   u.wRw.subVectors(u.hand.R,j.sR).normalize(); u.wLw.subVectors(u.hand.L,j.sL).normalize();
   if(u.aim) applyAim(u,dt,p);
   for(let i=0;i<2;i++){ const R=i===1, sd=R?1:-1, sh=R?j.sR:j.sL, hand=R?u.hand.R:u.hand.L, el=R?j.eR:j.eL, wr=R?j.hR:j.hL, pp=R?p.pR:p.pL;
-    if(pp) crC(_cq2,cr,pp,s).sub(cr.C).add(sh); else _cq2.copy(sh).addScaledVector(cr.d2,-.45*s).addScaledVector(cr.rc,sd*.9*s).addScaledVector(cr.n,.35*s);   // elbows out and up, ape-like
+    if(pp) crC(_cq2,cr,pp,s).sub(cr.C).add(sh); else _cq2.copy(sh).addScaledVector(cr.d2,-.95*s).addScaledVector(cr.rc,sd*(u.T.hound?.12:.3)*s).addScaledVector(cr.n,.2*s);   // elbows back along the body, only a little out (hounds tuck them in)
     ik2(sh,hand,CRB.ua*s,CRB.fa*s,_cq2,el,wr);
     const w=cr.hw[R?'R':'L'], cw=R?u.wRw:u.wLw;
     _cq3.subVectors(wr,el).normalize();
