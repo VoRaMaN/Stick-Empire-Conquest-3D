@@ -11,7 +11,7 @@ Object.assign(TYPES,{
   dread:{name:'Dreadguard',engage:2.15,reach:1.35,s:1.18,hp:190,dmg:30,range:1.4,speed:2.5,cd:1.4,cost:150,thick:1.28,turn:6.5,armor:.2,
     chaos:true,gearX:true,body:[new THREE.Color('#141112'),new THREE.Color('#1c0e10')]},
   harvester:{name:'Soul Harvester',engage:7,reach:1.4,s:1,hp:60,dmg:11,range:11,speed:2.7,cd:1.8,cost:120,thick:.86,turn:8,
-    ranged:true,kite:4.2,finR:4,chgStop:6,chaos:true,gearX:true,body:[new THREE.Color('#cfc2a4'),new THREE.Color('#cfc2a4')]},
+    ranged:true,kite:4.2,finR:4,chgStop:6,chaos:true,gearX:true,skel:true,body:[new THREE.Color('#d6c9ab'),new THREE.Color('#d6c9ab')]},
 });
 TYPES.miner.worker=true;   // workers (Miner, Thrall) dig, carry and stay out of the battle line
 for(const t of ['thrall','dread','harvester']) RAW[t]={};

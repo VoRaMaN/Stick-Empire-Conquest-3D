@@ -54,8 +54,10 @@ function separate(){
 /* ---------------- drawing ---------------- */
 const _fq=new THREE.Quaternion(),_fz=new V3(0,0,1),_fp=new V3(),_ff=new V3();
 // Bold Stick Empire build: thick tapered limbs, broad torso, big round head, rounded boot-shaped feet.
-function drawFigure(j,s,col,thick,fwd,set,robe){
+const _vb=new V3();
+function drawFigure(j,s,col,thick,fwd,set,robe,skel){
   const rl=.068*s*thick, ra=rl*.86, rt=rl*1.45, LI=set?set.limb:limbIM, TO=set?set.torso:torsoIM, SP=set?set.sph:sphIM, JO=set?set.joint:jointIM;
+  if(skel){ drawSkeleton(j,s,col,fwd,LI,SP,JO); return; }
   cyl(j.pelvis,j.chest,rt,col,TO); cyl(j.chest,j.neck,rt,col,LI);
   sph(j.pelvis,rt*.8,col,JO); sph(j.chest,rt,col,JO); sph(j.neck,rt*.84,col,JO);
   sph(j.head,.19*s*Math.min(1.08,.92+thick*.08),col,SP);
@@ -66,6 +68,23 @@ function drawFigure(j,s,col,thick,fwd,set,robe){
     if(!robe){ cyl(hp,kn,rl,col,LI); sph(kn,rl*.86,col,JO); cyl(kn,ft,rl*.86,col,LI); }
     _fp.copy(ft).addScaledVector(_ff,.05*s); _fp.y-=.012*s;
     _s.set(rl*1.05,rl*.72,rl*1.75); _m.compose(_fp,_fq,_s); put(JO,col); }
+}
+// a walking skeleton (the Soul Harvester): a thin column of vertebrae instead of a torso, collarbones, a hip bar and
+// thin bones with knobbed joints. The rib cage, pelvis and shroud are gear (27b) that follow the spine.
+function drawSkeleton(j,s,col,fwd,LI,SP,JO){
+  const rb=.02*s, rk=.03*s;
+  cyl(j.pelvis,j.neck,.015*s,col,LI); cyl(j.neck,j.head,.014*s,col,LI);
+  for(let k=1;k<=8;k++){ _vb.copy(j.pelvis).lerp(j.neck,k/9); sph(_vb,.023*s,col,JO); }
+  sph(j.neck,.021*s,col,JO); sph(j.pelvis,.03*s,col,JO);
+  sph(j.head,.14*s,col,SP);
+  cyl(j.sL,j.sR,.013*s,col,LI);
+  for(const [sh,el,ha] of [[j.sL,j.eL,j.hL],[j.sR,j.eR,j.hR]]){
+    sph(sh,rk,col,JO); cyl(sh,el,rb,col,LI); sph(el,rk*.85,col,JO); cyl(el,ha,rb*.8,col,LI); sph(ha,rk*.9,col,JO); }
+  cyl(j.hipL,j.hipR,.017*s,col,LI);
+  _ff.set(fwd?fwd.x:0,0,fwd?fwd.z:1); if(_ff.lengthSq()<1e-4)_ff.set(0,0,1); _ff.normalize(); _fq.setFromUnitVectors(_fz,_ff);
+  for(const [hp,kn,ft] of [[j.hipL,j.kL,j.fL],[j.hipR,j.kR,j.fR]]){
+    sph(hp,rk,col,JO); cyl(hp,kn,rb*1.1,col,LI); sph(kn,rk*.95,col,JO); cyl(kn,ft,rb*.9,col,LI);
+    _fp.copy(ft).addScaledVector(_ff,.05*s); _fp.y-=.012*s; _s.set(rk*1.15,rk*.6,rk*2.3); _m.compose(_fp,_fq,_s); put(JO,col); }
 }
 const BAR_BG=new THREE.Color('#121212'), _cr=new V3(), _cb=new V3(), _bp=new V3();
 function drawBar(u){

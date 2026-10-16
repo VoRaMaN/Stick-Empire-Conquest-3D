@@ -13,7 +13,7 @@
      look      turns the head; wL (if set) aims the head in the shoulders' frame
      pR / pL   elbow direction override */
 Object.assign(TYPES,{
-  crawler:{name:'Hellcrawler',engage:2.0,reach:1.3,s:1,hp:90,dmg:15,range:1.3,speed:5.2,cd:.55,cost:150,thick:1,turn:8,acc:7,
+  crawler:{name:'Hellcrawler',engage:2.0,reach:1.3,s:1,hp:180,dmg:15,range:1.3,speed:5.2,cd:.55,cost:150,thick:1,turn:8,acc:7,
     crawler:true,gearX:true,swarm:true,armReach:.95,chaos:true,body:[new THREE.Color('#2a1d19'),new THREE.Color('#2a1d19')]},
 });
 RAW.crawler={};

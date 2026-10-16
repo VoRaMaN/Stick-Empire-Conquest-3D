@@ -1,6 +1,6 @@
 /* ================= Chaos Empire systems: gear, soul fragments, Soul Rend, Infernal Regeneration, brains =================
    Thrall: hood, mattock, shackle and chain, a sack of soul crystals when it carries · Dreadguard: horned helm,
-   plate, spiked pauldrons, executioner's axe · Soul Harvester: horned skull, scythe with a soul lantern, cape.
+   plate, spiked pauldrons, executioner's axe · Soul Harvester: a skeleton (rib cage around a trapped soul, pelvis), horned skull, torn shroud, scythe with a soul lantern, cape.
    Every Chaos soldier slowly knits back together once it has gone a few seconds without being hurt. */
 const CGX={};
 const CH_ACC=['#e0782a','#b3141f'];          // team accents: ember and blood red
@@ -48,11 +48,27 @@ function cgxInit(){
   CGX.jaw=new THREE.BoxGeometry(.19,.065,.15);
   CGX.eyeHole=new THREE.SphereGeometry(.052,8,6);
   CGX.nose=new THREE.ConeGeometry(.024,.06,3);
-  CGX.sHorn=[-1,1].map(sd=>mergeGeo(crHorn(new V3(sd*.12,.13,-.04),new V3(sd*.3,.6,-.7),new V3(1,0,0),-1.7,.36,.034,6)));
+  CGX.sHorn=[-1,1].map(sd=>mergeGeo(crHorn(new V3(sd*.12,.13,-.04),new V3(sd*.3,.6,-.7),new V3(1,0,0),-1.8,.46,.042,7)));
   CGX.sHaft=new THREE.CylinderGeometry(.02,.025,1.8,6);
   CGX.sBlade=(()=>{ const sh=new THREE.Shape(); sh.moveTo(.02,1.05); sh.lineTo(.02,1.17); sh.quadraticCurveTo(-.42,1.25,-.82,.97); sh.quadraticCurveTo(-.44,1.1,.02,1.05); sh.closePath();
     const g=new THREE.ExtrudeGeometry(sh,{depth:.016,bevelEnabled:false}); g.translate(0,0,-.008); return g; })();
   CGX.lantern=new THREE.OctahedronGeometry(.065,0);
+  // the Harvester's bones (pelvis-local: y up the spine, z forward): six pairs of ribs (the last two floating), a
+  // sternum, a pelvis ring with its two wings and a sacrum; a torn shroud on the shoulders; a row of teeth
+  { const I=new THREE.Matrix4(), parts=[], cmp=(p,e,sc)=>new THREE.Matrix4().compose(p,new THREE.Quaternion().setFromEuler(e),sc||new V3(1,1,1));
+    for(const [y,w,fl] of [[.5,.058,0],[.455,.074,0],[.41,.086,0],[.365,.092,0],[.32,.09,1],[.28,.08,1]]) for(const sd of [-1,1]){
+      const pts=[new V3(sd*.012,y,-.045),new V3(sd*w*.8,y+.004,-.058),new V3(sd*w,y-.016,.004),new V3(sd*w*.78,y-.04,.068)];
+      if(!fl) pts.push(new V3(sd*.026,y-.056,.094));
+      parts.push([tube(pts,.0085),I]); }
+    parts.push([new THREE.BoxGeometry(.03,.19,.014),cmp(new V3(0,.375,.1),new THREE.Euler(-.12,0,0))]);
+    parts.push([new THREE.TorusGeometry(.068,.014,5,14),cmp(new V3(0,.005,.012),new THREE.Euler(Math.PI/2-.45,0,0),new V3(1,.8,1))]);
+    for(const sd of [-1,1]) parts.push([new THREE.SphereGeometry(.06,8,6,0,Math.PI*2,0,Math.PI*.55),cmp(new V3(sd*.075,.03,-.012),new THREE.Euler(0,0,-sd*.95),new V3(.4,.85,1))]);
+    parts.push([new THREE.ConeGeometry(.03,.09,5),cmp(new V3(0,-.015,-.045),new THREE.Euler(Math.PI+.3,0,0),new V3(1,1,.6))]);
+    CGX.bones=mergeGeo(parts);
+    CGX.teeth=mergeGeo([0,1,2,3,4,5].map(i=>[new THREE.BoxGeometry(.016,.03,.014),new THREE.Matrix4().makeTranslation(-.05+i*.02,-.135,.163)])); }
+  CGX.shroud=(()=>{ const g=new THREE.CylinderGeometry(.07,.15,.16,14,2,true), p=g.attributes.position;
+    for(let i=0;i<p.count;i++){ const y=p.getY(i); if(y<-.07){ const a=Math.atan2(p.getZ(i),p.getX(i)); p.setY(i,y-.05*(.5+.5*Math.sin(a*7+1.3))*(.6+.4*Math.sin(a*3))); } }
+    g.computeVertexNormals(); g.translate(0,.555,-.01); return g; })();
   CGX.cage=new THREE.TorusGeometry(.075,.008,4,12);
 }
 function buildChaosGear(u,G){
@@ -81,11 +97,12 @@ function buildChaosGear(u,G){
       break; }
     case 'harvester':{
       const bone=L('#e3d6b8');
-      const h=grp(); const cr=mesh(CGX.cranium,bone,0,.01,0); cr.scale.set(.95,1.05,1.06); h.add(cr,mesh(CGX.jaw,bone,0,-.16,.07));
-      for(const sd of [-1,1]){ const e=mesh(CGX.eyeHole,black,sd*.075,0,.168); e.scale.set(1,.85,.55); h.add(e); }
-      const n=mesh(CGX.nose,black,0,-.065,.19); n.rotation.x=Math.PI; h.add(n,mesh(CGX.sHorn[0],LD('#3a2a24')),mesh(CGX.sHorn[1],LD('#3a2a24'))); G.h=h;
+      const h=grp(); const cr=mesh(CGX.cranium,bone,0,.01,0); cr.scale.set(.95,1.05,1.06); h.add(cr,mesh(CGX.jaw,bone,0,-.16,.07),mesh(CGX.teeth,L('#efe6cc')));
+      for(const sd of [-1,1]){ const e=mesh(CGX.eyeHole,black,sd*.075,0,.168); e.scale.set(1.18,1,.62); h.add(e); }
+      const n=mesh(CGX.nose,black,0,-.065,.19); n.rotation.x=Math.PI; h.add(n,mesh(CGX.sHorn[0],LD('#3a2a24')),mesh(CGX.sHorn[1],LD('#3a2a24'))); h.scale.setScalar(.84); G.h=h;   // a smaller skull suits the thin frame
       const w=grp(); w.add(mesh(CGX.sHaft,LD('#1e1714'),0,.3,0),mesh(CGX.sBlade,L('#8a8c94')),mesh(CGX.lantern,E('#c58cff','#7a2ad8'),0,1.28,0));
       for(const ry of [0,Math.PI/2]){ const c=mesh(CGX.cage,LD('#2a2226'),0,1.28,0); c.rotation.y=ry; w.add(c); } G.w=w;
+      const r=grp(); r.add(mesh(CGX.bones,bone),mesh(CGX.shroud,st?M.stoneD:lamOf(REAPER_CAPE[team],{side:THREE.DoubleSide}))); G.r=r;
       if(!st) makeCape(u,'r');
       break; }
   }
@@ -226,6 +243,8 @@ function drawChaos(){
     else if(u.type==='dread'){ for(const sd of [-1,1]){ _ch1.copy(j.head).addScaledVector(fw,.21*s).addScaledVector(rw,sd*.055*s).addScaledVector(sp,-.04*s); glowAt(_ch1,.026*s,'#ff4a1a'); }
       if(u.forgeT>0){ _ch1.copy(j.hR).addScaledVector(u.wRw,.95*s); glowAt(_ch1,(.18+.05*Math.sin(tt*30))*s,'#ff9a3a'); if(Math.random()<.4) puff(_ch1,1,.05,.6,'#ffb050'); } }
     else if(u.type==='harvester'){ for(const sd of [-1,1]){ _ch1.copy(j.head).addScaledVector(fw,.15*s).addScaledVector(rw,sd*.075*s); glowAt(_ch1,.024*s,'#d070ff'); }
+      { _ch1.copy(j.pelvis).addScaledVector(u.spine,.39*s).addScaledVector(fw,.015*s); const pc=.5+.5*Math.sin(tt*3.1+u.id*1.7), sg=u.soulGlow||0;
+        glowAt(_ch1,(.045+.012*pc+.03*sg)*s,'#c27bff'); glowAt(_ch1,(.085+.02*pc+.03*sg)*s,'#3a1460'); }
       if(u.G&&u.G.w&&!u.G.w.dropped){ harvTip(u,_ch1); const pul=.5+.5*Math.sin(tt*4+u.id); glowAt(_ch1,(.09+.03*pul+.12*(u.soulGlow||0))*s,'#a64dff'); }
       if(u.wispT>0){ _ch1.copy(j.hL).addScaledVector(UP,.08*s+.03*Math.sin(tt*5)); glowAt(_ch1,.07*s,'#c58cff'); } }
   }

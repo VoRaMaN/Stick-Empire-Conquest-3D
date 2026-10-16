@@ -444,7 +444,7 @@ function drawUnit(u){
     else if(S.burn){ tc.copy(u.col).lerp(scol('#ff6a1a'),.3+.2*Math.sin(game.time*19+u.id)); col=tc; }
     else if(S.rend){ tc.copy(u.col).lerp(scol('#8a4ad8'),.3+.15*Math.sin(game.time*5+u.id)); col=tc; }
     if(S.healF>0){ tc.copy(col).lerp(scol('#fff3a8'),Math.min(1,S.healF*2)); col=tc; } }
-  drawFigure(u.j,u.s,col,u.thick,u.fwdW,u.cloak&&u.alive?GHOST:null,!!u.T.robe);
+  drawFigure(u.j,u.s,col,u.thick,u.fwdW,u.cloak&&u.alive?GHOST:null,!!u.T.robe,!!u.T.skel);
 }
 
 /* ---------- brains ---------- */
