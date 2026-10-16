@@ -204,7 +204,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 @media (max-width:560px){ .pausebtn{width:32px;height:32px;flex-basis:32px} .fps{font-size:10px} }
 @media (max-height:620px){ .menu{padding-top:calc(env(safe-area-inset-top,0px) + 2vh)} .mm{padding:8px 12px 7px} .mm span{font-size:23px} }
 @media (prefers-reduced-motion:reduce){.banner{transition:none}.chip.no{animation:none}.pulse{animation:none;box-shadow:0 0 0 2px var(--gold)}}
-.in-menu .top .seg,.in-menu .brand .w,.in-menu .pausebtn,.in-menu #hudBattle,.in-menu .dock,.in-menu #follow,.in-menu #callouts,.in-menu #banner,.in-menu #coach{display:none!important}
+.in-menu .top .seg,.in-menu .brand .w,.in-menu .pausebtn,.in-menu #hudBattle,.in-menu .dock,.in-menu #viewer,.in-menu #follow,.in-menu #callouts,.in-menu #banner,.in-menu #coach{display:none!important}
 
 /* ---------- castle: mana, unit portraits, building panel, hover tooltip ---------- */
 .side .gold .mana{color:#b9a6ff}
@@ -286,4 +286,30 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
   .chips::-webkit-scrollbar-track{background:transparent}
   .chips.dragging{cursor:grabbing;user-select:none}
   .chips.dragging .chip{pointer-events:none}
+}
+/* Unit Viewer: the description card beside the turntable */
+.viewer{position:absolute;z-index:5;top:var(--hudBottom,calc(env(safe-area-inset-top,0px) + 128px));right:calc(env(safe-area-inset-right,0px) + 12px);width:min(340px,calc(100vw - 24px));
+  max-height:calc(100% - var(--hudBottom,140px) - 200px);overflow:auto;background:var(--panel-hi);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:14px;padding:12px 14px 14px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 10px 30px rgba(0,0,0,.45);-webkit-overflow-scrolling:touch}
+.viewer.chaos{border-top-color:#e0583a}
+.vw-fac{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.viewer.chaos .vw-fac{color:#ff8a66}
+.viewer h2{margin:2px 0 0;font-family:var(--display);font-weight:500;font-size:36px;line-height:1;letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+.vw-role{font-size:13px;color:var(--muted);margin-top:2px}
+.vw-desc{font-size:13.5px;line-height:1.5;margin:10px 0 12px;color:var(--ink)}
+.vw-stats{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;font-size:12px;color:var(--muted)}
+.vw-stats .bar{height:6px;border-radius:3px;background:rgba(245,236,217,.12);overflow:hidden}
+.vw-stats .bar i{display:block;height:100%;background:var(--gold);border-radius:3px}
+.viewer.chaos .vw-stats .bar i{background:#e0583a}
+.vw-stats b{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;color:var(--ink);white-space:nowrap}
+.viewer h3{margin:14px 0 6px;font-family:var(--display);font-weight:500;font-size:19px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.vw-abil{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;font-size:13px;line-height:1.35}
+.vw-abil li{padding-left:14px;position:relative}
+.vw-abil li::before{content:'';position:absolute;left:2px;top:.5em;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.viewer.chaos .vw-abil li::before{background:#e0583a}
+.vw-count{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+@media (max-width:700px){
+  .viewer{left:calc(env(safe-area-inset-left,0px) + 10px);right:calc(env(safe-area-inset-right,0px) + 10px);width:auto;max-height:36vh;padding:10px 12px 12px}
+  .viewer h2{font-size:28px}
+  .vw-desc{font-size:13px;margin:8px 0 10px}
 }

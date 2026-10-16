@@ -7,7 +7,7 @@ function pan(dx,dy){ const k=cam.dist*.0016; const r=camRight(), f=camFwd(); cam
 function orbit(dx,dy){ cam.yaw-=dx*.0065; cam.pitch=clamp(cam.pitch+dy*.005,.04,1.35); inputStats.turned+=Math.abs(dx); }
 function clampGoal(){ cam.goal.x=clamp(cam.goal.x,-72,72); cam.goal.z=clamp(cam.goal.z,-20,20); cam.goal.y=H(cam.goal.x,cam.goal.z)+1.1; }
 // one finger (or left mouse) pans the field in battle and orbits in the Lab; right mouse / shift does the other
-const orbitDrag=p=>{ const o=game.mode==='duel'||settings.drag==='orbit'; return p.alt?!o:o; };
+const orbitDrag=p=>{ const o=game.mode==='duel'||game.mode==='viewer'||settings.drag==='orbit'; return p.alt?!o:o; };
 function twoFinger(){ const [a,b]=[...ptrs.values()]; return {d:Math.hypot(a.x-b.x,a.y-b.y),mx:(a.x+b.x)/2,my:(a.y+b.y)/2,ang:Math.atan2(b.y-a.y,b.x-a.x)}; }
 canvas.addEventListener('pointerdown',e=>{
   canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId);
@@ -22,7 +22,7 @@ canvas.addEventListener('pointermove',e=>{
     if(q.d>10&&pinch.d>10) cam.dGoal=clamp(cam.dGoal*pinch.d/q.d,3.5,70);                       // pinch: zoom
     const da=wrapA(q.ang-pinch.ang); if(Math.abs(da)<.5){ cam.yaw+=da; inputStats.turned+=Math.abs(da)*150; }   // twist: turn
     const mx=q.mx-pinch.mx, my=q.my-pinch.my;
-    if(game.mode!=='duel'&&settings.drag!=='orbit') cam.pitch=clamp(cam.pitch+my*.004,.04,1.35);  // two-finger drag: tilt
+    if(game.mode!=='duel'&&game.mode!=='viewer'&&settings.drag!=='orbit') cam.pitch=clamp(cam.pitch+my*.004,.04,1.35);  // two-finger drag: tilt
     else if(Math.hypot(mx,my)>.5) pan(mx,my);
     pinch=q; }
 });
@@ -77,6 +77,7 @@ function updateCamera(rdt){
     if(D.att.script){ cam.goal.set(a.x,0,a.z); cam.dGoal=D.att.s>1.5?12:8; }
     else cam.goal.set((a.x+b.x)/2,0,(a.z+b.z)/2);
     cam.goal.y=H(cam.goal.x,cam.goal.z)+1.1*(D.att.s>1.5?1.6:1);
+  } else if(game.mode==='viewer'&&VW.u){ viewerCamera(rdt);
   } else if(cam.follow){
     const f=cam.follow; const p=f.rag?f.j.pelvis:f.pos; cam.goal.set(p.x,H(p.x,p.z)+1.1*Math.sqrt(f.s),p.z);
     if(!f.alive&&f.rag&&f.rag.age>3){ cam.follow=null; updateFollowUI(); }

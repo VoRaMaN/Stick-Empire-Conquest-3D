@@ -97,13 +97,14 @@ function duelDo(kind){
 }
 function setTab(t){ $('#mBattle').setAttribute('aria-selected',t==='battle'); $('#mCamp').setAttribute('aria-selected',t==='camp'); $('#mDuel').setAttribute('aria-selected',t==='duel'); }
 function syncModeUI(){ const m=game.mode; selectReg(null);
-  $('#hudBattle').hidden=m!=='battle'; $('#actBattle').hidden=m!=='battle'; $('#orders').hidden=m!=='battle'; $('#actDuel').hidden=m!=='duel'; renderChips(); syncMinimap(); }
+  $('#hudBattle').hidden=m!=='battle'; $('#actBattle').hidden=m!=='battle'; $('#orders').hidden=m!=='battle'; $('#actDuel').hidden=m!=='duel'; $('#actView').hidden=m!=='viewer'; $('#viewer').hidden=m!=='viewer'; renderChips(); syncMinimap(); }
 function setMode(m){
   if(game.demo&&menuEl&&!menuEl.hidden) closeMenu();
   game.mode=m; setTab(m==='duel'?'duel':(game.campFight?'camp':'battle'));
   syncModeUI();
   if(m==='battle') resetBattle();
-  else { resetDuel(); cam.pitch=.22; cam.yaw=.35; }
+  else if(m==='viewer'){ resetViewer(); cam.yaw=.35; }
+  else { VW.u=null; resetDuel(); cam.pitch=.22; cam.yaw=.35; }
   renderChips();
 }
 

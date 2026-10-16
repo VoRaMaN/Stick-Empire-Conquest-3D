@@ -3,12 +3,14 @@ let bannerTimer=0;
 function showBanner(t,s,dur){ $('#bannerT').textContent=t; $('#bannerS').textContent=s||''; $('#banner').classList.add('show'); bannerTimer=dur||1.6; }
 function renderChips(){
   const box=$('#chips'); box.innerHTML='';
-  for(const t of (game.mode==='duel'?ORDER.concat(CHAOS):FAC(0).roster)){ const T=TYPES[t]; const b=document.createElement('button'); b.className='chip'+(T.chaos?' chaos':''); b.id='chip-'+t;
+  const lab=game.mode==='duel'||game.mode==='viewer';
+  for(const t of (lab?ORDER.concat(CHAOS):FAC(0).roster)){ const T=TYPES[t]; const b=document.createElement('button'); b.className='chip'+(T.chaos?' chaos':''); b.id='chip-'+t;
     const mc=game.mode==='battle'&&!game.classicMix?(MANA_COST[t]||0):0;
-    b.innerHTML='<span class="n">'+T.name+'</span><span class="s">'+(game.mode==='battle'?T.cost+' '+money(0)+(mc?' · '+mc+' mana':''):'10 finishers · 10 charges')+'</span><span class="qn"></span>';
-    if(game.mode==='duel') b.setAttribute('aria-pressed',game.duelSel===t);
+    b.innerHTML='<span class="n">'+T.name+'</span><span class="s">'+(game.mode==='battle'?T.cost+' '+money(0)+(mc?' · '+mc+' mana':''):game.mode==='viewer'?((UNIT_INFO[t]||{}).role||''):(FINS[t]?FINS[t].length:10)+' finishers · '+(CHG[t]?CHG[t].length:10)+' charges')+'</span><span class="qn"></span>';
+    if(lab) b.setAttribute('aria-pressed',game.duelSel===t);
     b.addEventListener('click',()=>{
       if(game.mode==='battle'){ if(!buyUnit(t)){ b.classList.remove('no'); void b.offsetWidth; b.classList.add('no'); } }
+      else if(game.mode==='viewer'){ sfx('ui'); game.duelSel=t; renderChips(); resetViewer(); unitVoice(t); }
       else { sfx('ui'); game.duelSel=t; game.finI=-1; game.idleI=-1; renderChips(); duelDo('fin'); unitVoice(t); }
     });
     box.appendChild(b); }
@@ -25,6 +27,7 @@ function setFinMode(m){ game.finMode=m; settings.finMode=m; saveSettings(); sync
 function syncBattleButtons(){ $('#bAuto').textContent='Auto-spawn: '+(game.auto[0]?'On':'Off'); $('#bFin').textContent='Finishers: '+FINL[game.finMode]; if(typeof syncSettingsUI==='function') syncSettingsUI(); }
 $('#bAuto').onclick=()=>{ sfx('ui'); setAutoSpawn(!game.auto[0]); };
 $('#bFin').onclick=()=>{ sfx('ui'); setFinMode((game.finMode+1)%3); };
+$('#dView').onclick=()=>{ sfx('ui'); setMode('viewer'); };
 $('#dChg').onclick=()=>duelDo('charge'); $('#dFin').onclick=()=>duelDo('fin'); $('#dIdle').onclick=()=>duelDo('idle'); $('#dAtk').onclick=()=>duelDo('atk'); $('#dWalk').onclick=()=>duelDo('walk');
 $('#dDef').onclick=()=>{ game.duelDefend=!game.duelDefend; $('#dDef').textContent='Defender: '+(game.duelDefend?'On':'Off'); };
 $('#dSlow').onclick=()=>{ game.slow=!game.slow; $('#dSlow').textContent='Slow-mo: '+(game.slow?'On':'Off'); };

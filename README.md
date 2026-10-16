@@ -9,6 +9,9 @@ browser.
 Pick your side on the title screen (Order Empire or Chaos Empire); Skirmish, the Campaign and the Lab use it, and
 the enemy fields the other empire.
 
+The Unit Viewer (on the title screen, or Unit info in the Lab) shows any unit up close on a turntable, with its
+description, stats, abilities and how many idles, moves, finishers and charges it has.
+
 ## Units
 
 | Unit | Role | Abilities |
@@ -171,7 +174,7 @@ Main source files:
 | `10`–`14` | Unit types, attacks, finishers, charges, blow aiming (`13a`/`13b`: the Ninja, Cleric, Wizard and Wing Archer) |
 | `20`–`26` | Skeleton and IK, ragdolls, blood, arrows, dropped gear, capes; `26`: the new units' gear, wing-flight model, spells, status effects and brains |
 | `30`–`36` | Combat, armies and formations, regiments and tactics, campaign, AI, per-unit update and drawing; `36`: the new units' regiments and formation places |
-| `40`–`42` | Game modes, battle UI, camera and touch input |
+| `40`–`42` | Game modes, battle UI, camera and touch input; `40b`: the Unit Viewer (descriptions, stats card, turntable) |
 | `43` | Graphics quality and the Auto frame-rate ladder, FPS counter, settings screen; `43b`: presets, post-processing chain (SSAO, bloom, sun shafts, depth of field, motion blur, tone mapping, grading, FXAA/SMAA/MSAA) and the Advanced Graphics panel |
 | `13c`, `27` | The Hellcrawler: stats and every clip; its rig, gait, tail, procedural model and behaviour |
 | `13d`, `27b` | The Thrall, Dreadguard and Soul Harvester: stats and every clip; their gear, souls, curses, cleave, regeneration and brains |

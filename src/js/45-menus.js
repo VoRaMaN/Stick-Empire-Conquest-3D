@@ -81,6 +81,7 @@ menuClick('mmCampaign',()=>{ const sv=campLoad(), b=$('#mmCampaign');
   delete b.dataset.armed; closeMenu(); game.demo=false; if(sv&&!sv.over) campNew(); else camp=sv; setTab('camp'); openCampaign(); });
 menuClick('mmTraining',()=>startTutorial());
 menuClick('mmLab',()=>{ closeMenu(); game.campFight=null; setTerrain('skirmish'); setMode('duel'); });
+menuClick('mmViewer',()=>{ closeMenu(); game.campFight=null; setTerrain('skirmish'); setMode('viewer'); });
 menuClick('mmSettings',()=>openSheet('settings'));
 menuClick('mmHelp',()=>openSheet('help'));
 menuClick('mmInstall',()=>{ if(installEvt){ installEvt.prompt(); installEvt.userChoice&&installEvt.userChoice.finally(()=>{ installEvt=null; updateInstallButton(); }); } else showPanel('menuInstall'); });
@@ -93,14 +94,15 @@ function closeOverlays(){ $('#pause').hidden=true; $('#results').hidden=true; fo
 function pauseGame(){
   if(!menuEl.hidden||!$('#camp').hidden||!$('#results').hidden) return;
   game.paused=true; $('#pause').hidden=false;
-  $('#pauseSub').textContent=game.tutorial?'Training':game.mode==='duel'?'Finisher Lab':game.campFight?campName(game.campFight.id)+' · campaign battle':BATTLE_SIZES[game.size].name+' skirmish · '+fmtTime(game.time-game.stats.t0);
-  $('#pRestart').textContent=game.mode==='duel'?'Reset the lab':'Restart battle';
+  $('#pauseSub').textContent=game.tutorial?'Training':game.mode==='duel'?'Finisher Lab':game.mode==='viewer'?'Unit Viewer':game.campFight?campName(game.campFight.id)+' · campaign battle':BATTLE_SIZES[game.size].name+' skirmish · '+fmtTime(game.time-game.stats.t0);
+  $('#pRestart').textContent=game.mode==='duel'?'Reset the lab':game.mode==='viewer'?'Reset the viewer':'Restart battle';
 }
 function resumeGame(){ $('#pause').hidden=true; for(const s of ['settings','help','tune']) $('#'+s).hidden=true; $('#dock').hidden=false; game.paused=false; }
 $('#bPause').onclick=()=>{ sfx('ui'); if(game.paused&&!$('#pause').hidden) resumeGame(); else pauseGame(); };
 menuClick('pResume',resumeGame);
 menuClick('pRestart',()=>{ resumeGame();
   if(game.mode==='duel') resetDuel();
+  else if(game.mode==='viewer') resetViewer();
   else if(game.tutorial) startTutorial();
   else if(game.campFight){ const f=game.campFight; startCampFight(f.id,f.attacking); }
   else resetBattle(); });
