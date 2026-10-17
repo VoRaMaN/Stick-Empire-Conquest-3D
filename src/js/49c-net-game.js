@@ -90,7 +90,7 @@ function applyCmd(team,type,p,local){
     case 'stance': if(!['defend','hold','charge'].includes(p.st)) return 'bad_payload'; armyOrder(p.st,team); return true;
     case 'reg':{ const r=regs.find(x=>x.id===p.r); if(!r||r.team!==team) return 'not_your_regiment'; if(!regAlive(r).length) return 'regiment_gone';
       const quiet=!local;
-      if(p.k==='move'){ const x=+p.x, z=+p.z; if(!isFinite(x)||!isFinite(z)||Math.abs(x)>80||Math.abs(z)>40) return 'bad_payload'; orderMove(r,{x,z},quiet); return true; }
+      if(p.k==='move'){ const x=+p.x, z=+p.z; if(!isFinite(x)||!isFinite(z)||Math.abs(x)>Math.max(80,MAP.fx1+4)||Math.abs(z)>Math.max(40,MAP.fz1+4)) return 'bad_payload'; orderMove(r,{x,z},quiet); return true; }
       if(p.k==='hold'){ orderHold(r,quiet); return true; }
       if(p.k==='charge'){ r.order={kind:'charge'}; return true; }
       if(p.k==='army'){ r.order={kind:'army'}; return true; }

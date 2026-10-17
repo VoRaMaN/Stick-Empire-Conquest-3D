@@ -90,6 +90,29 @@ charges, like the other units; pick it in the Finisher Lab to see them all.
 The ones Chaos buys climb out of the Hellpit, a magma pool in a ring of cracked rock and bone outside the Chaos
 castle, in packs of up to three.
 
+## Riverlands map
+
+Skirmish → **Choose the map** offers the **Classic field** or **Riverlands**, a river valley 320 × 320 m, about ten
+times the classic map's 168 × 64 m. The castles move out to the edges of the valley (walls at ±118 m, statues at
+±106 m), so armies march three times as far to meet.
+
+- **Capture zones A–D**, laid out as in the design sketch (point-symmetric: B and D nearer your castle, A and C
+  nearer the enemy's). Soldiers standing in a zone with no enemy in it lower the other army's banner and raise their
+  own up the 8 m pole (about 11 s for one soldier, quicker with more); with both armies inside, the zone is contested
+  and nothing moves. A held zone pays its army 5 gold a second (souls for Chaos). The ring on the ground shows the
+  holder and the capture progress; the battlefield map and the side cards show who holds what. Select a regiment and
+  tap **Capture** to send it to the nearest zone you don't hold; the enemy general sends detachments of his own.
+- **Two gold mines a side** in the corners beside each castle, each with a storehouse the miners carry to.
+- **A river** winds down the middle under five bridges (three stone, two timber); soldiers can wade it anywhere, slowly.
+- Hills, forests, bushes and long grass, two villages with windmills and fields, two hamlets, tent camps beside the
+  castles, watchtowers by the bridges, ruins on two hilltops, signposts and a forested rim. Soldiers walk round trees,
+  houses, tents and castle walls.
+- The scenery is built once from its own random seed. Trees, bushes and grass are instanced in tiles that are skipped
+  off screen or beyond the haze, far trees switch to simpler shapes, and the long grass is left out on Low quality.
+  The battlefield map becomes a square in the corner.
+
+Online matches are played on the classic field for now.
+
 ## Castles and research
 
 Behind each statue stands a castle: a crenellated curtain wall with a gatehouse and iron portcullis, corner
@@ -297,7 +320,7 @@ Main source files:
 | `13c`, `27` | The Hellcrawler: stats and every clip; its rig, gait, tail, procedural model and behaviour |
 | `13d`, `27b` | The Thrall, Dreadguard and Soul Harvester: stats and every clip; their gear, souls, curses, cleave, regeneration and brains |
 | `36b` | Factions: rosters, souls economy, team names, starting armies, the side picker's state |
-| `37`–`39` | Castles (walls, gatehouse, buildings, doors, training queues, garrison), the Hellpit (`37b`), the Black Citadel and Chaos buildings (`37c`); research, mana, narrator and building panel; unit portraits |
+| `37`–`39` | Castles (walls, gatehouse, buildings, doors, training queues, garrison), the Hellpit (`37b`), the Black Citadel and Chaos buildings (`37c`), the Riverlands map (`37d`: terrain, river, bridges, scenery, capture zones, obstacles, its minimap); research, mana, narrator and building panel; unit portraits |
 | `44` | Sound: recorded effects with synthesized fallbacks, voices, procedural music (Web Audio) |
 | `45` | Title screen, pause, battle results; `45b`: the PC or Mobile layout (first-launch question, Settings switch, hints) |
 | `46` | Battlefield map |
@@ -320,7 +343,10 @@ the Hellpit in a battle), the Chaos Empire (Order against Chaos castle battles b
 and Harvester clip, finisher aim), a seeded
 fingerprint proving the original five units still behave exactly as before, the online protocol (`nettest`: a host
 and guests in separate processes exchanging the real snapshots and commands: replication, command validation, remote
-recruitment, deaths, victory, 2v2 shared armies, disconnection) and a simulation cost report.
+recruitment, deaths, victory, 2v2 shared armies, disconnection), Riverlands (`rivertest`: a five-minute battle on the big map in
+which zones change hands and pay out, banners rise and fall, miners work both corner mines, nobody leaves the field
+or stands inside a tree, house, tent or wall; a zone taken, contested and lost step by step; the classic field
+restored afterwards) and a simulation cost report.
 
 Two more test sets need network access to the Supabase project and are run by hand:
 

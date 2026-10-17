@@ -40,7 +40,7 @@ function buildPit(C){
   b.wbox.copy(b.box).applyMatrix4(g.matrixWorld);
   C.B.pit=b; C.list.push(b); C.pit=b;
 }
-function placePit(C){ const b=C&&C.pit; if(!b) return; const g=b.grp; g.position.y=H(g.position.x,g.position.z); g.updateMatrixWorld(true); }
+function placePit(C){ const b=C&&C.pit; if(!b) return; const g=b.grp; g.position.x=cwx(C.team,PIT_L[0]); g.position.y=H(g.position.x,g.position.z); g.updateMatrixWorld(true); }
 TRAINED_AT.crawler='pit'; TRAINED_AT.hound='pit'; TRAINED_AT.cerberus='pit';   // a Chaos castle digs its pit when it is built (buildCastle)
 // a Hellcrawler rises out of the magma, claws hooked over the rim, and drags itself out toward the field
 function pitEmerge(b,type){

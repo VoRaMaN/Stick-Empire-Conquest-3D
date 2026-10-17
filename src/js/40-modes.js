@@ -16,7 +16,7 @@ function resetBattle(opt){
   const BS=BATTLE_SIZES[game.size], n=BS.start, g0=opt.gold||[BS.gold,BS.gold];
   game.gold=[g0[0]*econ(0),g0[1]*econ(1)];   // a Chaos treasury counts in souls (see ECON)
   if(game.classicMix) uid=48;   // the classic regression battle always numbers its soldiers from the same id, whatever ran before it
-  setupStatues(opt.statueHp); statsReset(); resetCastles(); closePanel();
+  setupStatues(opt.statueHp); statsReset(); resetCastles(); closePanel(); if(MAP.id!=='classic') rlResetZones();
   // each side's opening army: the faction's eight (Normal), or its regiments in ranks (Large, Epic)
   const start=t=>game.classicMix?(n<=8?['miner','miner','sword','sword','sword','archer','archer','spear']:armyMix(n)):factionStart(t,n);
   for(let t=0;t<2;t++) for(const ty of start(t)) spawn(ty,t);

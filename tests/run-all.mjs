@@ -23,6 +23,7 @@ const TESTS = [
   ['finaudit', 'Chaos finisher blows land on the right body part', o => num(o, /misses >0\.12: (\d+)/) <= 2, { DBG: '', FA_TYPES: 'thrall,dread,harvester' }],
   ['determinism', 'original five units behave exactly as before', o => /hash 7db8b359b35a1570/.test(o)],
   ['nettest', 'online: replication, commands, 2v2, disconnects (no network)', o => /nettest: \d+ passed, 0 failed/.test(o)],
+  ['rivertest', 'Riverlands: zones, banners, mines, obstacles, bounds', o => /rivertest: all passed/.test(o)],
   ['perf', '400-unit simulation cost (report only)', () => true]
 ];
 let fails = 0; const t0 = Date.now();

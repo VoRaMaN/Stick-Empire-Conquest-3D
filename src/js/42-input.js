@@ -5,7 +5,7 @@ function camRight(){return new V3(Math.cos(cam.yaw),0,-Math.sin(cam.yaw));}
 function camFwd(){return new V3(-Math.sin(cam.yaw),0,-Math.cos(cam.yaw));}
 function pan(dx,dy){ const k=cam.dist*.0016; const r=camRight(), f=camFwd(); cam.goal.addScaledVector(r,-dx*k).addScaledVector(f,dy*k); inputStats.panned+=Math.hypot(dx,dy); if(cam.follow){ cam.follow=null; updateFollowUI(); } clampGoal(); }
 function orbit(dx,dy){ cam.yaw-=dx*.0065; cam.pitch=clamp(cam.pitch+dy*.005,.04,1.35); inputStats.turned+=Math.abs(dx); }
-function clampGoal(){ cam.goal.x=clamp(cam.goal.x,-72,72); cam.goal.z=clamp(cam.goal.z,-20,20); cam.goal.y=H(cam.goal.x,cam.goal.z)+1.1; }
+function clampGoal(){ cam.goal.x=clamp(cam.goal.x,-MAP.cx,MAP.cx); cam.goal.z=clamp(cam.goal.z,-MAP.cz,MAP.cz); cam.goal.y=H(cam.goal.x,cam.goal.z)+1.1; }
 // one finger (or left mouse) pans the field in battle and orbits in the Lab; right mouse / shift does the other
 const orbitDrag=p=>{ const o=game.mode==='duel'||game.mode==='viewer'||settings.drag==='orbit'; return p.alt?!o:o; };
 function twoFinger(){ const [a,b]=[...ptrs.values()]; return {d:Math.hypot(a.x-b.x,a.y-b.y),mx:(a.x+b.x)/2,my:(a.y+b.y)/2,ang:Math.atan2(b.y-a.y,b.x-a.x)}; }
@@ -19,7 +19,7 @@ canvas.addEventListener('pointermove',e=>{
   const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY;
   if(ptrs.size===1){ if(orbitDrag(p)) orbit(dx,dy); else pan(dx,dy); }
   else if(ptrs.size===2&&pinch){ const q=twoFinger();
-    if(q.d>10&&pinch.d>10) cam.dGoal=clamp(cam.dGoal*pinch.d/q.d,3.5,70);                       // pinch: zoom
+    if(q.d>10&&pinch.d>10) cam.dGoal=clamp(cam.dGoal*pinch.d/q.d,3.5,MAP.zmax||70);                       // pinch: zoom
     const da=wrapA(q.ang-pinch.ang); if(Math.abs(da)<.5){ cam.yaw+=da; inputStats.turned+=Math.abs(da)*150; }   // twist: turn
     const mx=q.mx-pinch.mx, my=q.my-pinch.my;
     if(game.mode!=='duel'&&game.mode!=='viewer'&&settings.drag!=='orbit') cam.pitch=clamp(cam.pitch+my*.004,.04,1.35);  // two-finger drag: tilt
@@ -40,7 +40,7 @@ function endPtr(e){
   pick(e.clientX,e.clientY);
 }
 canvas.addEventListener('pointerup',endPtr); canvas.addEventListener('pointercancel',endPtr);
-canvas.addEventListener('wheel',e=>{ e.preventDefault(); cam.dGoal=clamp(cam.dGoal*Math.exp(e.deltaY*.0012),3.5,70); },{passive:false});
+canvas.addEventListener('wheel',e=>{ e.preventDefault(); cam.dGoal=clamp(cam.dGoal*Math.exp(e.deltaY*.0012),3.5,MAP.zmax||70); },{passive:false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('gesturestart',e=>e.preventDefault()); document.addEventListener('gesturechange',e=>e.preventDefault());
 document.addEventListener('touchmove',e=>{ if(e.target===canvas) e.preventDefault(); },{passive:false});
@@ -49,10 +49,10 @@ window.addEventListener('keydown',e=>{ const k=e.key.toLowerCase(), s=cam.dist*.
   if(e.target&&(e.target.tagName==='INPUT')) return;
   if(k==='w'||k==='arrowup') pan(0,-60*s); if(k==='s'||k==='arrowdown') pan(0,60*s); if(k==='a'||k==='arrowleft') pan(60*s,0); if(k==='d'||k==='arrowright') pan(-60*s,0);
   if(k==='q') orbit(-24,0); if(k==='e') orbit(24,0); if(k==='r') orbit(0,-16); if(k==='f') orbit(0,16);
-  if(k==='+'||k==='=') cam.dGoal=clamp(cam.dGoal*.85,3.5,70); if(k==='-') cam.dGoal=clamp(cam.dGoal*1.18,3.5,70); });
+  if(k==='+'||k==='=') cam.dGoal=clamp(cam.dGoal*.85,3.5,MAP.zmax||70); if(k==='-') cam.dGoal=clamp(cam.dGoal*1.18,3.5,MAP.zmax||70); });
 const _proj=new V3();
 const _ray=new THREE.Raycaster(), _ndc=new THREE.Vector2();
-function groundPoint(x,y){ _ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1); _ray.setFromCamera(_ndc,camera); const h=_ray.intersectObject(groundMesh); return h.length?h[0].point:null; }
+function groundPoint(x,y){ _ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1); _ray.setFromCamera(_ndc,camera); const h=_ray.intersectObject(MAP.ground||groundMesh,true); return h.length?h[0].point:null; }
 function pick(x,y){
   if(game.mode!=='battle'||game.paused) return;
   let best=null,bd=46*46;

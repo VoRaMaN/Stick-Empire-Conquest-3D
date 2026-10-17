@@ -1,3 +1,5 @@
+// seeded, so a run is repeatable (SEED=n to try another campaign; it was unseeded before and could rarely lose)
+{ let seed=+(process.env.SEED||2024); Math.random=()=>{ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; }; }
 require('./p3test.js');
 const sh=()=>{const c=S.getCamp(); return 'turn '+c.turn+' owner '+JSON.stringify(c.owner)+' pending '+JSON.stringify(c.pending)+' over '+c.over+' msg '+c.msg;};
 S.openCampaign(); console.log('paused',S.game.paused,'camp hidden',els['#camp'].hidden, 'svg len',els['#cMap'].innerHTML.length,'turn',els['#cTurn'].textContent);

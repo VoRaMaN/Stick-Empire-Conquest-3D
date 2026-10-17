@@ -5,13 +5,14 @@ function enemyCommander(dt){
   aiResearch(1); if(game.demo) aiResearch(0);
   const power=t=>units.filter(u=>u.alive&&u.team===t&&u.isUnit&&!u.T.worker&&!u.routing).reduce((a,u)=>a+u.T.cost/econ(t),0);
   const mine=power(1), theirs=power(0), st=game.stance[1];
-  const threat=units.some(u=>u.alive&&u.team===0&&!u.T.worker&&u.pos.x>14);
+  const threat=units.some(u=>u.alive&&u.team===0&&!u.T.worker&&u.pos.x>BASE_X[1]-20);
   game.bt=(game.bt||0)+2;   // seconds since the battle began (this runs every 2s)
   const full=count(1)>=Math.min(POP_CAP*.9,Math.max(24,BATTLE_SIZES[game.size].start*1.15))&&game.bt>20;
   if(st!=='charge'&&(mine>Math.max(1500,theirs*1.25)||full||(threat&&mine>theirs))) { setStance(1,'charge'); if(game.mode==='battle'&&!game.demo){ showBanner(teamName(1).split(' ').pop()+' charges!','',1.4); sfx('hornEnemy'); }
     const archers=regs.filter(r=>r.team===0&&r.type==='archer'&&regAlive(r).length);
     for(const r of regs) if(r.team===1&&r.type==='sword'&&archers.length&&Math.random()<.45) r.order={kind:'attack',target:archers[Math.floor(Math.random()*archers.length)]}; }
   else if(st==='charge'&&mine<theirs*.6&&!full){ setStance(1,'defend'); for(const r of regs) if(r.team===1) r.order={kind:'army'}; }
+  if(MAP.id!=='classic') rlAI(1);   // Riverlands: detachments go out to take and hold the capture zones
 }
 // the nearest enemy on foot within r, by plain distance (nearestEnemy's crowd penalty would hide one already brawling with our own)
 function closeThreat(u,r){ let best=null, bd=r*r;
@@ -100,9 +101,9 @@ function fightBrain(u,t,dx,dz,d){
   u.desired.set(bx+px*side*strafe,0,bz+pz*side*strafe);
 }
 function minerLogic(u,dt){
-  const m=MINE[u.team];
+  const m=MAP.id==='classic'?MINE[u.team]:rlMineOf(u);
   if(u.mstate==='toMine'){
-    _goal.set(m.x+Math.cos(u.slot)*1.7,0,m.z+Math.sin(u.slot)*1.7);
+    const mr=m.r||1.7; _goal.set(m.x+Math.cos(u.slot)*mr,0,m.z+Math.sin(u.slot)*mr);
     const dx=_goal.x-u.pos.x,dz=_goal.z-u.pos.z,d=Math.hypot(dx,dz);
     if(d<.35){ u.mstate='mining'; u.mineT=workerDig(u); }
     else { const sp=u.T.speed*clamp(d/1.2,.3,1); u.desired.set(dx/d*sp,0,dz/d*sp); u.faceGoal=Math.atan2(dx,dz); }
@@ -111,7 +112,7 @@ function minerLogic(u,dt){
     if(!u.action&&Math.abs(wrapA(u.faceGoal-u.face))<.4){ if(u.mineT<=0){ u.mstate='toBase'; u.carry=true; u.mining=false; } else { play(u,'mine'); u.fwdScale=0; } }
   } else {
     u.mining=false;
-    _goal.set(BASE_X[u.team]+(u.team?-2.6:2.6),0,u.zoff*.3);
+    if(MAP.id==='classic') _goal.set(BASE_X[u.team]+(u.team?-2.6:2.6),0,u.zoff*.3); else rlDropOf(u,_goal);
     const dx=_goal.x-u.pos.x,dz=_goal.z-u.pos.z,d=Math.hypot(dx,dz);
     if(d<.8){ u.carry=false; u.mstate='toMine'; if(game.mode==='battle'){ const g=workerYield(u); game.gold[u.team]+=g; onGold(u.team,g); if(u.team===0){ if(u.type==='thrall') crSfx('crystal','coin',u.pos,.8); else sfx('coin',u.pos,.8); } } }
     else { const sp=u.T.speed*.85; u.desired.set(dx/d*sp,0,dz/d*sp); u.faceGoal=Math.atan2(dx,dz); }

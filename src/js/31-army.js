@@ -34,8 +34,10 @@ function syncMines(){
         m.position.set(Math.cos(a)*r,h*.45,Math.sin(a)*r); m.scale.set(.18+R()*.1,h,.18+R()*.1); m.rotation.set((R()-.5)*.7,R()*3,(R()-.5)*.7); m.castShadow=true; g.add(m); }
       const base=new THREE.Mesh(new THREE.CircleGeometry(1.5,20),new THREE.MeshLambertMaterial({color:'#2a1612'})); base.rotation.x=-Math.PI/2; base.position.y=.03; g.add(base);
       g.position.set(c.x,H(c.x,c.z),c.z); scene.add(g); MINE_X[t]=g; emitReg(crystalMat,'e'); }
-    if(MINE_X[t]){ MINE_X[t].visible=chaos; MINE_X[t].position.y=H(MINE[t].x,MINE[t].z); }
-    for(const mm of mineMeshes) if(mm.t===t) mm.m.visible=!chaos; }
+    const cl=MAP.id==='classic';   // the classic field's two mines; a bigger map shows its own (37d)
+    if(MINE_X[t]){ MINE_X[t].visible=chaos&&cl; MINE_X[t].position.y=H(MINE[t].x,MINE[t].z); }
+    for(const mm of mineMeshes) if(mm.t===t) mm.m.visible=!chaos&&cl; }
+  if(MAP.id!=='classic') rlSyncMines();
 }
 function hitStatue(st,dmg){
   if(game.mode!=='battle'||st.hp<=0||game.over>0) return;
@@ -69,7 +71,9 @@ function autoSpend(team){
   else if(game.gold[team]>=cost){ game.gold[team]-=cost; spawn(pick,team); }
 }
 /* ---------- spatial hash: neighbour queries stay cheap with hundreds of units ---------- */
-const GC=3, GX0=-48, GZ0=-21, GNX=32, GNZ=14, gridCells=Array.from({length:GNX*GNZ},()=>[]);
+let GC=3, GX0=-48, GZ0=-21, GNX=32, GNZ=14, gridCells=Array.from({length:GNX*GNZ},()=>[]);
+// a bigger map needs a bigger grid (the classic one keeps its exact cells, so its battles replay identically)
+function setGrid(x0,z0,nx,nz,c){ c=c||3; if(GX0===x0&&GZ0===z0&&GNX===nx&&GNZ===nz&&GC===c) return; GC=c; GX0=x0; GZ0=z0; GNX=nx; GNZ=nz; gridCells=Array.from({length:GNX*GNZ},()=>[]); }
 const gI=x=>{ const i=Math.floor((x-GX0)/GC); return i<0?0:i>=GNX?GNX-1:i; }, gJ=z=>{ const j=Math.floor((z-GZ0)/GC); return j<0?0:j>=GNZ?GNZ-1:j; };
 function gridBuild(){ for(const c of gridCells) c.length=0; for(const u of units) if(u.alive) gridCells[gJ(u.pos.z)*GNX+gI(u.pos.x)].push(u); }
 // calls fn(o) for every unit in the cells overlapping the square of radius r (fn returns false to stop)
@@ -94,7 +98,7 @@ const DIRX=[1,-1];
 const RANK={spear:0,sword:-1.8,giant:-3.9,archer:-6.2};
 function setStance(team,st){
   if(st==='hold'){ const xs=units.filter(u=>u.alive&&u.team===team&&u.isUnit&&!u.T.worker).map(u=>u.pos.x);
-    game.holdX[team]=xs.length?clamp(xs.reduce((a,b)=>a+b,0)/xs.length+DIRX[team]*2.5,-28,28):BASE_X[team]+DIRX[team]*10; }
+    game.holdX[team]=xs.length?clamp(xs.reduce((a,b)=>a+b,0)/xs.length+DIRX[team]*2.5,BASE_X[0]+6,BASE_X[1]-6):BASE_X[team]+DIRX[team]*10; }
   game.stance[team]=st;
   if(team===myTeam()) for(const [id,v] of [['oDefend','defend'],['oHold','hold'],['oCharge','charge']]) $('#'+id).setAttribute('aria-pressed',st===v);
   assignSlots(team);

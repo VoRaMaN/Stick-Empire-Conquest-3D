@@ -38,6 +38,7 @@ $('#cGo').onclick=()=>campGo(); $('#cReset').onclick=()=>{ const b=$('#cReset');
 $('#rgClose').onclick=()=>selectReg(null);
 $('#rgHold').onclick=()=>{ if(selReg){ issue('reg',{r:selReg.id,k:'hold'}); updateRegbar(); } };
 $('#rgCharge').onclick=()=>{ if(selReg){ issue('reg',{r:selReg.id,k:'charge'}); updateRegbar(); } };
+$('#rgCapture').onclick=()=>{ if(!selReg) return; const Z=rlCaptureTarget(selReg); if(!Z) return; sfx('order'); issue('reg',{r:selReg.id,k:'move',x:Z.x,z:Z.z}); updateRegbar(); };
 $('#rgRelease').onclick=()=>{ if(selReg){ issue('reg',{r:selReg.id,k:'army'}); updateRegbar(); } };
 $('#rgFollow').onclick=()=>{ if(selReg){ const b=regAlive(selReg)[0]; if(b){ cam.follow=b; cam.dGoal=Math.min(cam.dGoal,b.s>1.5?14:10); updateFollowUI(); } } };
 $('#mDuel').onclick=()=>{ game.spent=false; closeCampaign(); if(game.mode!=='duel'){ game.campFight=null; setTerrain('skirmish'); setMode('duel'); } };

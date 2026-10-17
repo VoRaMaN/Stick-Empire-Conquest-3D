@@ -18,6 +18,7 @@ function drawMinimap(){
   mmT-=1; if(mmT>0) return; mmT=5;            // every 5th frame is plenty
   const {w,h,dpr}=mmSize(); if(!w) return; const c=mmCtx;
   c.clearRect(0,0,w,h);
+  if(MAP.id!=='classic') rlMinimapBg(c,w,h,dpr); else {
   // ground: a soft band for the playable field, darker beyond it
   c.fillStyle='rgba(191,154,104,.22)'; c.fillRect(mmX(-42,w),mmZ(-15,h),mmX(42,w)-mmX(-42,w),mmZ(15,h)-mmZ(-15,h));
   c.strokeStyle='rgba(245,236,217,.12)'; c.lineWidth=dpr; c.beginPath(); c.moveTo(w/2,mmZ(-15,h)); c.lineTo(w/2,mmZ(15,h)); c.stroke();
@@ -27,6 +28,7 @@ function drawMinimap(){
     c.fillStyle='rgba(30,22,14,.9)'; c.fillRect(xa+(t?-1:-1)*dpr,mmZ(3.5,h),2*dpr,mmZ(8.5,h)-mmZ(3.5,h)); }
   // mines
   c.fillStyle='rgba(228,178,58,.55)'; for(const m of MINE){ c.beginPath(); c.arc(mmX(m.x,w),mmZ(m.z,h),2.6*dpr,0,TAU); c.fill(); }
+  }
   // statues with their health
   for(const st of statues){ const x=mmX(st.pos.x,w), y=mmZ(st.pos.z,h), s=5*dpr, col=st.team?'#d0465a':'#e4b23a';
     c.fillStyle='rgba(0,0,0,.45)'; c.fillRect(x-s,y-s,2*s,2*s); c.fillStyle=col; const f=clamp(st.hp/st.max,0,1); c.fillRect(x-s,y+s-2*s*f,2*s,2*s*f);
@@ -42,6 +44,7 @@ function drawMinimap(){
   c.beginPath(); P.forEach((p,i)=>{ const x=mmX(p.x,w), y=mmZ(p.z,h); i?c.lineTo(x,y):c.moveTo(x,y); }); c.closePath();
   c.fillStyle='rgba(255,255,255,.1)'; c.fill(); c.strokeStyle='rgba(255,255,255,.75)'; c.lineWidth=1.2*dpr; c.stroke(); c.restore();
   c.fillStyle='rgba(255,255,255,.9)'; c.beginPath(); c.arc(mmX(cam.target.x,w),mmZ(cam.target.z,h),1.8*dpr,0,TAU); c.fill();
+  if(MAP.id!=='classic') rlMinimapZones(c,w,h,dpr);
 }
 function mmJump(e){ const r=mmEl.getBoundingClientRect(); const fx=(e.clientX-r.left)/r.width, fz=(e.clientY-r.top)/r.height;
   if(cam.follow){ cam.follow=null; updateFollowUI(); }

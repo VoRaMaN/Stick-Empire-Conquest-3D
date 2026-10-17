@@ -16,6 +16,7 @@ function updateUnit(u,dt){
   if(u.T.crawler) crawlerTick(u,dt);   // Rage research (never in the classic battle)
   if(u.T.chaos) chaosTick(u,dt);       // Infernal Regeneration, glows
   const acc=u.T.acc||(u.type==='giant'?3:9);
+  if(MAP.obst&&!u.inCastle&&!u.garrison){ mapWade(u); mapSteer(u,dt); }   // Riverlands: wading slows, obstacles are walked round (37d)
   u.vel.lerp(u.desired,1-Math.exp(-dt*acc));
   u.last.copy(u.pos);
   u.pos.addScaledVector(u.vel,dt);
@@ -27,7 +28,7 @@ function updateUnit(u,dt){
   if(!u.alive) return;
   if(NET.guest&&u.net) netPuppetCorrect(u,dt);   // keep a replicated soldier on the host's track
   updateFinAim(u,dt); updateCharge(u,dt);
-  if(!u.inCastle&&!u.garrison){ u.pos.x=clamp(u.pos.x,-42,42); u.pos.z=clamp(u.pos.z,-15,15); } u.pos.y=groundAt(u,u.pos.x,u.pos.z);
+  if(!u.inCastle&&!u.garrison){ u.pos.x=clamp(u.pos.x,MAP.fx0,MAP.fx1); u.pos.z=clamp(u.pos.z,MAP.fz0,MAP.fz1); if(MAP.obst) mapCollide(u); } u.pos.y=groundAt(u,u.pos.x,u.pos.z);
   const rv=_tmp.subVectors(u.pos,u.last).multiplyScalar(1/Math.max(dt,1e-4)); rv.y=0;
   const prevF=u.av.x*Math.sin(u.face)+u.av.z*Math.cos(u.face);
   u.av.lerp(rv,1-Math.exp(-dt*12)); u.spd=Math.hypot(u.av.x,u.av.z);

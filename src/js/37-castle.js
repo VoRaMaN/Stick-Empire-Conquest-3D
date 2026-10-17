@@ -4,8 +4,8 @@
    march through the gate. Castle-local frame: the wall's outer face is x=0, the castle runs toward -x, and the
    building fronts face +z (toward the default camera). World x = DIRX[team]*(lx-46). */
 var castleReady=false;
-const CF=46;                                   // |x| of the curtain wall's outer face
-const cwx=(t,lx)=>(t?-1:1)*(lx-CF);            // castle-local x → world x (DIRX is declared later in 31-army)
+// MAP.cf: |x| of the curtain wall's outer face (46 on the classic field; a bigger map pushes the castles out)
+const cwx=(t,lx)=>(t?-1:1)*(lx-MAP.cf);        // castle-local x → world x (DIRX is declared later in 31-army)
 
 /* ---------- assets embedded by the build (ElevenLabs audio, Artlist textures) ---------- */
 let _assetsP=null;
@@ -296,7 +296,7 @@ const CASTLES=[];
 function buildCastle(t){
   const fac=facOf(t), chaos=fac==='chaos';
   const C={team:t,fac,group:new THREE.Group(),kit:new Kit(),flags:[],dyn:[],B:{},list:[],torches:[],garrison:[],q:[],res:{},resBusy:{},research:null};
-  C.group.position.set(t?CF:-CF,CGY[t],0); if(t) C.group.scale.x=-1;
+  C.group.position.set(t?MAP.cf:-MAP.cf,CGY[t],0); if(t) C.group.scale.x=-1;
   Kit.mats=chaos?CMC:CM;
   buildWalls(C);
   for(const D of BUILDINGS_OF[fac]){ const b=Object.assign({},D,{team:t,fac,bx:D.x,hullL:[],q:[],train:null,exitQ:[],glowL:[]}); const glow=[];

@@ -27,7 +27,8 @@ let skyDome=null, sunDisc=null;
 // ground (rebuilt whenever the battlefield changes)
 let groundMesh=null, rocksIM=null; const rockData=[], mineMeshes=[], MINE_X={};   // MINE_X: Chaos soul-crystal mines (31-army)
 function buildTerrain(){
-  bakeH(); for(let t=0;t<2;t++){ let m=-1e9; for(let x=46;x<=82;x+=2) for(let z=-21;z<=16;z+=1) m=Math.max(m,H(t?x:-x,z)); CGY[t]=m+.05; }
+  bakeH(); for(let t=0;t<2;t++){ let m=-1e9; for(let x=MAP.cf;x<=MAP.cf+36;x+=2) for(let z=-21;z<=16;z+=1) m=Math.max(m,H(t?x:-x,z)); CGY[t]=m+.05; }
+  if(MAP.id!=='classic'){ rlGround(); if(typeof castleGround==='function') castleGround(); return; }   // a bigger map draws its own ground (37d)
   if(!groundMesh){
     const g=new THREE.PlaneGeometry(168,64,252,96); g.rotateX(-Math.PI/2);
     g.setAttribute('color',new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count*3),3));

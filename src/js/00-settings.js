@@ -8,6 +8,7 @@ const SETTINGS_DEFAULTS={
   blood:true,
   finMode:1,        // finishers: 0 off, 1 sometimes, 2 always
   size:0,           // battle size index (Normal / Large / Epic)
+  map:'classic',    // skirmish map: classic | river (Riverlands)
   auto:true,        // auto-spawn for your army
   master:.8, music:.5, sfx:.9,
   voice:true,       // narrator and unit voices

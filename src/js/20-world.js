@@ -9,7 +9,7 @@ const statues=[];
 
 function groundAt(u,x,z){return u&&u.gy!==undefined?u.gy:u&&u.inCastle?castleFloor(u,x,z):H(x,z);}
 // inside the walls a soldier walks on the courtyard paving; past the gate the road blends back into the field
-function castleFloor(u,x,z){ const t=u.team, lx=t?46-x:x+46, f=CGY[t]+.08; if(lx<-.5) return f; return lerp(f,H(x,z),smooth(clamp((lx+.5)/5,0,1))); }
+function castleFloor(u,x,z){ const t=u.team, lx=t?MAP.cf-x:x+MAP.cf, f=CGY[t]+.08; if(lx<-.5) return f; return lerp(f,H(x,z),smooth(clamp((lx+.5)/5,0,1))); }
 
 function makeUnit(type,team,x,z,opt){
   opt=opt||{};

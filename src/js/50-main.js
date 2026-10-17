@@ -48,6 +48,7 @@ function step(rdt){
     if(u.rag.age>18.5&&!u.rag.keep){ destroyGear(u); corpses.splice(i,1); if(cam.follow===u){cam.follow=null; updateFollowUI();} } }
   game.regT=(game.regT||0)-dt; if(game.regT<=0){ game.regT=.4; if(!NET.guest) cleanRegs(); if(selReg) updateRegbar(); }
   if(game.mode==='battle'){ updateCastles(dt); castleIncome(dt); } else if(castleReady) updateCastles(dt);
+  if(MAP.id!=='classic') rlStep(dt);   // capture zones, the windmills, the river (37d)
   if(panelB) panelTick(rdt);
   updateArrows(dt); updateSpells(dt); updateChaos(dt); updateFire(dt); updateBlood(dt); updateLoose(dt);
   { const half=capes.length>24; game.capeF=(game.capeF||0)+1; for(let i=0;i<capes.length;i++) if(!half||((i+game.capeF)&1)===0) stepCape(capes[i],half?dt*2:dt); }
@@ -69,22 +70,24 @@ function draw(){
     if(u.isUnit&&(u.hp<u.maxHp||u.morale<99||cam.follow===u)&&!u.invuln) drawBar(u); }
   for(const u of corpses) drawUnit(u);
   for(const C of CASTLES) for(const g of C.garrison) drawUnit(g);
-  castleFx();
+  castleFx(); if(MAP.id!=='classic') rlDrawFx();
   for(const list of [units,corpses,CASTLES[0].garrison,CASTLES[1].garrison]) for(const u of list){ const st=u.G&&u.G.str; if(st&&st.vis&&!u.G.o.dropped){ cyl(st.a,st.m,.006*u.s,WHITE,strIM); cyl(st.m,st.b,.006*u.s,WHITE,strIM); } }
   drawPuffs(); drawSpells(); drawChaos(); drawFire();
   for(const [im,n] of CNT){ im.count=n; im.instanceMatrix.needsUpdate=true; if(im.instanceColor) im.instanceColor.needsUpdate=true; }
   if(game.mode==='battle'){
-    const s=game.stance.join()+Math.floor(game.gold[0])+'|'+Math.floor(game.gold[1])+'|'+Math.floor(game.mana[0])+'|'+Math.floor(game.mana[1])+'|'+Math.ceil(statues[0].hp)+'|'+Math.ceil(statues[1].hp)+'|'+count(0)+'|'+count(1);
+    const s=game.stance.join()+Math.floor(game.gold[0])+'|'+Math.floor(game.gold[1])+'|'+Math.floor(game.mana[0])+'|'+Math.floor(game.mana[1])+'|'+Math.ceil(statues[0].hp)+'|'+Math.ceil(statues[1].hp)+'|'+count(0)+'|'+count(1)+(MAP.id!=='classic'?'|'+rlHeld(0)+rlHeld(1):'');
     if(s!==hudCache){ hudCache=s; hudEls.gA.textContent=Math.floor(game.gold[0]).toLocaleString(); hudEls.gB.textContent=Math.floor(game.gold[1]).toLocaleString();
       const mOn=!game.classicMix; if(hudEls.mA){ hudEls.mA.textContent=Math.floor(game.mana[0]); hudEls.mB.textContent=Math.floor(game.mana[1]); if(hudEls.mA.parentNode) hudEls.mA.parentNode.hidden=!mOn; if(hudEls.mB.parentNode) hudEls.mB.parentNode.hidden=!mOn; }
       hudEls.hpA.style.width=(statues[0].hp/statues[0].max*100)+'%'; hudEls.hpB.style.width=(statues[1].hp/statues[1].max*100)+'%';
-      const SN={defend:'defending',hold:'holding',charge:'charging'}; hudEls.cA.textContent=count(0)+' units · '+SN[game.stance[0]]; hudEls.cB.textContent=count(1)+' units · '+SN[game.stance[1]];
+      const SN={defend:'defending',hold:'holding',charge:'charging'}; const ZN=t=>MAP.id==='classic'?'':' · '+rlHeld(t)+(rlHeld(t)===1?' zone':' zones');
+      hudEls.cA.textContent=count(0)+' units · '+SN[game.stance[0]]+ZN(0); hudEls.cB.textContent=count(1)+' units · '+SN[game.stance[1]]+ZN(1);
       const me=myTeam(); for(const t of FAC(me).roster){ const el=document.getElementById('chip-'+t); if(el){ el.style.opacity=game.gold[me]>=TYPES[t].cost&&game.mana[me]>=unitMana(t)?1:.55; const q=el.querySelector&&el.querySelector('.qn'); if(q){ const n=castleOn()?queuedType(me,t):0; q.textContent=n?'×'+n:''; } } } }
   }
   drawArrows(); drawBlood(); updateBanners(); drawSelection(1/60); updateCallouts(1/60);
   drawMinimap();
   // the sun's shadow box follows the camera along the field, so the castles get shadows when you look at them
-  { const sx=clamp(Math.round(cam.target.x/1.9765625)*1.9765625,-40,40); if(sx!==sun.userData.sx){ sun.userData.sx=sx; sun.position.set(-16+sx,30,16); sun.target.position.set(sx,0,0); sun.target.updateMatrixWorld(); } }
+  { const big=MAP.id!=='classic', sx=clamp(Math.round(cam.target.x/1.9765625)*1.9765625,big?-84:-40,big?84:40), sz=big?clamp(Math.round(cam.target.z/1.9765625)*1.9765625,-84,84):0;
+    if(sx!==sun.userData.sx||sz!==sun.userData.sz){ sun.userData.sx=sx; sun.userData.sz=sz; sun.position.set(-16+sx,30,16+sz); sun.target.position.set(sx,0,sz); sun.target.updateMatrixWorld(); } }
   renderFrame();
 }
 let last=performance.now();
@@ -101,9 +104,10 @@ function frame(now){
   if(!window.SE3D_NO_DRAW) draw();   // automated multi-browser tests switch rendering off to share a small CPU
 }
 // debug and test hooks (used by tests/ and the browser checks)
-window.__SE3D={closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
+window.__SE3D={THREE,closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
   renderer,sceneRef:scene,sunScreen,applyQuality,GFX_PRESETS,GFX_DEF,post,GFX:()=>GFX,CASTLES,recruit,buyUnit,startResearch,resLvl,hasRes,openPanel,closePanel,pickBuilding,setHover,queued,ICONS,makeUnitIcons,VOX,narrate,loadAssets,BUILDINGS,
-  NET,issue,applyCmd,buyFor,netSnapshot,netApplyTick,netBeforeStep,netAfterStep,hitStatue,netTest:()=>NETT,uiMode,setUiMode,uiSuggest,layoutTop,selectReg};
+  NET,applyCmd,buyFor,netSnapshot,netApplyTick,netBeforeStep,netAfterStep,hitStatue,netTest:()=>NETT,uiMode,setUiMode,uiSuggest,layoutTop,selectReg,
+  setTerrain,startSkirmish,RL,MAP,BASE_X,setFactions,rlCaptureTarget,regAlive,regCenter,issue};
 // start: apply saved settings, then open on the title screen with a battle playing behind it
 game.finMode=settings.finMode; game.auto[0]=settings.auto; game.size=settings.size; tune.blood=settings.blood;
 applyUiMode(); syncBattleButtons(); syncSettingsUI(); syncMinimap(); applyQuality();

@@ -71,7 +71,7 @@ function regBrain(u,o){
 // quiet: an order given on another screen (online) moves the soldiers without flashing a marker on this one
 function orderMove(r,p,quiet){
   const c=regCenter(r); let a=Math.atan2(p.x-c.x,p.z-c.z); if(Math.hypot(p.x-c.x,p.z-c.z)<2.5) a=r.team?-Math.PI/2:Math.PI/2;
-  r.order={kind:'move',x:clamp(p.x,-40,40),z:clamp(p.z,-14,14),a}; if(!quiet) marker.at(r.order.x,r.order.z,'#ffd36b');
+  r.order={kind:'move',x:clamp(p.x,MAP.fx0+2,MAP.fx1-2),z:clamp(p.z,MAP.fz0+1,MAP.fz1-1),a}; if(!quiet) marker.at(r.order.x,r.order.z,'#ffd36b');
 }
 function orderAttack(r,tr,unit,quiet){ r.order={kind:'attack',target:tr||null,unit:tr?null:unit}; const c=tr?regCenter(tr):unit.pos; if(!quiet) marker.at(c.x,c.z,'#ff5a4f'); }
 function orderHold(r,quiet){ const c=regCenter(r); r.order={kind:'hold',x:c.x,z:c.z,a:r.team?-Math.PI/2:Math.PI/2}; if(!quiet) marker.at(c.x,c.z,'#ffd36b'); }
@@ -101,6 +101,7 @@ function updateRegbar(){
   if(!selReg) return; const n=regAlive(selReg).length, o=selReg.order.kind;
   const ST={army:'following army orders',move:'marching',hold:'holding',attack:'attacking',charge:'charging'};
   $('#rgTitle').textContent='Regiment '+ROMAN(selReg.num); $('#rgSub').textContent=n+' '+TYPE_PL[selReg.type]+' · '+ST[o];
+  const cb=$('#rgCapture'); if(cb){ const Z=MAP.id==='classic'?null:rlCaptureTarget(selReg); cb.hidden=!Z; if(Z) cb.textContent='Capture '+Z.id; }
 }
 
 /* ---------- tactics: flanks, rear, charge, high ground, brace ---------- */
@@ -144,5 +145,7 @@ const TPRESET={
   keep:{wave:.8,m:[[19,0,7,2.6],[8,-8,5,1.2]]},
 };
 let terrName='skirmish';
-function setTerrain(name){ if(terrName===name) return; terrName=name; const p=TPRESET[name]; TERR.wave=p.wave; TERR.m=p.m; buildTerrain(); }
+function setTerrain(name){ if(terrName===name) return; terrName=name; const river=name==='riverlands';
+  if(river!==(MAP.id==='river')) setMapMode(river);   // Riverlands is a map of its own (37d); every other ground is the classic field
+  if(!river){ const p=TPRESET[name]; TERR.wave=p.wave; TERR.m=p.m; } buildTerrain(); }
 
