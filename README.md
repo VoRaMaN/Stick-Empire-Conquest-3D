@@ -299,7 +299,7 @@ Main source files:
 | `36b` | Factions: rosters, souls economy, team names, starting armies, the side picker's state |
 | `37`–`39` | Castles (walls, gatehouse, buildings, doors, training queues, garrison), the Hellpit (`37b`), the Black Citadel and Chaos buildings (`37c`); research, mana, narrator and building panel; unit portraits |
 | `44` | Sound: recorded effects with synthesized fallbacks, voices, procedural music (Web Audio) |
-| `45` | Title screen, pause, battle results |
+| `45` | Title screen, pause, battle results; `45b`: the PC or Mobile layout (first-launch question, Settings switch, hints) |
 | `46` | Battlefield map |
 | `47` | Training battle |
 | `48` | Offline cache and update notice |
@@ -328,6 +328,27 @@ Two more test sets need network access to the Supabase project and are run by ha
 NODE_USE_ENV_PROXY=1 node tests/online/rooms.test.mjs              # rooms, codes, seats, RLS, start/result rules, private channels
 npm run serve &  python3 tests/online/browser_match.py http://localhost:8080/ 1v1   # (or 2v2) real browsers, real identities
 ```
+
+The layouts are checked in a real browser (no network needed): the first-launch question, the Settings switch, and on
+phones in landscape and portrait that the top row and the dock leave the battlefield in view without overlapping.
+
+```bash
+npm run serve &  python3 tests/ui_layout.py http://localhost:8080/
+```
+
+## PC or Mobile layout
+
+The first time the game opens it asks **How do you play?** and offers two layouts, suggesting the one that fits the
+device (Mobile on a touch screen, PC with a mouse). The choice is remembered and can be changed any time in
+**Settings → Interface**. Both layouts accept touch and mouse alike; only the arrangement changes.
+
+- **PC** keeps the full-size panels: title and mode tabs at the top, both armies' cards and the map under them,
+  and the dock with its own rows for units, orders and actions.
+- **Mobile** keeps the battlefield clear. In landscape, where a phone is only 320–430 px tall, both armies' cards and
+  the map share one row beside the pause button, and the dock is two rows (unit cards, then orders and actions side by
+  side); the building panel and the settings open as columns on the right; the title screen puts the logo beside the
+  menu. On an 844 × 390 phone the top row and the dock take about 37 % of the height. In portrait, the mode tabs
+  share the top row with the pause button. The mode tabs are left out in landscape: the title screen has every mode.
 
 ## Controls
 

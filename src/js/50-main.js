@@ -103,12 +103,14 @@ function frame(now){
 // debug and test hooks (used by tests/ and the browser checks)
 window.__SE3D={closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
   renderer,sceneRef:scene,sunScreen,applyQuality,GFX_PRESETS,GFX_DEF,post,GFX:()=>GFX,CASTLES,recruit,buyUnit,startResearch,resLvl,hasRes,openPanel,closePanel,pickBuilding,setHover,queued,ICONS,makeUnitIcons,VOX,narrate,loadAssets,BUILDINGS,
-  NET,issue,applyCmd,buyFor,netSnapshot,netApplyTick,netBeforeStep,netAfterStep,hitStatue,netTest:()=>NETT};
+  NET,issue,applyCmd,buyFor,netSnapshot,netApplyTick,netBeforeStep,netAfterStep,hitStatue,netTest:()=>NETT,uiMode,setUiMode,uiSuggest,layoutTop,selectReg};
 // start: apply saved settings, then open on the title screen with a battle playing behind it
 game.finMode=settings.finMode; game.auto[0]=settings.auto; game.size=settings.size; tune.blood=settings.blood;
-syncBattleButtons(); syncSettingsUI(); syncMinimap(); applyQuality();
+applyUiMode(); syncBattleButtons(); syncSettingsUI(); syncMinimap(); applyQuality();
 setMode('battle');
 openMenu();
+// first launch: ask PC or Mobile before the title menu is used (the suggested layout is already applied behind it)
+if(settings.uiMode!=='pc'&&settings.uiMode!=='mobile') uiPickOpen();
 setTimeout(()=>{ $('#hint').style.transition='opacity .6s'; $('#hint').style.opacity='.0'; },14000);
 requestAnimationFrame(frame);
 // portraits of every unit for the dock and the building panels, once the first frames are on screen

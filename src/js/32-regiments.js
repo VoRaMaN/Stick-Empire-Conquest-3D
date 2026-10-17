@@ -94,7 +94,7 @@ function selectReg(r){
   selReg=r; const on=!!r&&game.mode==='battle';
   $('#regbar').hidden=!on; $('#orders').hidden=on||game.mode!=='battle'; $('#actBattle').hidden=on||game.mode!=='battle';
   if(on) updateRegbar();
-  $('#hint').textContent=on?'Tap the ground to move · tap an enemy to attack':(game.mode==='battle'?'Drag to move the camera · tap your soldiers to command their regiment':'Pick a unit · drag to orbit · pinch to zoom');
+  $('#hint').textContent=hintText(on);
   $('#hint').style.opacity=1;
 }
 function updateRegbar(){

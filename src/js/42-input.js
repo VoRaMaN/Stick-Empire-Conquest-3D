@@ -97,7 +97,8 @@ function updateCamera(rdt){
 }
 // keep the score cards clear of the header, however the header wraps on narrow phones
 function layoutTop(){ const t=document.querySelector('.top'); if(!t||!t.getBoundingClientRect) return; const b=t.getBoundingClientRect().bottom, root=document.documentElement.style; if(b>0) root.setProperty('--hudTop',Math.round(b+6)+'px');
-  const h=$('#hudBattle'); if(h&&h.getBoundingClientRect){ const r=h.getBoundingClientRect(); root.setProperty('--hudBottom',Math.round(!h.hidden&&r.bottom>0?r.bottom+8:b+10)+'px'); } }
+  const h=$('#hudBattle'); if(h&&h.getBoundingClientRect){ const r=h.getBoundingClientRect(); root.setProperty('--hudBottom',Math.round(!h.hidden&&r.bottom>0?r.bottom+8:b+10)+'px'); }
+  const d=$('#dock'); if(d&&d.getBoundingClientRect&&!d.hidden){ const r=d.getBoundingClientRect(); if(r.height>0) root.setProperty('--dockH',Math.round(Math.max(0,(window.innerHeight||0)-r.top))+'px'); } }
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layoutTop);
 // a hidden or collapsed page reports a 0×0 window: keep the last real size (a zero size made the camera's aspect
 // NaN and the screen showed nothing but the sky colour); the main loop re-checks the size every frame

@@ -162,6 +162,28 @@
     <p class="ver" id="ver"></p>
   </div>
 
+  <!-- first launch: PC or Mobile layout (changeable later in Settings) -->
+  <div id="uiPick" class="overlay uipick" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="uiPickH" aria-describedby="uiPickS">
+      <h2 id="uiPickH" class="card-h">How do you play?</h2>
+      <p class="card-sub" id="uiPickS">Pick the layout that fits your device. You can switch any time in Settings.</p>
+      <div class="ui-opts">
+        <button class="ui-opt" data-ui="pc">
+          <i class="tag" hidden>Suggested</i>
+          <svg class="ui-ic" viewBox="0 0 72 48" aria-hidden="true"><rect x="6" y="3" width="44" height="30" rx="3"/><path d="M22 44h12M28 33v11"/><rect x="56" y="22" width="11" height="18" rx="5.5"/><path d="M61.5 22v6"/></svg>
+          <b>PC</b>
+          <small>Mouse and keyboard. Full-size panels for a big screen.</small>
+        </button>
+        <button class="ui-opt" data-ui="mobile">
+          <i class="tag" hidden>Suggested</i>
+          <svg class="ui-ic" viewBox="0 0 72 48" aria-hidden="true"><rect x="10" y="9" width="52" height="30" rx="5"/><path d="M55 20v8"/><circle class="dot" cx="30" cy="24" r="5"/></svg>
+          <b>Mobile</b>
+          <small>Touch screen. A compact layout that keeps the battlefield clear, in portrait and landscape.</small>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- pause -->
   <div id="pause" class="overlay" hidden>
     <div class="card" role="dialog" aria-modal="true" aria-labelledby="pauseH">
@@ -193,6 +215,15 @@
   <!-- settings -->
   <div id="settings" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="setH">
     <div class="hd"><h2 id="setH">Settings</h2><button id="setClose">Done</button></div>
+    <section class="set-sec">
+      <h3>Interface</h3>
+      <div class="opt"><span id="uiLbl">Layout</span>
+        <div class="pills" role="radiogroup" aria-labelledby="uiLbl" id="uiPills">
+          <button role="radio" data-ui="pc">PC</button><button role="radio" data-ui="mobile">Mobile</button>
+        </div>
+      </div>
+      <small class="opt-note">PC: full-size panels for a mouse and a big screen. Mobile: a compact layout for touch screens that keeps the battlefield clear, in portrait and landscape.</small>
+    </section>
     <section class="set-sec">
       <h3>Graphics</h3>
       <div class="opt"><span id="qLbl">Quality</span>

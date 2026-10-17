@@ -14,6 +14,7 @@ const SETTINGS_DEFAULTS={
   drag:'pan',       // one-finger drag on the battlefield: pan | orbit
   minimap:true,
   shake:1,          // screen shake strength (0 off … 2 double)
+  uiMode:null,      // layout: 'pc' | 'mobile'; null until the player picks one at first launch
   tutorialDone:false,
   played:0          // battles finished, for the menu's subtitle
 };

@@ -52,6 +52,8 @@ with sync_playwright() as p:
     pages, logs = [], []
     for i in range(N):
         ctx = b.new_context(viewport={'width': 640, 'height': 420}, ignore_https_errors=True, service_workers='block')
+        # answer the first-launch "PC or Mobile" question up front (it would cover the title menu)
+        ctx.add_init_script("try{const k='se3d-settings',s=JSON.parse(localStorage.getItem(k)||'{}');if(!s.uiMode){s.uiMode='%s';localStorage.setItem(k,JSON.stringify(s));}}catch(e){}" % os.environ.get('UI', 'pc'))   # UI=mobile for the Mobile layout
         pg = ctx.new_page()
         pg.on('console', lambda m, i=i: logs.append((i, m.type, m.text)) if m.type in ('error', 'warning') else None)
         pg.on('pageerror', lambda e, i=i: logs.append((i, 'pageerror', str(e))))

@@ -50,7 +50,7 @@ $('#setTune').onclick=()=>{ sfx('ui'); openSheet('tune','settings'); };
 
 function setPills(box,attr,val){ if(!box||!box.querySelectorAll) return; box.querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset[attr]===String(val)))); }
 function syncSettingsUI(){
-  setPills($('#qPills'),'q',settings.quality); setPills($('#dragPills'),'drag',settings.drag); setPills($('#finPills'),'fin',game.finMode);
+  setPills($('#qPills'),'q',settings.quality); setPills($('#dragPills'),'drag',settings.drag); setPills($('#uiPills'),'ui',uiMode()); setPills($('#finPills'),'fin',game.finMode);
   $('#sFps').checked=settings.fps; if($('#sVoice')) $('#sVoice').checked=settings.voice!==false; $('#sBlood').checked=tune.blood; $('#sMini').checked=settings.minimap; $('#sAuto').checked=game.auto[0];
   for(const [id,k] of [['Master','master'],['Music','music'],['Sfx','sfx']]){ $('#s'+id).value=settings[k]; $('#o'+id).textContent=Math.round(settings[k]*100)+'%'; }
   if($('#sShake')){ const k=settings.shake===undefined?1:settings.shake; $('#sShake').value=k; $('#oShake').textContent=Math.round(k*100)+'%'; }
@@ -72,7 +72,7 @@ $('#setErase').onclick=()=>{ const b=$('#setErase');
   b.classList.remove('armed'); b.textContent='Erase saved progress';
   try{ localStorage.removeItem(SETTINGS_KEY); localStorage.removeItem('se3d-campaign'); }catch(e){}
   Object.assign(settings,SETTINGS_DEFAULTS); camp=null; game.finMode=settings.finMode; game.auto[0]=settings.auto; tune.blood=settings.blood;
-  applyQuality(); applyVolumes(); syncBattleButtons(); syncMinimap(); toast('Saved progress and settings erased'); };
+  applyQuality(); applyVolumes(); syncBattleButtons(); syncMinimap(); applyUiMode(); toast('Saved progress and settings erased'); };
 
 /* ---------- toast ---------- */
 let toastTimer=0;
