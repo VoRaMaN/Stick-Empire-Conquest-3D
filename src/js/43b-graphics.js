@@ -37,6 +37,20 @@ function gfxCfg(){
 
 /* ---------- scene-side options ---------- */
 const FOG0={near:38,far:105};
+// View distance and shadow distance (Settings → Graphics and the Advanced screen) sit on top of whatever quality is
+// chosen. View distance pushes the haze out (or in) and the far clipping plane with it, and Riverlands' scenery tiles
+// draw that much further; shadow distance sizes the sun's shadow box round the camera.
+const viewK=()=>clamp(+settings.viewDist||1,.5,2.5), shadowM=()=>clamp(+settings.shadowDist||46,20,160);
+function applyDistances(){
+  const vk=viewK(), f=GFX.fog;
+  if(scene.fog){ scene.fog.near=f>.01?FOG0.near*vk/f:1e4; scene.fog.far=f>.01?FOG0.far*vk/f:2e4; }
+  const far=MAP.id==='classic'?Math.max(400,FOG0.far*vk*2.2):Math.max(230,(MAP.far||240)*vk);   // the sky dome (r 220) must stay inside it
+  if(camera.far!==far){ camera.far=far; camera.updateProjectionMatrix(); }
+  if(skyDome) skyDome.scale.setScalar(MAP.id==='classic'?1:Math.max(1,vk));   // the sky follows the camera on Riverlands: grow it so a long view isn't cut off by it
+  const sd=shadowM(), C=sun.shadow.camera;
+  if(C.right!==sd){ C.left=-sd; C.right=sd; C.top=sd*24/46; C.bottom=-sd*24/46; C.far=95*Math.max(1,sd/46); C.updateProjectionMatrix(); }
+}
+function setDistance(k,v){ settings[k]=v; saveSettings(); applyDistances(); if(typeof syncSettingsUI==='function') syncSettingsUI(); gfxSync(); }
 let anisoNow=-1;
 function texList(){ const L=[];
   for(const k in CM){ const m=CM[k]; if(m&&m.map) L.push(m.map); }
@@ -70,7 +84,7 @@ function applyGfx(cfg){
   const maxT=renderer.capabilities&&renderer.capabilities.maxTextureSize||4096;
   setShadows(cfg.shadows>0,Math.min(maxT,[1024,1024,2048,4096][cfg.shadows]||2048),cfg.soft);
   sun.intensity=.92*cfg.sun; hemi.intensity=.78*cfg.sky;
-  if(scene.fog){ const f=cfg.fog; scene.fog.near=f>.01?FOG0.near/f:1e4; scene.fog.far=f>.01?FOG0.far/f:2e4; }
+  applyDistances();
   partK=cfg.particles;
   post.want=gfxCanPost()&&needPost(cfg);
   if(post.built) postConfigure();
@@ -275,10 +289,12 @@ const GFX_UI=[
     {k:'res',t:'range',min:.5,max:1,step:.05,l:'Resolution',f:pct,n:'Share of your screen’s full sharpness the 3D view is drawn at'},
     {k:'aa',t:'pills',l:'Anti-aliasing',o:[['off','Off'],['fxaa','FXAA'],['smaa','SMAA'],['msaa','MSAA 4×']]},
     {k:'fpsCap',t:'pills',l:'Frame rate limit',o:[[30,'30'],[60,'60'],[0,'Unlimited']]},
-    {k:'aniso',t:'pills',l:'Texture filtering',o:[[1,'Bilinear'],[4,'4×'],[8,'8×'],[16,'16×']]}]],
+    {k:'aniso',t:'pills',l:'Texture filtering',o:[[1,'Bilinear'],[4,'4×'],[8,'8×'],[16,'16×']]},
+    {k:'viewDist',set:1,t:'range',min:.5,max:2.5,step:.05,l:'View distance',f:v=>Math.round(FOG0.far*v)+' m',n:'How far the world is drawn before the haze. Kept when you change preset'}]],
   ['Lighting and shadows',[
     {k:'shadows',t:'pills',l:'Shadows',o:[[0,'Off'],[1,'Low'],[2,'Medium'],[3,'High']]},
     {k:'soft',t:'tog',l:'Soft shadow edges'},
+    {k:'shadowDist',set:1,t:'range',min:20,max:160,step:2,l:'Shadow distance',f:v=>Math.round(v)+' m',n:'How far from the camera shadows are cast; further is softer and slower. Kept when you change preset'},
     {k:'sun',t:'range',min:.4,max:1.6,step:.05,l:'Sunlight',f:pct},
     {k:'sky',t:'range',min:.4,max:1.6,step:.05,l:'Sky light',f:pct},
     {k:'fog',t:'range',min:0,max:2,step:.05,l:'Distance haze',f:pct}]],
@@ -335,7 +351,7 @@ function gfxBuildUI(){
     for(const it of items){ const id='gx_'+it.k; let el;
       if(it.t==='range'){ el=document.createElement('div'); el.className='sl';
         el.innerHTML='<label for="'+id+'">'+it.l+'</label><output id="'+id+'o"></output><input id="'+id+'" type="range" min="'+it.min+'" max="'+it.max+'" step="'+it.step+'">'+(it.n?'<small>'+it.n+'</small>':'');
-        el.querySelector('input').addEventListener('input',e=>{ const v=+e.target.value; el.querySelector('output').textContent=it.f(v); gfxSet(it.k,v); }); }
+        el.querySelector('input').addEventListener('input',e=>{ const v=+e.target.value; el.querySelector('output').textContent=it.f(v); if(it.set) setDistance(it.k,v); else gfxSet(it.k,v); }); }
       else if(it.t==='tog'){ el=document.createElement('label'); el.className='tg'+(it.n?' tg-n':''); el.htmlFor=id;
         el.innerHTML='<span>'+it.l+(it.n?'<small>'+it.n+'</small>':'')+'</span><input id="'+id+'" type="checkbox">';
         el.querySelector('input').addEventListener('change',e=>{ sfx('ui'); gfxSet(it.k,e.target.checked); }); }
@@ -351,7 +367,7 @@ function gfxSyncUI(){
   setPills($('#gfxPre'),'gq',settings.quality); const fp=$('#gfxFps'); if(fp) fp.checked=!!settings.fps;
   const n=$('#gfxNote'); if(n) n.textContent=(settings.quality==='auto'?'Auto picks a preset from your frame rate and moves it up or down as you play. ':settings.quality==='custom'?'Your own settings. ':'Picking a preset sets everything below; changing anything switches to Custom. ')+
     (post.built?(post.hdr?'HDR effects on this device.':'This device draws effects without HDR.'):'')+(renderer.capabilities&&!renderer.capabilities.isWebGL2?' MSAA with effects needs WebGL 2.':'');
-  for(const [,items] of GFX_UI) for(const it of items){ const id='gx_'+it.k, v=GFX[it.k], el=document.getElementById(id);
+  for(const [,items] of GFX_UI) for(const it of items){ const id='gx_'+it.k, v=it.set?(it.k==='viewDist'?viewK():shadowM()):GFX[it.k], el=document.getElementById(id);
     if(it.t==='range'&&el){ el.value=v; const o=document.getElementById(id+'o'); if(o) o.textContent=it.f(v); }
     else if(it.t==='tog'&&el) el.checked=!!v;
     else if(it.t==='pills'){ const box=gfxEl.querySelector('[data-k="'+it.k+'"] .pills'); if(box) box.querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===String(v)))); } }

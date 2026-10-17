@@ -154,13 +154,20 @@ the side on wide screens, so the battle stays in view) where every option can be
 
 | Group | Options |
 | --- | --- |
-| Display | Resolution, anti-aliasing (off, FXAA, SMAA, MSAA 4×), frame rate limit (30, 60, unlimited), texture filtering |
-| Lighting and shadows | Shadow quality (off to 4096² maps), soft shadow edges, sunlight, sky light, distance haze |
+| Display | Resolution, anti-aliasing (off, FXAA, SMAA, MSAA 4×), frame rate limit (30, 60, unlimited), texture filtering, view distance |
+| Lighting and shadows | Shadow quality (off to 4096² maps), soft shadow edges, shadow distance, sunlight, sky light, distance haze |
 | Ambient occlusion | SSAO on/off, intensity, radius |
 | Bloom and glow | Bloom on/off, strength, spread, threshold; emissive glow (magma, Hellpit, torches, windows, eyes, spells) |
 | Camera | Depth of field, motion blur, sun shafts (each with its strength), vignette, chromatic aberration, film grain, sharpen |
 | Colour | Tone mapping (off, filmic ACES, Reinhard, Cineon), exposure, saturation, contrast, brightness, warmth |
 | Effects | Dust and debris density |
+
+**View distance** and **Shadow distance** are also in Settings → Graphics, and both stay as you set them when you
+change the quality preset. View distance (0.5× to 2.5×, shown in metres) pushes the haze and the far edge of the
+drawn world out or in; on Riverlands the trees, villages and other scenery are drawn that much further too, so a
+longer view shows more of the big map and a shorter one is faster. Shadow distance (20 to 160 m, 46 by default)
+sizes the box round the camera inside which things cast shadows: further covers more of the field, but the same
+shadow map is spread wider, so edges get softer, and more objects have to be drawn into it.
 
 With every effect off the game draws straight to the screen as before. Any effect routes the frame through a
 half-float HDR chain: scene (MSAA 4× target on WebGL 2) → a half-resolution depth and normal pass feeding ambient
@@ -360,6 +367,13 @@ phones in landscape and portrait that the top row and the dock leave the battlef
 
 ```bash
 npm run serve &  python3 tests/ui_layout.py http://localhost:8080/
+```
+
+View distance and shadow distance have their own browser check: both sliders in Settings and on the Advanced screen,
+saved and kept across presets and reloads, and moving the haze, far plane, Riverlands scenery and shadow box.
+
+```bash
+npm run serve &  python3 tests/distance_check.py http://localhost:8080/
 ```
 
 ## PC or Mobile layout

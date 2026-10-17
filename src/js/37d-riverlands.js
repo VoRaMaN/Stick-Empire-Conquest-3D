@@ -209,8 +209,8 @@ function rlTiled(geo,mat,list,o){
     RL.tiles.push({im,lo,x:cx,y:cy,z:cz,r,far,lod:o.lod||60,fine:!!o.fine,cast:!!o.cast}); } }
 // each frame: tiles beyond their distance are skipped, far ones switch to their plainer shape, and the long grass and
 // flowers go on the lowest quality
-function rlCullTiles(){ const c=camera.position, low=RL.low, sh=typeof GFX!=='undefined'&&GFX&&GFX.shadows>0;
-  for(const T of RL.tiles){ const d=Math.hypot(T.x-c.x,T.y-c.y,T.z-c.z)-T.r, vis=d<T.far&&!(T.fine&&low);
+function rlCullTiles(){ const c=camera.position, low=RL.low, sh=typeof GFX!=='undefined'&&GFX&&GFX.shadows>0, vk=viewK();
+  for(const T of RL.tiles){ const d=Math.hypot(T.x-c.x,T.y-c.y,T.z-c.z)-T.r, vis=d<T.far*vk&&!(T.fine&&low);
     if(T.lo){ T.im.visible=vis&&d<T.lod; T.lo.visible=vis&&d>=T.lod; T.lo.castShadow=false; } else T.im.visible=vis;
     T.im.castShadow=T.cast&&sh; } }
 
@@ -572,7 +572,7 @@ function setMapMode(river){
   if(groundMesh) groundMesh.visible=!river; if(rocksIM) rocksIM.visible=!river;
   // a greener, hazier light on the valley; the dusk plain keeps its own. The sky follows the camera on the big map.
   FOG0.near=river?70:38; FOG0.far=river?215:105; HORIZON.set(river?'#d6d3b4':'#e3c79a'); if(scene.fog) scene.fog.color.copy(HORIZON);
-  camera.far=river?240:400; camera.updateProjectionMatrix();
+  MAP.far=river?240:400;   // the far plane itself follows the view distance (applyDistances)
   if(!river){ if(skyDome) skyDome.position.set(0,0,0); if(sunDisc){ sunDisc.position.set(-90,60,-170); } }
   if(typeof applyGfx==='function'&&typeof GFX!=='undefined'&&GFX) applyGfx(GFX);
   setBodyClass('map-river',river); RL.mmKey='';

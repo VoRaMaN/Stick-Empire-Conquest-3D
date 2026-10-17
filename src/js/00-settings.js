@@ -15,6 +15,8 @@ const SETTINGS_DEFAULTS={
   drag:'pan',       // one-finger drag on the battlefield: pan | orbit
   minimap:true,
   shake:1,          // screen shake strength (0 off … 2 double)
+  viewDist:1,       // view distance: how far the world is drawn before the haze closes in (0.5 … 2.5 × the map's own)
+  shadowDist:46,    // shadow distance: metres from the camera that shadows are cast (20 … 160)
   uiMode:null,      // layout: 'pc' | 'mobile'; null until the player picks one at first launch
   tutorialDone:false,
   played:0          // battles finished, for the menu's subtitle

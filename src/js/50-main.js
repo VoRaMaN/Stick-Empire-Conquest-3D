@@ -86,8 +86,10 @@ function draw(){
   drawArrows(); drawBlood(); updateBanners(); drawSelection(1/60); updateCallouts(1/60);
   drawMinimap();
   // the sun's shadow box follows the camera along the field, so the castles get shadows when you look at them
-  { const big=MAP.id!=='classic', sx=clamp(Math.round(cam.target.x/1.9765625)*1.9765625,big?-84:-40,big?84:40), sz=big?clamp(Math.round(cam.target.z/1.9765625)*1.9765625,-84,84):0;
-    if(sx!==sun.userData.sx||sz!==sun.userData.sz){ sun.userData.sx=sx; sun.userData.sz=sz; sun.position.set(-16+sx,30,16+sz); sun.target.position.set(sx,0,sz); sun.target.updateMatrixWorld(); } }
+  // (snapped to whole shadow texels so edges don't crawl; a longer shadow distance also backs the sun off so the box stays in front of it)
+  { const big=MAP.id!=='classic', sd=shadowM(), st=sd*44/1024, kk=Math.max(1,sd/46), lim=big?150:40,
+      sx=clamp(Math.round(cam.target.x/st)*st,-lim,lim), sz=big?clamp(Math.round(cam.target.z/st)*st,-lim,lim):0;
+    if(sx!==sun.userData.sx||sz!==sun.userData.sz||kk!==sun.userData.kk){ sun.userData.sx=sx; sun.userData.sz=sz; sun.userData.kk=kk; sun.position.set(-16*kk+sx,30*kk,16*kk+sz); sun.target.position.set(sx,0,sz); sun.target.updateMatrixWorld(); } }
   renderFrame();
 }
 let last=performance.now();
@@ -104,7 +106,7 @@ function frame(now){
   if(!window.SE3D_NO_DRAW) draw();   // automated multi-browser tests switch rendering off to share a small CPU
 }
 // debug and test hooks (used by tests/ and the browser checks)
-window.__SE3D={THREE,closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
+window.__SE3D={THREE,sun,setDistance,applyDistances,closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
   renderer,sceneRef:scene,sunScreen,applyQuality,GFX_PRESETS,GFX_DEF,post,GFX:()=>GFX,CASTLES,recruit,buyUnit,startResearch,resLvl,hasRes,openPanel,closePanel,pickBuilding,setHover,queued,ICONS,makeUnitIcons,VOX,narrate,loadAssets,BUILDINGS,
   NET,applyCmd,buyFor,netSnapshot,netApplyTick,netBeforeStep,netAfterStep,hitStatue,netTest:()=>NETT,uiMode,setUiMode,uiSuggest,layoutTop,selectReg,
   setTerrain,startSkirmish,RL,MAP,BASE_X,setFactions,rlCaptureTarget,regAlive,regCenter,issue};
