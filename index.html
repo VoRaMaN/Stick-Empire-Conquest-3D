@@ -379,6 +379,144 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .netwait span{font-size:14px;color:var(--ink);max-width:420px;text-wrap:pretty}
 .netwait .mm{max-width:220px}
 .in-menu #netbar{display:none!important}
+
+/* ---------- interface choice: PC or Mobile (asked at first launch, changeable in Settings) ---------- */
+.uipick{z-index:40;background:rgba(14,10,7,.78)}
+.uipick .card{max-width:520px;gap:12px}
+.ui-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:6px}
+.ui-opt{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:16px 12px 14px;text-align:center;color:var(--ink)}
+.ui-opt b{font-family:var(--display);font-weight:500;font-size:32px;letter-spacing:.06em;text-transform:uppercase;line-height:1}
+.ui-opt small{font-size:12.5px;color:var(--muted);line-height:1.35;text-wrap:pretty}
+.ui-opt.sugg{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold);background:var(--panel-hi)}
+.ui-opt.sugg b{color:var(--gold)}
+.ui-opt .tag{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#1c140c;font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.ui-opt:active{transform:translateY(1px)}
+.ui-ic{width:72px;height:48px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.ui-ic .dot{fill:var(--gold);stroke:none;opacity:.85}
+.ui-opt.sugg .ui-ic{color:var(--gold)}
+
+/* ---------- Mobile layout ---------- */
+/* everywhere: the pause button stands alone (no title text during play) and the hint floats above the dock
+   instead of taking a row of its own */
+.ui-mobile .brand .w{display:none}
+.ui-mobile .top{flex-wrap:nowrap;align-items:center;padding-top:calc(env(safe-area-inset-top,0px) + 8px)}
+.ui-mobile .dock > .hint{position:absolute;left:0;right:0;bottom:100%;padding:0 14px 6px;pointer-events:none;color:var(--ink);text-shadow:0 1px 2px rgba(0,0,0,.75),0 0 8px rgba(0,0,0,.35)}
+.ui-mobile .side{padding:5px 9px 6px}
+.ui-mobile .side .lbl{font-size:17px}
+.ui-mobile .minimap{height:40px}
+.ui-mobile:not(.in-menu) .toast{bottom:calc(var(--dockH,120px) + 8px)}
+
+/* portrait: the mode tabs share the top row with the pause button */
+@media (orientation:portrait){
+  .ui-mobile .seg button{padding:6px 11px;font-size:13px}
+  .ui-mobile .seg .lg{display:none}
+}
+
+/* landscape: everything at the top fits in one row ([your army] [map] [their army]), the dock in two
+   (unit cards, then orders and actions side by side); the mode tabs give way, the title menu has them all */
+@media (orientation:landscape){
+  .ui-mobile .top{padding-top:calc(env(safe-area-inset-top,0px) + 6px)}
+  .ui-mobile .top .seg{display:none}
+  .ui-mobile .fps{position:absolute;left:calc(env(safe-area-inset-left,0px) + 16px);top:calc(env(safe-area-inset-top,0px) + 44px)}
+  .ui-mobile .hud{top:calc(env(safe-area-inset-top,0px) + 6px);display:grid;grid-template-columns:minmax(0,210px) minmax(0,300px) minmax(0,210px);grid-template-areas:"a map b" "net net net";
+    justify-content:center;align-items:stretch;gap:4px 8px;padding:0 calc(env(safe-area-inset-right,0px) + 56px) 0 calc(env(safe-area-inset-left,0px) + 56px)}
+  .ui-mobile .hudrow{display:contents}
+  .ui-mobile .side.a{grid-area:a} .ui-mobile .side.b{grid-area:b}
+  .ui-mobile .side{padding:4px 8px 5px;border-radius:9px}
+  .ui-mobile .side .row{flex-wrap:nowrap;gap:6px}
+  .ui-mobile .side .lbl{font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ui-mobile .side .gold{font-size:11px}
+  .ui-mobile .side .gold .mana{display:inline;margin:0;font-size:0}          /* the word "mana" goes; the number stays, after a mana diamond */
+  .ui-mobile .side .gold .mana i{display:inline;font-size:11px}
+  .ui-mobile .side .gold .mana b{font-size:11px}
+  .ui-mobile .side .gold .mana b::before{content:"";display:inline-block;width:6px;height:6px;margin:0 4px 1px 1px;background:#b9a6ff;transform:rotate(45deg)}
+  .ui-mobile .bar{height:4px;margin-top:4px}
+  .ui-mobile .side .cnt{font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ui-mobile .minimap{grid-area:map;width:100%;height:auto;min-height:34px;border-radius:8px}
+  .ui-mobile .netbar{grid-area:net;justify-self:center;padding:3px 10px;font-size:11px}
+
+  .ui-mobile .dock{flex-direction:row;flex-wrap:wrap;align-items:center;gap:5px 6px;
+    padding:6px calc(env(safe-area-inset-right,0px) + 10px) calc(env(safe-area-inset-bottom,0px) + 6px) calc(env(safe-area-inset-left,0px) + 10px);
+    background:linear-gradient(to top,rgba(20,14,9,.78),rgba(20,14,9,.45) 70%,rgba(20,14,9,0))}
+  .ui-mobile .dock > .hint{font-size:11px;padding-bottom:4px}
+  .ui-mobile .chips{flex:1 1 100%;gap:5px}
+  .ui-mobile .chip{min-width:70px;padding:4px 8px 3px;border-radius:9px}
+  .ui-mobile .chip.pic{padding-left:35px}
+  .ui-mobile .chip img{left:2px;bottom:1px;width:31px;height:36px}
+  .ui-mobile .chip .n{font-size:16px}
+  .ui-mobile .chip .s{font-size:10px}
+  .ui-mobile .chip .qn{top:2px;right:4px;font-size:10px}
+  .ui-mobile .orders{flex:1 1 220px;gap:5px}
+  .ui-mobile .orders .olbl{display:none}
+  .ui-mobile .actions{flex:1 1 260px;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .ui-mobile .actions::-webkit-scrollbar{display:none}
+  .ui-mobile .orders button,.ui-mobile .actions button{padding:7px 9px;font-size:13px;border-radius:9px}
+  .ui-mobile .regbar{flex:1 1 100%;flex-direction:row;align-items:center;gap:8px;padding:5px 8px;border-radius:10px}
+  .ui-mobile .rgname{flex:0 1 auto;min-width:0;flex-wrap:nowrap;gap:6px}
+  .ui-mobile .rgname b{font-size:18px;white-space:nowrap}
+  .ui-mobile .rgname span{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ui-mobile .rgbtns{flex:1 1 auto;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .ui-mobile .rgbtns button{padding:7px 9px;font-size:12.5px}
+
+  .ui-mobile .banner{top:30%}
+  .ui-mobile .banner .bt{font-size:clamp(32px,13vh,64px)}
+  .ui-mobile .banner .bs{font-size:12px;margin-top:4px}
+  .ui-mobile .coach{max-width:380px;padding:7px 10px 8px;gap:4px}
+  .ui-mobile .coach p{font-size:13.5px}
+  .ui-mobile .follow{padding:4px 4px 4px 10px;font-size:12px}
+
+  /* building panel and unit card: a column on the right that may reach down over the dock */
+  .ui-mobile .bpanel,.ui-mobile .viewer{box-sizing:border-box}
+  .ui-mobile .bpanel{width:min(360px,50vw);max-height:calc(100% - var(--hudBottom,64px) - env(safe-area-inset-bottom,0px) - 8px);padding:8px 10px 10px;border-radius:12px}
+  .ui-mobile .bp-head{gap:8px}
+  .ui-mobile .bp-head .emb{width:34px;height:34px}
+  .ui-mobile .bp-t b{font-size:21px}
+  .ui-mobile .bp-t span{font-size:11px}
+  .ui-mobile .bp-sec h3{margin:8px 0 5px;font-size:16px}
+  .ui-mobile .bpu{flex-basis:120px;grid-template-columns:40px 1fr;padding:4px 6px}
+  .ui-mobile .bpu img{width:40px;height:46px}
+  .ui-mobile .bpu .n{font-size:17px}
+  .ui-mobile .bpr{padding:5px 8px 7px}
+  .ui-mobile .bpr .rn{font-size:13px}
+  .ui-mobile .bpr .rd{font-size:11px}
+  .ui-mobile .viewer{left:auto;right:calc(env(safe-area-inset-right,0px) + 10px);width:min(320px,46vw);max-height:calc(100% - var(--hudBottom,64px) - var(--dockH,110px) - 8px);padding:9px 12px 11px}
+  .ui-mobile .viewer h2{font-size:26px}
+  .ui-mobile .vw-desc{font-size:12.5px;margin:6px 0 8px}
+
+  /* sheets (settings, help, graphics, tuning) open as a full-height panel on the right */
+  .ui-mobile .sheet,.ui-mobile #settings,.ui-mobile #help,.ui-mobile #gfx{left:auto;top:0;width:min(440px,62vw);max-height:none;border-radius:16px 0 0 16px;border-top:0;border-left:1px solid var(--line);
+    padding:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-right,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 12px) 16px}
+
+  /* title menu: the logo on the left, the menu beside it */
+  .ui-mobile .menu{flex-direction:row;justify-content:center;align-items:center;gap:clamp(12px,4vw,40px);overflow:hidden;
+    padding:calc(env(safe-area-inset-top,0px) + 10px) calc(env(safe-area-inset-right,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 10px) calc(env(safe-area-inset-left,0px) + 16px);
+    background:linear-gradient(to right,rgba(20,14,9,0) 0%,rgba(20,14,9,.25) 38%,rgba(20,14,9,.86) 58%,rgba(20,14,9,.95))}
+  .ui-mobile .menu-title{flex:1 1 0;max-width:48%}
+  .ui-mobile .logo span{font-size:clamp(44px,10vw,104px)}
+  .ui-mobile .logo b{font-size:clamp(30px,6.5vw,68px)}
+  .ui-mobile .tagline{font-size:11px;letter-spacing:.12em;margin-top:8px}
+  .ui-mobile .menu-panel{flex:1 1 0;max-width:400px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 2px 6px;box-sizing:border-box}
+  .ui-mobile .mm{padding:7px 12px 6px}
+  .ui-mobile .mm span{font-size:22px}
+  .ui-mobile .mm small{font-size:11.5px}
+  .ui-mobile .mm.small{padding:9px 12px;font-size:14px}
+  .ui-mobile .ver{position:absolute;left:calc(env(safe-area-inset-left,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+
+  /* pause, results and the first-launch question */
+  .ui-mobile .overlay{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px calc(env(safe-area-inset-bottom,0px) + 10px)}
+  .ui-mobile .card{padding:12px 14px;gap:8px}
+  .ui-mobile .card-h{font-size:28px}
+  .ui-mobile .card-h.big{font-size:44px}
+  .ui-mobile .ui-opt{padding:12px 10px 10px}
+  .ui-mobile .ui-opt b{font-size:26px}
+}
+/* the first-launch question on a short screen, whichever layout is suggested */
+@media (max-height:430px){
+  .uipick .card{padding:12px 14px;gap:8px}
+  .uipick .card-h{font-size:28px}
+  .uipick .ui-opt{padding:12px 10px 10px;gap:4px}
+  .uipick .ui-ic{width:60px;height:40px}
+}
 </style>
 </head>
 <body>
@@ -546,6 +684,28 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
     <p class="ver" id="ver"></p>
   </div>
 
+  <!-- first launch: PC or Mobile layout (changeable later in Settings) -->
+  <div id="uiPick" class="overlay uipick" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="uiPickH" aria-describedby="uiPickS">
+      <h2 id="uiPickH" class="card-h">How do you play?</h2>
+      <p class="card-sub" id="uiPickS">Pick the layout that fits your device. You can switch any time in Settings.</p>
+      <div class="ui-opts">
+        <button class="ui-opt" data-ui="pc">
+          <i class="tag" hidden>Suggested</i>
+          <svg class="ui-ic" viewBox="0 0 72 48" aria-hidden="true"><rect x="6" y="3" width="44" height="30" rx="3"/><path d="M22 44h12M28 33v11"/><rect x="56" y="22" width="11" height="18" rx="5.5"/><path d="M61.5 22v6"/></svg>
+          <b>PC</b>
+          <small>Mouse and keyboard. Full-size panels for a big screen.</small>
+        </button>
+        <button class="ui-opt" data-ui="mobile">
+          <i class="tag" hidden>Suggested</i>
+          <svg class="ui-ic" viewBox="0 0 72 48" aria-hidden="true"><rect x="10" y="9" width="52" height="30" rx="5"/><path d="M55 20v8"/><circle class="dot" cx="30" cy="24" r="5"/></svg>
+          <b>Mobile</b>
+          <small>Touch screen. A compact layout that keeps the battlefield clear, in portrait and landscape.</small>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- pause -->
   <div id="pause" class="overlay" hidden>
     <div class="card" role="dialog" aria-modal="true" aria-labelledby="pauseH">
@@ -577,6 +737,15 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
   <!-- settings -->
   <div id="settings" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="setH">
     <div class="hd"><h2 id="setH">Settings</h2><button id="setClose">Done</button></div>
+    <section class="set-sec">
+      <h3>Interface</h3>
+      <div class="opt"><span id="uiLbl">Layout</span>
+        <div class="pills" role="radiogroup" aria-labelledby="uiLbl" id="uiPills">
+          <button role="radio" data-ui="pc">PC</button><button role="radio" data-ui="mobile">Mobile</button>
+        </div>
+      </div>
+      <small class="opt-note">PC: full-size panels for a mouse and a big screen. Mobile: a compact layout for touch screens that keeps the battlefield clear, in portrait and landscape.</small>
+    </section>
     <section class="set-sec">
       <h3>Graphics</h3>
       <div class="opt"><span id="qLbl">Quality</span>
@@ -679,6 +848,6 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 <script src="online-config.js"></script>
 <script src="vendor/supabase.46a3cc6618.js"></script>
 <script src="vendor/three.min.js"></script>
-<script src="game.687fe04914.js"></script>
+<script src="game.17e7323514.js"></script>
 </body>
 </html>
