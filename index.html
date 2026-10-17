@@ -780,6 +780,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
         </div>
       </div>
       <small class="opt-note" id="qNote">Auto steps the resolution, shadows and effects down when the frame rate drops, and back up when it recovers.</small>
+      <div class="sl"><label for="sView">View distance</label><output id="oView">105 m</output><input id="sView" type="range" min="0.5" max="2.5" step="0.05" value="1"><small>How far the world is drawn before it fades into the haze. Shorter is faster; longer shows more of a big map.</small></div>
+      <div class="sl"><label for="sShadowD">Shadow distance</label><output id="oShadowD">46 m</output><input id="sShadowD" type="range" min="20" max="160" step="2" value="46"><small>How far from the camera things cast shadows. Further covers more of the field, but each shadow is softer and costs more. (Needs shadows on.)</small></div>
       <div class="set-btns"><button id="setGfx">Advanced graphics</button></div>
       <label class="tg" for="sFps">Show frame rate <input id="sFps" type="checkbox"></label>
       <label class="tg" for="sBlood">Blood <input id="sBlood" type="checkbox" checked></label>
@@ -874,6 +876,6 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 <script src="online-config.js"></script>
 <script src="vendor/supabase.46a3cc6618.js"></script>
 <script src="vendor/three.min.js"></script>
-<script src="game.41a6fbaff9.js"></script>
+<script src="game.39a2424b6a.js"></script>
 </body>
 </html>
