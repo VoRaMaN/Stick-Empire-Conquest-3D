@@ -526,3 +526,17 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 #oBox[aria-pressed="true"],#rgBox[aria-pressed="true"]{background:var(--gold,#e4b23a);color:#1b1408}
 .on-cfg{display:flex;flex-direction:column;gap:6px;margin:4px 0 2px}
 .on-cfg .pills button[disabled]{opacity:.75;cursor:default}
+
+/* who is online */
+.on-live{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.on-live .lh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.on-live .lh small,.on-live .lr{color:var(--muted);font-size:12px}
+.on-live .ld{width:9px;height:9px;border-radius:50%;background:#7b746a;display:inline-block}
+.on-live .ld.on{background:#4fd16b;box-shadow:0 0 0 3px rgba(79,209,107,.22);animation:livePulse 1.6s ease-in-out infinite}
+@keyframes livePulse{50%{box-shadow:0 0 0 6px rgba(79,209,107,.06)}}
+.on-live .lps{display:flex;flex-wrap:wrap;gap:5px;max-height:92px;overflow:auto}
+.on-live .lp{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.on-live .lp.me{border-color:var(--gold)}
+.on-live .st{width:7px;height:7px;border-radius:50%;background:#4fd16b}
+.on-live .st.lobby{background:#e4b23a}.on-live .st.battle{background:#e2554f}
+.on-map button{font-size:20px}

@@ -59,7 +59,7 @@ function rlProjDefense(t,u,c){
   let kind=r<pd?'dodge':r<pd+pg?(Math.random()*(o.block+o.parry)<o.parry?'parry':'block'):null;
   if(!kind||!CL[kind]) kind=kind&&CL.block?'block':null; if(!kind) return;
   const ev=(c.ev||[]).find(e=>e.e==='fire'||e.e==='cast'||e.e==='throw'||e.e==='bolt'||e.e==='shoot'||e.e==='release'), tf=ev?ev.t:(c.dur||1)*.6;
-  const fl=u.T.bolt?clamp(d/45,.1,.8):(u.type==='archer'?clamp(d/24,.16,1.05):clamp(d/16,.3,2.4));
+  const fl=u.T.bolt?clamp(d/45,.1,.8):(u.type==='archer'?arrowT(d):clamp(d/16,.3,2.4));
   const lead={block:.22,parry:.14,dodge:.2}[kind];
   t.defQ={kind,from:u,t:Math.max(0,tf+fl-lead)+rand(-.03,.03)};
 }

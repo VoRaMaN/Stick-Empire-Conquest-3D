@@ -4,7 +4,31 @@
    under way. Lobby: the code with a copy button, both teams' seats with names, ready marks and live connection dots,
    each team's faction, Ready / Switch team / Leave, and Start for the host once every seat is filled and ready.
    Every change is a database call; every other player sees it through the room's private channel. */
-const ON={mode:(settings.netMode==='2v2'?'2v2':'1v1'),busy:false,active:null,nameT:null};
+const ON={mode:(settings.netMode==='2v2'?'2v2':'1v1'),map:(settings.netMap==='river'?'river':'classic'),busy:false,active:null,nameT:null,live:null,liveOn:false,liveErr:false};
+const netCfg=()=>({factions:[settings.side==='chaos'?'chaos':'order',settings.side==='chaos'?'order':'chaos'],size:0,map:ON.map});
+
+/* ---------- who is online right now ---------- */
+// every 20 s while the online screens are open (and in a room or battle) this player checks in and gets back the
+// players seen in the last 45 s, what they are doing, and the open quick-match rooms on each map
+const LIVE_ST={online:'browsing',lobby:'in a lobby',battle:'in battle'};
+function liveHTML(){
+  const L=ON.live;
+  if(!L) return '<div class="on-live" id="onLive"><span class="ld"></span><b>'+(ON.liveErr?'Live player list unavailable':'Checking who is online…')+'</b></div>';
+  const ps=(L.players||[]).map(p=>'<span class="lp'+(p.me?' me':'')+'" title="'+esc(LIVE_ST[p.status]||p.status)+(p.map==='river'?' · Riverlands':'')+'"><i class="st '+esc(p.status)+'"></i>'+esc(p.name)+(p.me?' (you)':'')+'</span>').join('');
+  const R=L.rooms||{};
+  return '<div class="on-live" id="onLive"><div class="lh"><span class="ld on"></span><b>'+L.online+' player'+(L.online===1?'':'s')+' online</b><small>'+(L.lobby||0)+' in lobbies · '+(L.battle||0)+' in battle</small></div>'+
+    '<div class="lps">'+ps+'</div><small class="lr">Open quick-match rooms: Classic '+(R.classic||0)+' · Riverlands '+(R.river||0)+'</small></div>';
+}
+function liveRender(){ const el=$('#onLive'); if(el) el.outerHTML=liveHTML(); const b=$('#mmOnline small'); if(b&&ON.live) b.textContent='1v1 or 2v2 against real players · '+ON.live.online+' online now'; }
+async function livePing(){
+  const sc=$('#menuOnline'), mn=$('#menu'), onScreen=ON.liveOn&&sc&&!sc.hidden&&mn&&!mn.hidden;
+  if(!onScreen&&!NETC.room) return; if(!NETC.user||onlineProblem()) return;
+  const st=NETC.phase==='battle'?'battle':NETC.room?'lobby':'online', map=NETC.room&&NETC.room.config&&NETC.room.config.map==='river'?'river':ON.map;
+  try{ ON.live=await netRpc('se3d_presence',{p_name:myName(),p_status:st,p_map:map}); ON.liveErr=false; }catch(e){ ON.liveErr=true; }
+  liveRender();
+}
+function liveStop(){ ON.liveOn=false; if(NETC.user&&!NETC.room) netRpc('se3d_presence_leave',{}).catch(()=>{}); }
+setInterval(livePing,20000);
 const onBody=()=>$('#onBody');
 function onMsg(t,err){ const m=$('#onMsg'); if(!m) return; m.textContent=t||''; m.classList.toggle('err',!!err); }
 function onlineConnUI(){
@@ -31,7 +55,8 @@ function openOnline(msg,isErr){
   if(NETC.room&&NETC.phase==='lobby'){ renderLobby(); return; }
   renderOnlineHome(); onMsg(msg||'',isErr);
   const p=onlineProblem(); if(p){ onMsg(p,true); onlineConnUI(); return; }
-  onTry(async()=>{ await netSignIn(); ON.active=await netRpc('se3d_my_active_match'); renderOnlineHome(); }).then(()=>{ if(msg) onMsg(msg,isErr); });
+  ON.liveOn=true;
+  onTry(async()=>{ await netSignIn(); ON.active=await netRpc('se3d_my_active_match'); renderOnlineHome(); }).then(()=>{ if(msg) onMsg(msg,isErr); livePing(); });
 }
 function renderOnlineHome(){
   const off=!!onlineProblem(), A=ON.active;
@@ -43,24 +68,26 @@ function renderOnlineHome(){
             :'<button class="mm primary" id="onRejoin"><span>Rejoin battle</span><small>Room '+esc(A.code)+' · '+esc(A.mode)+' · in progress</small></button>')
       :'<button class="mm primary" id="onRejoin"><span>Back to your room</span><small>Room '+esc(A.code)+' · '+esc(A.mode)+'</small></button>';
   }
-  onBody().innerHTML=rejoin+
+  onBody().innerHTML=liveHTML()+rejoin+
     '<label class="on-field">Your name<input id="onName" maxlength="20" autocomplete="nickname" value="'+esc(myName())+'"></label>'+
     '<div class="on-seg" role="radiogroup" aria-label="Mode"><button data-m="1v1" aria-pressed="'+(ON.mode==='1v1')+'">1v1</button><button data-m="2v2" aria-pressed="'+(ON.mode==='2v2')+'">2v2</button></div>'+
-    '<button class="mm primary" id="onQuick"'+(off?' disabled':'')+'><span>Quick match</span><small>Play the next '+(ON.mode==='2v2'?'three players':'player')+' who search'+(ON.mode==='2v2'?'':'es')+' · '+ON.mode+'</small></button>'+
+    '<div class="on-seg on-map" role="radiogroup" aria-label="Map"><button data-map="classic" aria-pressed="'+(ON.map==='classic')+'">Classic</button><button data-map="river" aria-pressed="'+(ON.map==='river')+'">Riverlands</button></div>'+
+    '<small class="opt-note">'+(ON.map==='river'?'Riverlands PvP: a 320 m valley, four capture zones with bonuses, bridges, fog of war and long-range bows.':'The classic field: one straight battle between the two castles.')+'</small>'+
+    '<button class="mm primary" id="onQuick"'+(off?' disabled':'')+'><span>Quick match · '+(ON.map==='river'?'Riverlands':'Classic')+'</span><small>Play the next '+(ON.mode==='2v2'?'three players':'player')+' who search'+(ON.mode==='2v2'?'':'es')+' for this map · '+ON.mode+'</small></button>'+
     '<button class="mm" id="onCreate"'+(off?' disabled':'')+'><span>Create private room</span><small>Get a code to share with '+(ON.mode==='2v2'?'three friends':'a friend')+'</small></button>'+
     '<div class="mm-row"><label class="on-field" style="flex:1 1 auto">Room code<input id="onCode" class="code" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC234"></label></div>'+
     '<button class="mm" id="onJoin"'+(off?' disabled':'')+'><span>Join room</span><small>Enter the code your friend shared</small></button>'+
     '<button class="mm small" id="onBack">Back</button>';
   const B=onBody();
   B.querySelector('#onName').addEventListener('change',e=>{ settings.netName=cleanName(e.target.value); e.target.value=settings.netName; saveSettings(); });
-  B.querySelectorAll('.on-seg button').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); ON.mode=b.dataset.m; settings.netMode=ON.mode; saveSettings(); renderOnlineHome(); }));
+  B.querySelectorAll('.on-seg button').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); if(b.dataset.map){ ON.map=b.dataset.map; settings.netMap=ON.map; } else { ON.mode=b.dataset.m; settings.netMode=ON.mode; } saveSettings(); renderOnlineHome(); }));
   const code=B.querySelector('#onCode');
   code.addEventListener('input',()=>{ const v=code.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6); if(v!==code.value) code.value=v; });
   code.addEventListener('keydown',e=>{ if(e.key==='Enter') onJoinPressed(); });
-  B.querySelector('#onQuick').onclick=()=>{ sfx('ui'); onTry(async()=>{ await netSignIn(); const r=await netRpc('se3d_quick_match',{p_mode:ON.mode,p_name:myName(),p_config:{factions:[settings.side==='chaos'?'chaos':'order',settings.side==='chaos'?'order':'chaos']}}); await enterRoom(r); }); };
-  B.querySelector('#onCreate').onclick=()=>{ sfx('ui'); onTry(async()=>{ await netSignIn(); const r=await netRpc('se3d_create_room',{p_mode:ON.mode,p_name:myName(),p_private:true,p_config:{factions:[settings.side==='chaos'?'chaos':'order',settings.side==='chaos'?'order':'chaos'],size:0}}); await enterRoom(r); }); };
+  B.querySelector('#onQuick').onclick=()=>{ sfx('ui'); onTry(async()=>{ await netSignIn(); const r=await netRpc('se3d_quick_match',{p_mode:ON.mode,p_name:myName(),p_config:netCfg()}); await enterRoom(r); livePing(); }); };
+  B.querySelector('#onCreate').onclick=()=>{ sfx('ui'); onTry(async()=>{ await netSignIn(); const r=await netRpc('se3d_create_room',{p_mode:ON.mode,p_name:myName(),p_private:true,p_config:netCfg()}); await enterRoom(r); livePing(); }); };
   B.querySelector('#onJoin').onclick=()=>{ sfx('ui'); onJoinPressed(); };
-  B.querySelector('#onBack').onclick=()=>{ sfx('ui'); showPanel('menuMain'); };
+  B.querySelector('#onBack').onclick=()=>{ sfx('ui'); liveStop(); showPanel('menuMain'); };
   const rj=B.querySelector('#onRejoin'); if(rj) rj.onclick=()=>{ sfx('ui'); onTry(async()=>{ const r=await netRpc('se3d_room_state',{p_match:A.id}); await enterRoom(r); }); };
   const ab=B.querySelector('#onAbandon'); if(ab) ab.onclick=()=>{ onTry(async()=>{ await netRpc('se3d_leave_room',{p_match:A.id}); ON.active=null; renderOnlineHome(); },'The old battle was ended with no result.'); };
   onlineConnUI();
@@ -131,7 +158,7 @@ function renderLobby(){
     return h+'</div>'; };
   onBody().innerHTML=
     '<div class="on-code"><div><small>Room code · '+esc(r.mode)+' · '+(r.is_private?'private':'quick match')+'</small><b id="onRoomCode">'+esc(r.code)+'</b></div><button id="onCopy">Copy code</button></div>'+
-    '<p class="on-status" id="onStatus">'+esc(status)+'</p>'+
+    liveHTML()+'<p class="on-status" id="onStatus">'+esc(status)+'</p>'+
     '<div class="on-teams">'+team(0)+team(1)+'</div>'+cfgUI(r,host)+
     '<label class="on-field">Your name<input id="onLName" maxlength="20" value="'+esc(me?me.name:myName())+'"></label>'+
     '<div class="mm-row"><button class="mm small" id="onReady">'+(me&&me.ready?'Not ready':'Ready')+'</button><button class="mm small" id="onSwitch">Switch team</button></div>'+

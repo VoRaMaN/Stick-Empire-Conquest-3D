@@ -51,10 +51,18 @@ function hitShield(a,t,prev){
   a.mode='shield'; a.g=g; a.lp=center.applyMatrix4(_mi); a.ld=a.dir.clone().transformDirection(_mi); a.age=0; sfx('arrowShield',a.p,.9);
   puff(X,4,.05,2.6,'#ffe9a8'); react(t,a.dir,.5); return true;
 }
+// Flight time of an arrow loosed at a target dist metres away. Close in it flies flat and fast, as before; past
+// ~18 m the archer looses it high, like a real volley, so it climbs and drops onto the target (75 m: about 3.4 s
+// in the air and 20 m up at the top of the arc). Lobbed shots go at least that high; power shots stay flatter.
+function arrowT(dist,opt){ opt=opt||{};
+  const far=dist>18?Math.min(3.8,.75+(dist-18)*.047):0;
+  if(opt.lob) return Math.max(clamp(dist/11,.5,1.7),far);
+  if(opt.power) return far?Math.max(clamp(dist/40,.1,.6),far*.6):clamp(dist/40,.1,.6);
+  return far||clamp(dist/24,.16,1.05); }
 function fireArrow(u,aim,dmg,special,opt){
   opt=opt||{};
   const o=opt.from?opt.from.clone():u.j.hL.clone().addScaledVector(u.fwdW,.1*u.s);
-  const G=14, dist=o.distanceTo(aim), T=special?.06:opt.lob?clamp(dist/11,.5,1.7):opt.power?clamp(dist/40,.1,.6):clamp(dist/24,.16,1.05);
+  const G=14, dist=o.distanceTo(aim), T=special?.06:arrowT(dist,opt);
   const v=aim.clone().sub(o).multiplyScalar(1/T); v.y+=.5*G*T;
   arrows.push({mode:'fly',p:o,v,dir:v.clone().normalize(),s:u.s,col:TEAM[u.team].acc2.color,team:u.team,dmg,src:u,age:0,special,G,power:!!opt.power,fire:!!opt.fire}); onArrow(u);
   if(arrows.length>MAXAR){ const i=arrows.findIndex(x=>x.mode==='fixed'&&!x.remove); if(i>=0) arrows[i].remove=true; }   // safety ceiling only

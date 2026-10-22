@@ -105,6 +105,11 @@ castle, in packs of up to three.
   guards, falls back when outnumbered, raids your miners with fast troops, comes home when its castle is attacked
   and pushes once it holds most of the valley.
 - Online: the host picks Classic or Riverlands and finishers Off / Sometimes / Always in the room lobby.
+- Riverlands PvP: the online screen has a **Classic / Riverlands** choice for quick match and new rooms; quick match
+  pairs players who picked the same map. The online screens show **who is online right now** (browsing, in a
+  lobby, in battle) and how many open quick-match rooms each map has.
+- Long arrow shots arc high like a real volley: past ~18 m the archer aims up and the arrow climbs (about 20–25 m
+  at 70 m) and drops onto where the target will be.
 
 **RTS controls** (Settings → Interface, on by default):
 - PC: drag a box to select regiments (Shift adds), click one to select it, double-click to select every regiment of
