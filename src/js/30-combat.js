@@ -29,6 +29,7 @@ function react(t,dirW,mag){
 }
 function damage(t,amt,src,dirW,kb,up,blocked,at){
   if(!t.alive) return;
+  if(RL.on&&src&&src.T&&src.T.ranged&&t.isUnit&&rlAvoid(t,src)) return;   // Riverlands: dodged or caught on the guard (37e)
   if(!dirW){ dirW=_tmp.subVectors(t.pos,src.pos); dirW.y=0; dirW.normalize(); dirW=dirW.clone(); }
   react(t,dirW,kb||1); if(t.fl) t.fl.vy-=Math.min(3,(kb||1)*.45);
   if(!blocked&&!t.action&&t.state!=='stunned'&&Math.random()<.5){ play(t,'flinch'); t.fwdScale=1; }
@@ -36,7 +37,7 @@ function damage(t,amt,src,dirW,kb,up,blocked,at){
   if(!blocked&&amt>0&&t.T.crawler) puff(at||t.j.chest,3,.09,2.6,'#ff7a2a');   // magma spills from a wounded Hellcrawler
   if(t.invuln||NET.guest) return;   // online guest: health only ever comes from the host
   if(amt>0) t.hurtAt=game.time;   // Chaos regeneration waits for the wounds to stop
-  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)); if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
+  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src))*(RL.on?rlDmgMul(src):1); if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
   if(t.hp<=0){ kill(t,dirW.clone().multiplyScalar(2.5*(kb||1)).add(new V3(0,1.8+(kb||1)*.6+(up||0),0)),{}); }
 }
 function kill(t,impWorld,opt){
@@ -85,7 +86,7 @@ function startAttack(u,t,forced){
   if(cname){ u.chg=null; u.chgCD=1.5; u.chgW=0; }
   if(tUnit){ const d=Math.hypot(tUnit.pos.x-u.pos.x,tUnit.pos.z-u.pos.z), fwd=c.keys.reduce((m,k)=>Math.max(m,k.fwd),0)*u.s;
     u.fwdScale=fwd>0?clamp((d-(T.reach+(tUnit.s-1)*.35))/fwd,0,2.4):1;
-    planDefense(tUnit,u,c); }
+    planDefense(tUnit,u,c); if(RL.on&&T.ranged&&!(T.meleeSet&&T.meleeSet.has(name))) rlProjDefense(tUnit,u,c); }
   if(c.aim&&t){ const d=Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z); u.aimPitch=clamp(d*.018,0,.3); }
   u.cdT=T.cd*rand(.85,1.15)*(c.dur>1.2?1.12:1);
   if(T.swarm&&tUnit&&u.action) packFrenzy(u,tUnit);
@@ -194,7 +195,7 @@ function handleEvent0(u,e){
       if(T.bolt){ fireBolts(u,e); break; }
       const t=u.atkTarget; if(!t) break;
       let aim;
-      if(t.isUnit){ if(!t.alive) break; aim=t.j.chest.clone().addScaledVector(t.av,clamp(u.pos.distanceTo(t.pos)/24,.16,1)); }
+      if(t.isUnit){ if(!t.alive) break; const dd=u.pos.distanceTo(t.pos); aim=t.j.chest.clone().addScaledVector(t.av,clamp(dd/24,.16,1)); if(RL.on&&dd>15){ aim.x+=rand(-1,1)*dd*.012; aim.z+=rand(-1,1)*dd*.012; } }
       else aim=new V3(t.pos.x,t.pos.y+3.5,t.pos.z);
       const n=e.n||1, fireA=u.type==='archer'&&!game.classicMix&&hasRes(u.team,'fireArrows');
       for(let i=0;i<n;i++){ const off=(i-(n-1)/2)*(e.spread||0), dx=aim.x-u.pos.x, dz=aim.z-u.pos.z, c=Math.cos(off), sn=Math.sin(off);

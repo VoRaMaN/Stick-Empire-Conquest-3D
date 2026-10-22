@@ -81,7 +81,7 @@ function updateArrows(dt){
       if(d<.24*t.s){
         const nm=t.action&&t.action.c.name; if(nm==='dodge') continue;
         const sp=Math.hypot(a.v.x,a.v.z)||1, head=(a.v.x*t.fwdW.x+a.v.z*t.fwdW.z)/sp;
-        if(head<-.3&&nm==='block'){ a.v.set(-a.v.x*.2,2.5,-a.v.z*.2); a.dead=true; puff(a.p,4,.05,2.6,'#ffe9a8'); sfx('clang',a.p,.4,{rate:1.4}); done=true; break; }
+        if(head<-.3&&(nm==='block'||RL.on&&nm==='parry')){ a.v.set(-a.v.x*.2,2.5,-a.v.z*.2); a.dead=true; puff(a.p,4,.05,2.6,'#ffe9a8'); sfx('clang',a.p,.4,{rate:1.4}); done=true; break; }
         const tm=game.mode==='battle'&&a.src?tacticMods(a.src,t,false):null; if(tm&&tm.txt==='Rear attack') callout(t,'Shot in the back','#ff7a5c');
         damage(t,a.dmg*(tm?Math.min(tm.mul,1.4):1),a.src,a.dir.clone(),a.power?3:1.2);
         if(a.fire) applyBurn(t,a.src,6,3);

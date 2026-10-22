@@ -15,8 +15,9 @@ function uiSuggest(){
 function uiMode(){ const m=settings.uiMode; return m==='pc'||m==='mobile'?m:uiSuggest(); }
 // the hint above the dock: "tap" on Mobile, "click" and the mouse controls on PC
 function hintText(sel){ const pc=uiMode()==='pc';
-  if(sel) return pc?'Click the ground to move · click an enemy to attack':'Tap the ground to move · tap an enemy to attack';
-  if(game.mode==='battle') return pc?'Drag to move the camera · scroll to zoom · right-drag to turn · click your soldiers to command their regiment':'Drag to move the camera · tap your soldiers to command their regiment';
+  const rts=pc&&settings.rts!==false;
+  if(sel) return rts?'Right-click the ground to march · right-click an enemy to attack · H hold · C charge · X rejoin · Esc let go':pc?'Click the ground to move · click an enemy to attack':'Tap the ground to move · tap an enemy to attack · Box or All to select more';
+  if(game.mode==='battle') return rts?'Drag a box round your soldiers (or click one) · right-click to order · WASD, middle-drag or the screen edges to scroll · right-drag to turn':pc?'Drag to move the camera · scroll to zoom · right-drag to turn · click your soldiers to command their regiment':'Drag to move the camera · tap your soldiers to command their regiment · Box to select several';
   return pc?'Pick a unit · drag to orbit · scroll to zoom':'Pick a unit · drag to orbit · pinch to zoom';
 }
 function applyUiMode(){ const m=uiMode();

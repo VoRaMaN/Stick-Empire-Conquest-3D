@@ -516,3 +516,13 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 @media (orientation:portrait){ .ui-mobile.map-river .minimap{position:static;align-self:flex-start;width:118px;height:118px} }
 @media (orientation:landscape){ .ui-mobile.map-river .minimap{left:calc(env(safe-area-inset-left,0px) + 10px);top:50px;width:110px;height:110px;grid-area:auto;min-height:0} }
 #rgCapture{border-color:var(--gold)!important;color:var(--gold)}
+
+/* RTS controls: the selection box, the All / Box buttons */
+#selBox{position:fixed;z-index:40;pointer-events:none;border:1.5px solid #ffd36b;background:rgba(255,211,107,.13);box-shadow:0 0 0 1px rgba(0,0,0,.35);border-radius:2px}
+.rts-b{min-width:0}
+.orders .rts-b{flex:0 0 auto;padding-left:12px;padding-right:12px}
+.ui-pc .mob-only{display:none!important}
+.no-rts .rts-b{display:none!important}
+#oBox[aria-pressed="true"],#rgBox[aria-pressed="true"]{background:var(--gold,#e4b23a);color:#1b1408}
+.on-cfg{display:flex;flex-direction:column;gap:6px;margin:4px 0 2px}
+.on-cfg .pills button[disabled]{opacity:.75;cursor:default}

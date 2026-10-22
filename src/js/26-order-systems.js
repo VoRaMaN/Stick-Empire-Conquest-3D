@@ -8,6 +8,7 @@ function canTarget(u,o){
   if(o.inCastle||o.emerging) return false;     // still inside its castle walls (or climbing out of the Hellpit)
   if(isAir(o)&&!u.T.ranged&&!u.fl) return false;
   if(o.cloak&&Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z)>1.8) return false;
+  if(FOW.on&&o.team!==u.team&&!fowSees(u.team,o)) return false;   // Riverlands: nobody shoots at what his army can't see (37e)
   return true;
 }
 // per-blow modifiers: the ninja's Fixate stacks and his Shinobi poison
@@ -399,7 +400,7 @@ function updateSpells(dt){
   for(let i=orbs.length-1;i>=0;i--){ const O=orbs[i]; O.age+=dt;
     if(O.t&&!O.big){ const P=aimPoint(O.t,_tmp); if(P&&(O.t.alive||O.t.isStatue)){ const sp=O.v.length(); _tmp2.subVectors(P,O.p).normalize().multiplyScalar(sp); O.v.lerp(_tmp2,Math.min(1,dt*6)); } }
     O.p.addScaledVector(O.v,dt); if(Math.random()<dt*30) puff(O.p,1,.08,.3,O.col);
-    let hit=O.age>2.2||O.p.y<H(O.p.x,O.p.z)+.1;
+    let hit=O.age>(RL.on?4.2:2.2)||O.p.y<H(O.p.x,O.p.z)+.1;
     if(!hit) for(const o of units){ if(!o.alive||o.team===O.team) continue; if(o.j.chest.distanceTo(O.p)<.45*o.s){ hit=true; break; } }
     if(!hit&&O.t&&O.t.isStatue&&Math.hypot(O.t.pos.x-O.p.x,O.t.pos.z-O.p.z)<1.4) hit=true;
     if(hit){ explode(O.p,O.team,O.dmg,O.src,O.big); orbs.splice(i,1); } }

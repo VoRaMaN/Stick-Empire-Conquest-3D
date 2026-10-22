@@ -36,8 +36,8 @@ function drawMinimap(){
   // soldiers
   const r=Math.max(1.2,1.5*dpr);
   for(const team of [0,1]){ c.fillStyle=team?'#ff6b7d':'#ffd25e';
-    for(const u of units){ if(!u.alive||u.team!==team||!u.isUnit) continue; const rr=u.s>1.5?r*1.9:r; c.fillRect(mmX(u.pos.x,w)-rr,mmZ(u.pos.z,h)-rr,rr*2,rr*2); } }
-  if(selReg){ c.strokeStyle='#ffffff'; c.lineWidth=dpr; for(const u of selReg.units){ if(!u.alive) continue; c.strokeRect(mmX(u.pos.x,w)-r*1.8,mmZ(u.pos.z,h)-r*1.8,r*3.6,r*3.6); } }
+    for(const u of units){ if(!u.alive||u.team!==team||!u.isUnit||u.fowH) continue; const rr=u.s>1.5?r*1.9:r; c.fillRect(mmX(u.pos.x,w)-rr,mmZ(u.pos.z,h)-rr,rr*2,rr*2); } }
+  for(const sr of selRegs){ c.strokeStyle='#ffffff'; c.lineWidth=dpr; for(const u of sr.units){ if(!u.alive) continue; c.strokeRect(mmX(u.pos.x,w)-r*1.8,mmZ(u.pos.z,h)-r*1.8,r*3.6,r*3.6); } }
   // camera footprint
   const P=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>viewCorner(a,b,new V3()));
   c.save(); c.beginPath(); c.rect(0,0,w,h); c.clip();
@@ -50,7 +50,12 @@ function mmJump(e){ const r=mmEl.getBoundingClientRect(); const fx=(e.clientX-r.
   if(cam.follow){ cam.follow=null; updateFollowUI(); }
   cam.goal.set(MM.x0+fx*(MM.x1-MM.x0),0,MM.z0+fz*(MM.z1-MM.z0)); clampGoal(); mmT=0; }
 if(mmEl&&mmEl.addEventListener){
-  mmEl.addEventListener('pointerdown',e=>{ e.stopPropagation(); mmDrag=true; mmEl.setPointerCapture&&mmEl.setPointerCapture(e.pointerId); mmJump(e); });
+  mmEl.addEventListener('pointerdown',e=>{ e.stopPropagation(); if(e.button===2) return; mmDrag=true; mmEl.setPointerCapture&&mmEl.setPointerCapture(e.pointerId); mmJump(e); });
   mmEl.addEventListener('pointermove',e=>{ if(mmDrag) mmJump(e); });
   const end=()=>{ mmDrag=false; }; mmEl.addEventListener('pointerup',end); mmEl.addEventListener('pointercancel',end);
+}
+// the battlefield map: right-click marches the selection there
+if(mmEl&&mmEl.addEventListener){
+  mmEl.addEventListener('contextmenu',e=>{ e.preventDefault(); e.stopPropagation(); if(!selRegs.length) return; const r=mmEl.getBoundingClientRect(), fx=(e.clientX-r.left)/r.width, fz=(e.clientY-r.top)/r.height;
+    rtsMoveMany(selRegs,MM.x0+fx*(MM.x1-MM.x0),MM.z0+fz*(MM.z1-MM.z0)); sfx('order'); updateRegbar(); });
 }

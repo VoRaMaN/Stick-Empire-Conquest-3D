@@ -66,7 +66,7 @@ function startSkirmish(size){
   game.auto=[settings.auto,true]; syncBattleButtons();
   showBanner(river?'Riverlands':BATTLE_SIZES[size].name+' battle',river?BATTLE_SIZES[size].name+' · '+BATTLE_SIZES[size].start+' soldiers a side':BATTLE_SIZES[size].start+' soldiers a side',1.8);
   sfx('horn');
-  if(river) setTimeout(()=>{ if(game.mode==='battle'&&MAP.id==='river'&&!game.demo&&game.over<=0) toast('Hold zones A–D for gold: tap a regiment, then Capture',null,null,7); },2600);
+  if(river) setTimeout(()=>{ if(game.mode==='battle'&&MAP.id==='river'&&!game.demo&&game.over<=0) toast('Markets B and C pay gold · shrines A and D give mana and +10% damage · held zones heal and reveal. Only the bridges cross the river.',null,null,9); },2600);
 }
 function menuClick(id,fn){ const b=$('#'+id); if(b) b.onclick=()=>{ sfx('ui'); fn(); }; }
 menuClick('mmSkirmish',()=>showPanel('menuSkirmish'));

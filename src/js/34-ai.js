@@ -12,7 +12,7 @@ function enemyCommander(dt){
     const archers=regs.filter(r=>r.team===0&&r.type==='archer'&&regAlive(r).length);
     for(const r of regs) if(r.team===1&&r.type==='sword'&&archers.length&&Math.random()<.45) r.order={kind:'attack',target:archers[Math.floor(Math.random()*archers.length)]}; }
   else if(st==='charge'&&mine<theirs*.6&&!full){ setStance(1,'defend'); for(const r of regs) if(r.team===1) r.order={kind:'army'}; }
-  if(MAP.id!=='classic') rlAI(1);   // Riverlands: detachments go out to take and hold the capture zones
+  if(MAP.id!=='classic'){ rlAI(1); if(game.demo) rlAI(0); }   // Riverlands: detachments go out to take and hold the capture zones
 }
 // the nearest enemy on foot within r, by plain distance (nearestEnemy's crowd penalty would hide one already brawling with our own)
 function closeThreat(u,r){ let best=null, bd=r*r;
@@ -39,7 +39,7 @@ function brain(u,dt){
   if(ro&&(ro.kind==='move'||ro.kind==='hold'||ro.kind==='attack')&&regBrain(u,ro)) return;
   const st=ro&&ro.kind==='charge'?'charge':(game.mode==='battle'?game.stance[u.team]:'charge');
   if(st!=='charge'&&!u.T.worker&&u.slot){
-    const ranged=u.T.ranged, sl=u.slot, guard=ranged?u.T.range:7.5, leash=ranged?3:11;
+    const ranged=u.T.ranged, sl=u.slot, guard=ranged?u.T.range:7.5*sightK(), leash=ranged?3:11*sightK();   // Riverlands: they see three times as far
     u.sfT=(u.sfT||0)-dt; if(u.sfT<=0||u.sFoe&&!u.sFoe.alive){ u.sfT=.25+Math.random()*.1; u.sFoe=nearestFoe(sl.x,sl.z,u.team,ranged?guard+4:guard+.5,u); }
     const foe=u.sFoe&&u.sFoe.alive?u.sFoe:null, fd=foe?Math.hypot(foe.pos.x-sl.x,foe.pos.z-sl.z):1e9;
     const fromSlot=Math.hypot(u.pos.x-sl.x,u.pos.z-sl.z);

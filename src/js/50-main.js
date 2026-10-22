@@ -62,11 +62,12 @@ function step(rdt){
 function draw(){
   draw.frame=(draw.frame||0)+1;
   for(const im of CNT.keys()) CNT.set(im,0);
-  for(const L of [units,corpses]) for(const u of L) if(u.cr) crPrep(u);   // Hellcrawler models: posed only when on screen
+  if(RL.on) fowDrawPrep();   // fog of war: the enemy you can't see isn't drawn (37e)
+  for(const L of [units,corpses]) for(const u of L) if(u.cr&&!u.fowH) crPrep(u);   // Hellcrawler models: posed only when on screen
   drawGear();
   _cr.set(1,0,0).applyQuaternion(camera.quaternion); _cb.set(0,0,1).applyQuaternion(camera.quaternion);
   for(const st of statues){ const f=st.fig; if(!f.rag){ drawFigure(f.j,f.s,f.col,f.thick,f.fwdW); if(f.T.plateLimbs) drawPlateLimbs(f,f.col,f.col); } }
-  for(const u of units) if(u.alive){ drawUnit(u); if(tune.dbg) drawDebug(u);
+  for(const u of units) if(u.alive){ if(u.fowH) continue; drawUnit(u); if(tune.dbg) drawDebug(u);
     if(u.isUnit&&(u.hp<u.maxHp||u.morale<99||cam.follow===u)&&!u.invuln) drawBar(u); }
   for(const u of corpses) drawUnit(u);
   for(const C of CASTLES) for(const g of C.garrison) drawUnit(g);
@@ -102,7 +103,7 @@ function frame(now){
   if(window.innerWidth!==vpW||window.innerHeight!==vpH||!isFinite(camera.aspect)) resize();   // a resize event can be missed when the page is hidden and shown again
   if(NET.on) netBeforeStep(rdt);
   step(rdt); if(NET.on) netAfterStep(rdt);
-  if(game.demo&&!game.paused) demoCamera(rdt); updateCamera(rdt); updateAudio();
+  if(game.demo&&!game.paused) demoCamera(rdt); rtsFrame(rdt); updateCamera(rdt); updateAudio();
   if(!window.SE3D_NO_DRAW) draw();   // automated multi-browser tests switch rendering off to share a small CPU
 }
 // debug and test hooks (used by tests/ and the browser checks)

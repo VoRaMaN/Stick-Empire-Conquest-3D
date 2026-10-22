@@ -102,6 +102,13 @@ function onRoomChanged(r,prev){
 }
 function leaveLobbyLocal(){ netHeartbeat(false); netLeaveChannel(); NETC.room=null; NETC.me=null; NETC.phase='off'; }
 const facLabel=f=>f==='chaos'?'Chaos':'Order';
+// the room's battle settings: the host picks the map and the finishers, everyone sees them
+function cfgUI(r,host){ const c=r.config||{}, map=c.map==='river'?'river':'classic', fin=c.finishers===0||c.finishers===2?c.finishers:1, dis=host?'':' disabled';
+  return '<div class="on-cfg"><div class="opt"><span>Map</span><div class="pills" role="radiogroup" aria-label="Map">'+
+    [['classic','Classic field'],['river','Riverlands']].map(([v,t])=>'<button role="radio" data-map="'+v+'" aria-checked="'+(map===v)+'" aria-pressed="'+(map===v)+'"'+dis+'>'+t+'</button>').join('')+'</div></div>'+
+    '<div class="opt"><span>Finishers</span><div class="pills" role="radiogroup" aria-label="Finishers">'+
+    [[0,'Off'],[1,'Sometimes'],[2,'Always']].map(([v,t])=>'<button role="radio" data-fin="'+v+'" aria-checked="'+(fin===v)+'" aria-pressed="'+(fin===v)+'"'+dis+'>'+t+'</button>').join('')+'</div></div>'+
+    '<small class="opt-note">'+(host?'You are the host: changing these asks everyone to ready up again.':'The host picks the map and the finishers.')+(map==='river'?' Riverlands: a 320 m valley with four capture zones, bridges and fog of war.':'')+'</small></div>'; }
 function renderLobby(){
   const r=NETC.room; if(!r||NETC.phase!=='lobby') return;
   const fe=typeof document!=='undefined'&&document.activeElement; if(fe&&fe.id==='onLName'){ clearTimeout(ON.rt); ON.rt=setTimeout(renderLobby,1500); return; }   // don't redraw under someone typing
@@ -125,7 +132,7 @@ function renderLobby(){
   onBody().innerHTML=
     '<div class="on-code"><div><small>Room code · '+esc(r.mode)+' · '+(r.is_private?'private':'quick match')+'</small><b id="onRoomCode">'+esc(r.code)+'</b></div><button id="onCopy">Copy code</button></div>'+
     '<p class="on-status" id="onStatus">'+esc(status)+'</p>'+
-    '<div class="on-teams">'+team(0)+team(1)+'</div>'+
+    '<div class="on-teams">'+team(0)+team(1)+'</div>'+cfgUI(r,host)+
     '<label class="on-field">Your name<input id="onLName" maxlength="20" value="'+esc(me?me.name:myName())+'"></label>'+
     '<div class="mm-row"><button class="mm small" id="onReady">'+(me&&me.ready?'Not ready':'Ready')+'</button><button class="mm small" id="onSwitch">Switch team</button></div>'+
     (host?'<button class="mm primary" id="onStart"'+(r.status==='ready'?'':' disabled')+'><span>Start match</span><small>'+(r.status==='ready'?'Everyone is ready':'Every seat must be filled and ready')+'</small></button>':'')+
@@ -137,6 +144,8 @@ function renderLobby(){
   B.querySelector('#onLeave').onclick=()=>{ sfx('ui'); onTry(async()=>{ await netRpc('se3d_leave_room',{p_match:id}); leaveLobbyLocal(); renderOnlineHome(); $('#onTitle').textContent='Online Multiplayer'; },'You left the room.'); };
   B.querySelectorAll('.on-fac button').forEach(b=>b.onclick=()=>{ if(b.disabled) return; sfx('ui'); onTry(async()=>netSetRoom(await netRpc('se3d_set_faction',{p_match:id,p_faction:b.dataset.f}))); });
   const ln=B.querySelector('#onLName'); ln.addEventListener('change',()=>{ const v=cleanName(ln.value); settings.netName=v; saveSettings(); onTry(async()=>netSetRoom(await netRpc('se3d_set_name',{p_match:id,p_name:v}))); });
+  B.querySelectorAll('.on-cfg button').forEach(b=>b.onclick=()=>{ if(b.disabled) return; sfx('ui'); const c=r.config||{}, map=b.dataset.map||c.map||'classic', fin=b.dataset.fin!==undefined?+b.dataset.fin:(c.finishers===undefined?1:c.finishers);
+    onTry(async()=>netSetRoom(await netRpc('se3d_set_config',{p_match:id,p_map:map,p_finishers:fin}))); });
   const st=B.querySelector('#onStart'); if(st) st.onclick=()=>{ if(st.disabled) return; st.disabled=true; sfx('horn'); onTry(async()=>netSetRoom(await netRpc('se3d_start_match',{p_match:id}))); };
   onlineConnUI();
 }

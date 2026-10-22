@@ -92,6 +92,29 @@ castle, in packs of up to three.
 
 ## Riverlands map
 
+**Riverlands rules (v0.18):**
+- Ranged units reach much further: archers, wing archers and soul harvesters 5× (+400%), wizards, oracles and
+  bombers 4× (+300%). Soldiers dodge, block or parry incoming shots.
+- Sight is tripled (+200%): soldiers notice enemies walking past and go for them, but only ones their army can see.
+- **Fog of war:** ground never seen is dark, ground seen before is dim, and enemies outside your view are hidden on
+  the field and the minimap and can't be targeted. Vision comes from soldiers, castles, statues and held zones.
+- The river can only be crossed by the bridges; soldiers find their way to the best one.
+- Zone bonuses: markets B and C pay +6 gold a second; shrines A and D give +2 mana a second and +10% damage. Every
+  held zone heals your soldiers standing in it and reveals the ground around it.
+- The computer trains more miners as the battle goes on, sends detachments sized to the enemy at each zone, leaves
+  guards, falls back when outnumbered, raids your miners with fast troops, comes home when its castle is attacked
+  and pushes once it holds most of the valley.
+- Online: the host picks Classic or Riverlands and finishers Off / Sometimes / Always in the room lobby.
+
+**RTS controls** (Settings → Interface, on by default):
+- PC: drag a box to select regiments (Shift adds), click one to select it, double-click to select every regiment of
+  that kind on screen, right-click the ground to march (several regiments line up side by side), right-click an
+  enemy to attack, right-click the map to march there.
+- PC camera: WASD, the arrow keys, middle-drag or the screen edges scroll; right-drag turns.
+- PC keys: Ctrl+A selects all; Shift or Ctrl + 1–9 makes a group and 1–9 picks it (press twice to look at it);
+  H hold, C charge, X rejoin the army, Z capture, Space looks at the selection, Esc lets go.
+- Phones: **Box** turns the next drag into a selection box and **All** selects everything.
+
 Skirmish → **Choose the map** offers the **Classic field** or **Riverlands**, a river valley 320 × 320 m, about ten
 times the classic map's 168 × 64 m. The castles move out to the edges of the valley (walls at ±118 m, statues at
 ±106 m), so armies march three times as far to meet.

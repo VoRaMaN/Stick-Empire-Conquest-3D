@@ -52,6 +52,7 @@
     <div class="coach-dots" id="coachDots"></div>
   </div>
 
+  <div id="selBox" hidden></div>
   <footer class="dock" id="dock">
     <div class="hint" id="hint">Drag to move the camera · pinch to zoom · twist two fingers to turn · tap your soldiers to command them</div>
     <div class="chips" id="chips"></div>
@@ -60,10 +61,11 @@
       <button id="oDefend" aria-pressed="true">Defend</button>
       <button id="oHold" aria-pressed="false">Hold line</button>
       <button id="oCharge" aria-pressed="false">Charge</button>
+      <button id="oAll" class="rts-b">All</button><button id="oBox" class="rts-b mob-only" aria-pressed="false">Box</button>
     </div>
     <div class="regbar" id="regbar" hidden>
       <div class="rgname"><b id="rgTitle">Regiment I</b><span id="rgSub"></span></div>
-      <div class="rgbtns"><button id="rgHold">Hold</button><button id="rgCharge">Charge</button><button id="rgFollow">Follow</button><button id="rgCapture" hidden>Capture</button><button id="rgRelease">Rejoin army</button><button id="rgClose" aria-label="Deselect">Done</button></div>
+      <div class="rgbtns"><button id="rgHold">Hold</button><button id="rgCharge">Charge</button><button id="rgFollow">Follow</button><button id="rgCapture" hidden>Capture</button><button id="rgRelease">Rejoin army</button><button id="rgAll" class="rts-b">All</button><button id="rgBox" class="rts-b mob-only" aria-pressed="false">Box</button><button id="rgClose" aria-label="Deselect">Done</button></div>
     </div>
     <div class="actions" id="actBattle">
       <button id="bAuto">Auto-spawn: On</button>
@@ -141,7 +143,7 @@
           <b>Classic field</b><small>The dusty plain between the two castles</small></button>
         <button class="mapc" role="radio" data-map="river" aria-checked="false">
           <svg class="mapi" viewBox="0 0 64 40" aria-hidden="true"><rect x="12" y="1" width="40" height="38" rx="3" fill="#5f7f38"/><path d="M33 1 C 28 10, 37 16, 32 20 S 27 31, 31 39" stroke="#5aa0b4" stroke-width="3" fill="none"/><rect x="12" y="16" width="5" height="8" fill="#857c70"/><rect x="47" y="16" width="5" height="8" fill="#857c70"/><g fill="#f2ead6"><circle cx="38" cy="5" r="2.4"/><circle cx="27" cy="15" r="2.4"/><circle cx="37" cy="25" r="2.4"/><circle cx="26" cy="35" r="2.4"/></g><g fill="#e8b830"><circle cx="18" cy="5" r="1.6"/><circle cx="18" cy="35" r="1.6"/><circle cx="46" cy="5" r="1.6"/><circle cx="46" cy="35" r="1.6"/></g><g fill="#2f4a26"><circle cx="15" cy="10" r="2.6"/><circle cx="49" cy="30" r="2.6"/></g></svg>
-          <b>Riverlands</b><small>A river valley 320 m square, ten times the classic map: capture zones A–D, gold in the corners, forests, villages, bridges</small></button>
+          <b>Riverlands</b><small>A river valley 320 m square, ten times the classic map: four capture zones with bonuses, fog of war, a river crossed only by bridges, long-range bows</small></button>
       </div>
       <h2 class="panel-h">Choose the battle size</h2>
       <div class="sizes" role="radiogroup" aria-label="Battle size">
@@ -232,6 +234,7 @@
         </div>
       </div>
       <small class="opt-note">PC: full-size panels for a mouse and a big screen. Mobile: a compact layout for touch screens that keeps the battlefield clear, in portrait and landscape.</small>
+      <label class="tg tg-n" for="sRts"><span>RTS controls<small>PC: drag a box to select regiments, right-click to order, WASD or the screen edges to scroll, Ctrl/Shift+1–9 for groups. Phones: Box and All buttons.</small></span><input id="sRts" type="checkbox" checked></label>
     </section>
     <section class="set-sec">
       <h3>Graphics</h3>

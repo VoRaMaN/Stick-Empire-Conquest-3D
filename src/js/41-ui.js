@@ -36,10 +36,10 @@ $('#mCamp').onclick=()=>{ setTab('camp'); openCampaign(); };
 $('#cClose').onclick=()=>{ closeCampaign(); setTab(game.mode==='duel'?'duel':(game.campFight?'camp':'battle')); };
 $('#cGo').onclick=()=>campGo(); $('#cReset').onclick=()=>{ const b=$('#cReset'); if(!b.dataset.armed){ b.dataset.armed='1'; b.textContent='Tap again to restart'; return; } delete b.dataset.armed; b.textContent='New campaign'; campNew(); renderCampaign(); };
 $('#rgClose').onclick=()=>selectReg(null);
-$('#rgHold').onclick=()=>{ if(selReg){ issue('reg',{r:selReg.id,k:'hold'}); updateRegbar(); } };
-$('#rgCharge').onclick=()=>{ if(selReg){ issue('reg',{r:selReg.id,k:'charge'}); updateRegbar(); } };
-$('#rgCapture').onclick=()=>{ if(!selReg) return; const Z=rlCaptureTarget(selReg); if(!Z) return; sfx('order'); issue('reg',{r:selReg.id,k:'move',x:Z.x,z:Z.z}); updateRegbar(); };
-$('#rgRelease').onclick=()=>{ if(selReg){ issue('reg',{r:selReg.id,k:'army'}); updateRegbar(); } };
+$('#rgHold').onclick=()=>rtsCmd('hold');
+$('#rgCharge').onclick=()=>rtsCmd('charge');
+$('#rgCapture').onclick=()=>rtsCmd('capture');
+$('#rgRelease').onclick=()=>rtsCmd('army');
 $('#rgFollow').onclick=()=>{ if(selReg){ const b=regAlive(selReg)[0]; if(b){ cam.follow=b; cam.dGoal=Math.min(cam.dGoal,b.s>1.5?14:10); updateFollowUI(); } } };
 $('#mDuel').onclick=()=>{ game.spent=false; closeCampaign(); if(game.mode!=='duel'){ game.campFight=null; setTerrain('skirmish'); setMode('duel'); } };
 for(const [id,key] of [['Step','step'],['Bob','bob'],['Lean','lean'],['Spring','spring'],['Speed','speed']]){

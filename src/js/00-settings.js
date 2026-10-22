@@ -14,6 +14,7 @@ const SETTINGS_DEFAULTS={
   voice:true,       // narrator and unit voices
   drag:'pan',       // one-finger drag on the battlefield: pan | orbit
   minimap:true,
+  rts:true,         // RTS controls: box selection, right-click orders, edge scrolling, control groups
   shake:1,          // screen shake strength (0 off … 2 double)
   viewDist:1,       // view distance: how far the world is drawn before the haze closes in (0.5 … 2.5 × the map's own)
   shadowDist:46,    // shadow distance: metres from the camera that shadows are cast (20 … 160)

@@ -58,7 +58,7 @@ function netSnapshot(){
       b[B.id]=[(B.q||[]).map(x=>NTI[x]),tr?NTI[tr.type]:-1,tr?Math.round(tr.t*10):0,tr?Math.round(tr.tot*10):0,(B.exitQ||[]).length,rs?rs.id:'',rs?rs.lvl:0,rs?Math.round(rs.t*10):0,rs?Math.round(rs.tot*10):0]; }
     return {res:Cs.res,b,g:Cs.garrison.map(g=>[g.id,r3(wrapA(g.face))])}; });
   return {v:BUILD.version,n:++NETG.tickN,t,g:game.gold.map(Math.floor),m:game.mana.map(Math.floor),st:game.stance.slice(),au:game.auto.slice(0,2).map(x=>x?1:0),
-    hx:game.holdX.map(r2),sh:statues.map(s=>[Math.ceil(s.hp),Math.round(s.max)]),u:U,r:R,c:C,e:netFlushEvents(t),a:NETG.acks.splice(0),ov:NETG.over};
+    hx:game.holdX.map(r2),sh:statues.map(s=>[Math.ceil(s.hp),Math.round(s.max)]),u:U,r:R,c:C,e:netFlushEvents(t),a:NETG.acks.splice(0),ov:NETG.over,z:rlNetZones()};
 }
 function netHostTick(rdt){
   NETG.tickAcc+=rdt; const hz=NETC.room&&NETC.room.mode==='2v2'?8:NET_HZ;
@@ -193,6 +193,7 @@ function netApplyTick(s){
   for(let t=0;t<2;t++){ if(game.stance[t]!==s.st[t]){ game.stance[t]=s.st[t]; if(t===myTeam()) for(const [id,v] of [['oDefend','defend'],['oHold','hold'],['oCharge','charge']]) $('#'+id).setAttribute('aria-pressed',s.st[t]===v); } }
   const au=[!!s.au[0],!!s.au[1]]; if(au[myTeam()]!==game.auto[myTeam()]){ game.auto=au; syncBattleButtons(); } else game.auto=au;
   game.holdX=[s.hx[0]/100,s.hx[1]/100];
+  if(s.z) rlApplyNetZones(s.z);   // Riverlands: the host's capture zones
   s.sh.forEach((h,i)=>{ const st=statues[i]; if(st){ st.hp=h[0]; st.max=h[1]; } });
   // regiments first (units point at them)
   const seenR=new Set();
@@ -200,7 +201,7 @@ function netApplyTick(s){
     if(!r){ r={id,team,type:NTYPES[ti],units:[],num,order:{kind:'army'}}; regs.push(r); makeBanner(r); if(team===0) regNum[0]=Math.max(regNum[0],num); else regNum[1]=Math.max(regNum[1],num); }
     const k=ORDN[ok]||'army';
     r.order=k==='move'||k==='hold'?{kind:k,x:ox/100,z:oz/100,a:oa/1000}:k==='attack'?{kind:'attack',target:tr?regById(tr):null,unit:tu?NETG.byId.get(tu)||null:null}:{kind:k}; }
-  for(let i=regs.length-1;i>=0;i--){ const r=regs[i]; if(!seenR.has(r.id)){ if(r.banner) dropRoot(r.banner); if(selReg===r) selectReg(null); regs.splice(i,1); } }
+  for(let i=regs.length-1;i>=0;i--){ const r=regs[i]; if(!seenR.has(r.id)){ if(r.banner) dropRoot(r.banner); if(selRegs.includes(r)) setSelection(selRegs.filter(x=>x!==r)); regs.splice(i,1); } }
   for(const r of regs) r.units.length=0;
   // units: create the newcomers, update everyone, retire the ones the host no longer has
   const seen=new Set();
@@ -212,7 +213,7 @@ function netApplyTick(s){
     const n=(NETG.missing.get(u.id)||0)+1; NETG.missing.set(u.id,n);
     if(n>=3) netKill(u,null,0,true); }   // gone without a death event (missed while reconnecting): it fell
   for(const id of seen) NETG.missing.delete(id);
-  if(selReg&&!regs.includes(selReg)) selectReg(null);
+  if(selRegs.some(r=>!regs.includes(r))) setSelection(selRegs.filter(r=>regs.includes(r)));
   // castles: what is queued, training and being researched; who stands on the walls
   s.c.forEach((cs,t)=>{ const C=CASTLES[t]; if(!cs||!C) return;
     const before=C.res.castleArchers||0; C.res=Object.assign({},cs.res);
@@ -367,11 +368,11 @@ function netResetState(){
 // both sides: build the battlefield from the room's shared configuration (factions, size)
 function netBattleScene(cfg,host){
   closeMenu(); closeOverlays(); closeCampaign(); game.demo=false; game.tutorial=null; game.campFight=null; game.classicMix=false; game.paused=false;
-  setFactions(cfg.factions[0],cfg.factions[1]); game.size=cfg.size===1?1:0; game.finMode=1;
-  game.mode='battle'; syncModeUI(); setTab('battle'); setTerrain('skirmish');
+  setFactions(cfg.factions[0],cfg.factions[1]); game.size=cfg.size===1?1:0; game.finMode=cfg.finishers===0||cfg.finishers===2?cfg.finishers:1;
+  game.mode='battle'; syncModeUI(); setTab('battle'); setTerrain(cfg.map==='river'?'riverlands':'skirmish');
   if(host){ resetBattle(); }
   else { clearAll(); game.over=0; game.winner=undefined; game.mana=[150,150]; game.gold=[0,0]; ensureCastles(); syncTeamNames(); setupStatues(); statsReset(); resetCastles(); closePanel();
-    game.stance=['defend','defend']; game.bt=0; }
+    game.stance=['defend','defend']; game.bt=0; if(RL.on) rlResetZones(); }
   game.auto=[false,false]; syncBattleButtons(); renderChips();
   for(const [id,v] of [['oDefend','defend'],['oHold','hold'],['oCharge','charge']]) $('#'+id).setAttribute('aria-pressed',game.stance[NET.team]===v);
   netCamera(NET.team);

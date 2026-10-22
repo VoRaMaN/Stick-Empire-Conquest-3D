@@ -1,7 +1,7 @@
 /* ================= PHASE 3: regiments, tactics, campaign ================= */
 
 /* ---------- regiments ---------- */
-const regs=[]; const regNum=[0,0]; let selReg=null, chaosReg=0;
+const regs=[]; const regNum=[0,0]; let selReg=null, chaosReg=0, selRegs=[];   // selRegs: every selected regiment (RTS box selection); selReg is the first
 const REG_SIZE={sword:12,spear:12,archer:10,giant:3};
 const FORM={spear:{cols:6,gap:1.3,depth:1.35},sword:{cols:6,gap:1.3,depth:1.35},archer:{cols:5,gap:1.35,depth:1.4},giant:{cols:3,gap:3.1,depth:3.1}};
 const ROMAN=n=>{const r=[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];let s='';for(const [v,c] of r) while(n>=v){s+=c;n-=v;} return s;};
@@ -28,14 +28,14 @@ function makeBanner(r){
 }
 function updateBanners(){
   for(const r of regs){ if(!r.banner) continue; const b=regAlive(r)[0];
-    if(!b||b.fl){ r.banner.visible=false; continue; } r.banner.visible=true;   // wing archers carry their wings, not a banner
+    if(!b||b.fl||b.fowH){ r.banner.visible=false; continue; } r.banner.visible=true;   // wing archers carry their wings, not a banner
     const s=b.s, pos=_tmp.copy(b.j.chest).addScaledVector(b.fwdW,-.2*s).addScaledVector(b.spine,-.15*s);
     orient(r.banner,pos,b.spine,b.rightW); r.banner.scale.setScalar(s*(b.type==='giant'?.8:1));
     r.flag.rotation.y=Math.sin(game.time*4+r.id)*.18; }
 }
 function cleanRegs(){
   for(let i=regs.length-1;i>=0;i--){ const r=regs[i]; r.units=r.units.filter(u=>u.alive);
-    if(!r.units.length){ if(r.banner) dropRoot(r.banner); if(selReg===r) selectReg(null); regs.splice(i,1); continue; }
+    if(!r.units.length){ if(r.banner) dropRoot(r.banner); if(selRegs.includes(r)) setSelection(selRegs.filter(x=>x!==r)); regs.splice(i,1); continue; }
     const o=r.order;
     if(o.kind==='attack'&&!(o.target&&regAlive(o.target).length)&&!(o.unit&&o.unit.alive)){ const c=regCenter(r); r.order={kind:'hold',x:c.x,z:c.z,a:r.team?-Math.PI/2:Math.PI/2}; }
     if(o.kind==='move'){ const a=regAlive(r); if(a.every(u=>{const s=regSlot(r,u); return Math.hypot(s.x-u.pos.x,s.z-u.pos.z)<1.3;})) o.kind='hold'; }
@@ -55,7 +55,7 @@ function regBrain(u,o){
     if(!t) return false; u.target=t; const dx=t.pos.x-u.pos.x,dz=t.pos.z-u.pos.z; fightBrain(u,t,dx,dz,Math.hypot(dx,dz)||1e-3); return true;
   }
   const sl=regSlot(u.reg,u), moving=o.kind==='move';
-  const ranged=u.T.ranged, guard=ranged?u.T.range:(moving?2.5:7), leash=ranged?3:(moving?4:10);
+  const ranged=u.T.ranged, guard=ranged?u.T.range:(moving?2.5:7)*sightK(), leash=ranged?3:(moving?4:10)*sightK();
   u.rfT=(u.rfT||0)-1/60; if(u.rfT<=0||u.rFoe&&!u.rFoe.alive){ u.rfT=.25+Math.random()*.1; u.rFoe=nearestFoe(u.pos.x,u.pos.z,u.team,Math.max(guard,u.T.range)+.5,u); }
   const foe=u.rFoe&&u.rFoe.alive&&u.rFoe.state!=='stunned'?u.rFoe:null, fd=foe?Math.hypot(foe.pos.x-u.pos.x,foe.pos.z-u.pos.z):1e9;
   const fromSlot=Math.hypot(u.pos.x-sl.x,u.pos.z-sl.z);
@@ -76,21 +76,23 @@ function orderMove(r,p,quiet){
 function orderAttack(r,tr,unit,quiet){ r.order={kind:'attack',target:tr||null,unit:tr?null:unit}; const c=tr?regCenter(tr):unit.pos; if(!quiet) marker.at(c.x,c.z,'#ff5a4f'); }
 function orderHold(r,quiet){ const c=regCenter(r); r.order={kind:'hold',x:c.x,z:c.z,a:r.team?-Math.PI/2:Math.PI/2}; if(!quiet) marker.at(c.x,c.z,'#ffd36b'); }
 // selection visuals
-const ringIM=new THREE.InstancedMesh((()=>{const g=new THREE.RingGeometry(.42,.54,28); g.rotateX(-Math.PI/2); return g;})(),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.85,depthWrite:false}),160);
-for(let i=0;i<160;i++) ringIM.setColorAt(i,WHITE);   // before count=0: three sizes the colour buffer from .count
+const RING_MAX=720, ringIM=new THREE.InstancedMesh((()=>{const g=new THREE.RingGeometry(.42,.54,28); g.rotateX(-Math.PI/2); return g;})(),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.85,depthWrite:false}),RING_MAX);
+for(let i=0;i<RING_MAX;i++) ringIM.setColorAt(i,WHITE);   // before count=0: three sizes the colour buffer from .count
 ringIM.instanceMatrix.setUsage(THREE.DynamicDrawUsage); ringIM.frustumCulled=false; ringIM.count=0; ringIM.renderOrder=3; scene.add(ringIM);
 const RING_SEL=new THREE.Color('#ffd36b'), RING_TGT=new THREE.Color('#ff5a4f');
 const marker=(()=>{ const m=new THREE.Mesh((()=>{const g=new THREE.RingGeometry(.7,.95,36); g.rotateX(-Math.PI/2); return g;})(),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,depthWrite:false}));
   m.visible=false; m.renderOrder=3; scene.add(m); return {m,t:0,at(x,z,c){ m.position.set(x,H(x,z)+.05,z); m.material.color.set(c); m.visible=true; this.t=0; }}; })();
 function drawSelection(dt){
   let n=0;
-  const ring=(u,col,k)=>{ if(n>=160) return; _p.set(u.pos.x,u.pos.y+.04,u.pos.z); _s.set(u.s*k,1,u.s*k); _m.compose(_p,_qi,_s); ringIM.setMatrixAt(n,_m); ringIM.setColorAt(n,col); n++; };
-  if(selReg){ for(const u of regAlive(selReg)) ring(u,RING_SEL,1);
-    const o=selReg.order; if(o.kind==='attack'){ for(const u of (o.target?regAlive(o.target):(o.unit&&o.unit.alive?[o.unit]:[]))) ring(u,RING_TGT,1.1); } }
+  const ring=(u,col,k)=>{ if(n>=RING_MAX) return; _p.set(u.pos.x,u.pos.y+.04,u.pos.z); _s.set(u.s*k,1,u.s*k); _m.compose(_p,_qi,_s); ringIM.setMatrixAt(n,_m); ringIM.setColorAt(n,col); n++; };
+  for(const sr of selRegs){ for(const u of regAlive(sr)) ring(u,RING_SEL,1);
+    const o=sr.order; if(o.kind==='attack'){ for(const u of (o.target?regAlive(o.target):(o.unit&&o.unit.alive?[o.unit]:[]))) if(!u.fowH) ring(u,RING_TGT,1.1); } }
   ringIM.count=n; ringIM.instanceMatrix.needsUpdate=true; if(ringIM.instanceColor) ringIM.instanceColor.needsUpdate=true;
   if(marker.m.visible){ marker.t+=dt; const k=1+.25*Math.sin(marker.t*6); marker.m.scale.set(k,1,k); marker.m.material.opacity=Math.max(0,1-marker.t/2.2); if(marker.t>2.2) marker.m.visible=false; }
 }
-function selectReg(r){
+function selectReg(r){ setSelection(r?[r]:[]); }
+function setSelection(list){
+  selRegs=list.filter((r,i)=>r&&list.indexOf(r)===i&&regs.includes(r)); const r=selRegs[0]||null;
   selReg=r; const on=!!r&&game.mode==='battle';
   $('#regbar').hidden=!on; $('#orders').hidden=on||game.mode!=='battle'; $('#actBattle').hidden=on||game.mode!=='battle';
   if(on) updateRegbar();
@@ -100,7 +102,9 @@ function selectReg(r){
 function updateRegbar(){
   if(!selReg) return; const n=regAlive(selReg).length, o=selReg.order.kind;
   const ST={army:'following army orders',move:'marching',hold:'holding',attack:'attacking',charge:'charging'};
-  $('#rgTitle').textContent='Regiment '+ROMAN(selReg.num); $('#rgSub').textContent=n+' '+TYPE_PL[selReg.type]+' · '+ST[o];
+  if(selRegs.length>1){ const k={}; let tot=0; for(const r of selRegs){ const m=regAlive(r).length; tot+=m; k[r.type]=(k[r.type]||0)+m; }
+    $('#rgTitle').textContent=selRegs.length+' regiments'; $('#rgSub').textContent=tot+' soldiers · '+Object.keys(k).map(t=>k[t]+' '+(TYPE_PL[t]||t)).join(', '); }
+  else { $('#rgTitle').textContent='Regiment '+ROMAN(selReg.num); $('#rgSub').textContent=n+' '+TYPE_PL[selReg.type]+' · '+ST[o]; }
   const cb=$('#rgCapture'); if(cb){ const Z=MAP.id==='classic'?null:rlCaptureTarget(selReg); cb.hidden=!Z; if(Z) cb.textContent='Capture '+Z.id; }
 }
 

@@ -11,13 +11,15 @@ const orbitDrag=p=>{ const o=game.mode==='duel'||game.mode==='viewer'||settings.
 function twoFinger(){ const [a,b]=[...ptrs.values()]; return {d:Math.hypot(a.x-b.x,a.y-b.y),mx:(a.x+b.x)/2,my:(a.y+b.y)/2,ang:Math.atan2(b.y-a.y,b.x-a.x)}; }
 canvas.addEventListener('pointerdown',e=>{
   canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId);
-  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,t:performance.now(),btn:e.button,alt:e.button===2||e.shiftKey});
+  // RTS (42b): with a mouse the left button drags a selection box and the middle one pans; on a phone, Box does the same for one drag
+  const mouse=e.pointerType==='mouse', rts=rtsOn()&&game.mode==='battle'&&!game.paused, bx=rts&&((mouse&&e.button===0&&uiMode()==='pc')||(!mouse&&RTS.boxMode&&!ptrs.size));
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,t:performance.now(),btn:e.button,mouse,alt:e.button===2||(e.shiftKey&&!bx),box:bx,panB:rts&&mouse&&e.button===1});
   if(ptrs.size===2) pinch=twoFinger();
 });
 canvas.addEventListener('pointermove',e=>{
   const p=ptrs.get(e.pointerId); if(!p) return;
   const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY;
-  if(ptrs.size===1){ if(orbitDrag(p)) orbit(dx,dy); else pan(dx,dy); }
+  if(ptrs.size===1){ if(p.box){ if(Math.hypot(p.x-p.sx,p.y-p.sy)>6){ p.boxing=true; rtsBoxDraw(p); } } else if(p.panB) pan(dx,dy); else if(orbitDrag(p)) orbit(dx,dy); else pan(dx,dy); }
   else if(ptrs.size===2&&pinch){ const q=twoFinger();
     if(q.d>10&&pinch.d>10) cam.dGoal=clamp(cam.dGoal*pinch.d/q.d,3.5,MAP.zmax||70);                       // pinch: zoom
     const da=wrapA(q.ang-pinch.ang); if(Math.abs(da)<.5){ cam.yaw+=da; inputStats.turned+=Math.abs(da)*150; }   // twist: turn
@@ -32,9 +34,12 @@ function zoomAt(x,y){ const gp=groundPoint(x,y);
   else cam.dGoal=Math.min(60,cam.dGoal*1.7); }
 function endPtr(e){
   const p=ptrs.get(e.pointerId); if(!p) return;
-  const now=performance.now(), tap=ptrs.size===1&&Math.hypot(e.clientX-p.sx,e.clientY-p.sy)<9&&now-p.t<350;
+  const now=performance.now(), tap=ptrs.size===1&&Math.hypot(e.clientX-p.sx,e.clientY-p.sy)<9&&now-p.t<(p.mouse?800:350);
   ptrs.delete(e.pointerId); if(ptrs.size<2) pinch=null; else pinch=twoFinger();
+  if(p.boxing){ const b=$('#selBox'); if(b) b.hidden=true; if(e.type==='pointerup') rtsBoxEnd(p,e.shiftKey); return; }
   if(!tap||e.type!=='pointerup') return;
+  // RTS with a mouse: left click selects, right click gives the order
+  if(p.mouse&&rtsOn()&&game.mode==='battle'&&uiMode()==='pc'){ if(p.btn===2) rtsOrderAt(e.clientX,e.clientY); else if(p.btn===0) rtsClick(e.clientX,e.clientY,e.shiftKey); return; }
   if(lastTap&&now-lastTap.t<320&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<40&&!selReg&&game.mode==='battle'){ lastTap=null; zoomAt(e.clientX,e.clientY); return; }
   lastTap={x:e.clientX,y:e.clientY,t:now};
   pick(e.clientX,e.clientY);
@@ -56,17 +61,13 @@ function groundPoint(x,y){ _ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1); _ray
 function pick(x,y){
   if(game.mode!=='battle'||game.paused) return;
   let best=null,bd=46*46;
-  for(const u of units){ if(!u.alive) continue; _proj.copy(u.j.chest).project(camera); if(_proj.z>1) continue;
+  for(const u of units){ if(!u.alive||u.fowH) continue; _proj.copy(u.j.chest).project(camera); if(_proj.z>1) continue;
     const sx=(_proj.x*.5+.5)*innerWidth, sy=(-_proj.y*.5+.5)*innerHeight, d=(sx-x)**2+(sy-y)**2; if(d<bd){bd=d;best=u;} }
   // a building (and nobody standing right where you tapped): open it, or show what the enemy's is
   const me=myTeam(), foe=1-me;
   if(!selReg&&(!best||bd>20*20)){ const bb=pickBuilding(x,y); if(bb){ if(bb.team===me) openPanel(bb); else { setHover(bb,x,y); setTimeout(()=>{ if(hoverB===bb) setHover(null); },1800); } return; } }
-  if(best&&best.team===me&&best.reg){ selectReg(best.reg); return; }          // tap your regiment: select it
-  if(selReg){
-    if(best&&best.team===foe){ issue('reg',{r:selReg.id,k:'attack',tr:best.reg?best.reg.id:0,tu:best.id}); updateRegbar(); return; }   // tap an enemy: attack
-    const gp=groundPoint(x,y); if(!gp) return;
-    if(Math.hypot(gp.x-BASE_X[foe],gp.z)<5){ issue('reg',{r:selReg.id,k:'charge'}); marker.at(BASE_X[foe]-DIRX[foe]*3,0,'#ff5a4f'); updateRegbar(); return; }
-    issue('reg',{r:selReg.id,k:'move',x:+gp.x.toFixed(2),z:+gp.z.toFixed(2)}); updateRegbar(); return; }   // tap ground: march there
+  if(best&&best.team===me&&best.reg){ if(selRegs.length>1&&selRegs.includes(best.reg)) setSelection(selRegs.filter(r=>r!==best.reg)); else selectReg(best.reg); return; }   // tap your regiment: select it
+  if(selReg){ rtsOrderAt(x,y); return; }   // tap an enemy: attack; tap the ground: march there (every selected regiment, 42b)
   cam.follow=best; if(best) cam.dGoal=Math.min(cam.dGoal,best.s>1.5?14:9);
   updateFollowUI();
 }

@@ -221,6 +221,7 @@ function rlObstGrid(){ const N=RL.ogN, S=RL.ogS, O=RL.og0, G=Array.from({length:
     for(let j=j0;j<=j1;j++) for(let i=i0;i<=i1;i++) G[j*N+i].push(o); } }
 function mapCollide(u){
   if(u.fl&&u.fl.air) return;
+  rlRiverCollide(u);   // the river: only the bridges cross it (37e)
   const N=RL.ogN, i=Math.floor((u.pos.x-RL.og0)/RL.ogS), j=Math.floor((u.pos.z-RL.og0)/RL.ogS); if(i<0||j<0||i>=N||j>=N) return;
   const ur=.3*u.s;
   for(const o of RL.og[j*N+i]){ const dx=u.pos.x-o.x, dz=u.pos.z-o.z;
@@ -232,6 +233,7 @@ function mapCollide(u){
 // remember which way the obstacle pushed: for a moment afterwards a soldier walking into it turns to slide along it
 function rlTouch(u,nx,nz){ u.slN=u.slN||{x:0,z:0}; u.slN.x=nx; u.slN.z=nz; u.slT=.7; }
 function mapSteer(u,dt){
+  rlRoute(u,dt);   // a way that runs into the river goes round by a bridge (37e)
   const d=u.desired, sp=Math.hypot(d.x,d.z); if(sp<.15) return;
   // look ahead for a tree, rock or post in the way and bear off to one side before reaching it
   const fx=d.x/sp, fz=d.z/sp, ur=.3*u.s, N=RL.ogN, i=Math.floor((u.pos.x+fx*2-RL.og0)/RL.ogS), j=Math.floor((u.pos.z+fz*2-RL.og0)/RL.ogS);
@@ -302,11 +304,11 @@ function rlBuildZone(Z,K){
 function rlFlagTextures(){ const key=facOf(0)+facOf(1); if(RL.flagKey===key) return; RL.flagKey=key;
   const tx=[rlFlagTex(0),rlFlagTex(1)];
   for(const Z of RL.zones) for(let t=0;t<2;t++){ const m=Z.cloth[t].material; if(m.map) m.map.dispose(); m.map=tx[t]; m.color.set(tx[t]?'#ffffff':RL_TEAMC[t]); m.needsUpdate=true; } }
-function rlResetZones(){ for(const Z of RL.zones){ Z.s=0; Z.owner=-1; Z.n=[0,0]; Z.contest=false; Z.cap=-1; Z.held=[0,0]; } RL.zT=0; rlFlagTextures(); }
+function rlResetZones(){ for(const Z of RL.zones){ Z.s=0; Z.owner=-1; Z.n=[0,0]; Z.contest=false; Z.cap=-1; Z.held=[0,0]; } RL.zT=0; RL.dmg=[1,1]; RL.ai=[{},{}]; if(RL.on) fowReset(); rlFlagTextures(); }
 const rlZoneName=Z=>'zone '+Z.id;
 function rlZonesStep(dt){
-  if(game.mode!=='battle'||NET.on) return;
-  RL.zT-=dt; if(RL.zT<=0){ RL.zT=.25;
+  if(game.mode!=='battle'||NET.guest) return;   // online, the host holds the zones and sends them round
+  RL.zT-=dt; if(RL.zT<=0){ RL.zT=.25; rlZoneBonusTick(.25);
     for(const Z of RL.zones){ Z.n[0]=Z.n[1]=0;
       gridEach(Z.x,Z.z,RL_ZR,u=>{ if(!u.alive||!u.isUnit||u.T.worker||(u.fl&&u.fl.air)||u.routing) return; if((u.pos.x-Z.x)**2+(u.pos.z-Z.z)**2<RL_ZR*RL_ZR) Z.n[u.team]++; });
       Z.contest=Z.n[0]>0&&Z.n[1]>0; Z.cap=Z.contest?-1:Z.n[0]>0?0:Z.n[1]>0?1:-1; } }
@@ -317,11 +319,11 @@ function rlZonesStep(dt){
     // the banner reaches the top: taken. It falls to the foot of the pole: the holder has lost it.
     if(Z.owner!==0&&Z.s<=-1){ rlZoneTaken(Z,0); } else if(Z.owner!==1&&Z.s>=1){ rlZoneTaken(Z,1); }
     else if(Z.owner>=0&&(Z.owner?Z.s<=0:Z.s>=0)&&(Z.owner?s0>0:s0<0)){ const lost=Z.owner; Z.owner=-1; rlZoneLost(Z,lost); }
-    if(Z.owner>=0){ const t=Z.owner; game.gold[t]+=RL_INCOME*econ(t)*dt; Z.held[t]+=dt; } }
+    if(Z.owner>=0){ const t=Z.owner, K=rlKind(Z); game.gold[t]+=K.gold*econ(t)*dt; game.mana[t]+=K.mana*dt; Z.held[t]+=dt; } }
 }
 function rlZoneTaken(Z,t){ Z.owner=t; Z.s=t?1:-1; const me=myTeam();
   if(game.demo) return;
-  if(t===me){ sfx('horn',new V3(Z.x,Z.h,Z.z),.8); toast('Zone '+Z.id+' captured · +'+(Math.round(RL_INCOME*econ(me)*10)/10)+' '+money(me)+' a second'); }
+  if(t===me){ sfx('horn',new V3(Z.x,Z.h,Z.z),.8); const K=rlKind(Z); toast('Zone '+Z.id+' captured · '+K.name+': '+K.txt.replace('gold',money(me))+' · heals and reveals'); }
   else { sfx('hornEnemy',new V3(Z.x,Z.h,Z.z),.8); toast(teamName(t)+' took '+rlZoneName(Z)); }
 }
 function rlZoneLost(Z,t){ if(game.demo) return; if(t===myTeam()) toast('Your banner fell at '+rlZoneName(Z)); }
@@ -562,6 +564,7 @@ const RL_CLASSIC={fx0:-42,fx1:42,fz0:-15,fz1:15,cx:72,cz:20,cf:46};
 function setMapMode(river){
   if(river&&!RL.built) rlBuild();
   RL.on=river; MAP.id=river?'river':'classic';
+  rlRangeMode(river);   // bows and spells reach four or five times as far on the big map (37e)
   if(river){ Object.assign(MAP,{fx0:-RL_LIM,fx1:RL_LIM,fz0:-RL_LIM,fz1:RL_LIM,cx:165,cz:165,cf:RL_CF,zmax:130,obst:true,ground:RL.ground});
     BASE_X[0]=-(RL_CF-12); BASE_X[1]=RL_CF-12;
     heightGrid(-RL_EDGE,-RL_EDGE,RL_EDGE*2+1,RL_EDGE*2+1,1); setGrid(-174,-174,58,58,6); Object.assign(MM,{x0:-163,x1:163,z0:-163,z1:163}); }
@@ -569,6 +572,7 @@ function setMapMode(river){
     heightGrid(-60,-32,181,97,120/180); setGrid(-48,-21,32,14,3); Object.assign(MM,{x0:-62,x1:62,z0:-19,z1:17}); }
   for(const C of CASTLES) if(C&&C.group){ C.group.position.x=C.team?MAP.cf:-MAP.cf; C.group.updateMatrixWorld(true); }
   if(RL.group) RL.group.visible=river;
+  if(river) fowPatchScene(); else { FOW.on=false; FOW.uOn.value=0; }
   if(groundMesh) groundMesh.visible=!river; if(rocksIM) rocksIM.visible=!river;
   // a greener, hazier light on the valley; the dusk plain keeps its own. The sky follows the camera on the big map.
   FOG0.near=river?70:38; FOG0.far=river?215:105; HORIZON.set(river?'#d6d3b4':'#e3c79a'); if(scene.fog) scene.fog.color.copy(HORIZON);
@@ -587,6 +591,7 @@ function rlStep(dt){
   for(const m of RL.mills) m.rotation.z+=dt*.6;
   for(let i=0;i<RL.flags.length;i++) RL.flags[i].rotation.y=.3*Math.sin(game.time*1.6+i*1.7)+.12*Math.sin(game.time*4+i);
   if(RL.zones.length) rlZonesStep(dt);
+  fowStep(dt);
   rlZonesDraw();
   // the sky dome and sun stay round the camera, so a far corner of the valley still has a sky
   if(skyDome) skyDome.position.set(camera.position.x,0,camera.position.z); if(sunDisc) sunDisc.position.set(camera.position.x-90,60,camera.position.z-170);
@@ -615,6 +620,7 @@ function rlMinimapBg(c,w,h,dpr){
       for(let t=0;t<2;t++){ const xa=mmX((t?1:-1)*RL_CF,w), xb=mmX((t?1:-1)*(RL_CF+36.5),w); g.fillStyle='rgba(130,122,108,.9)'; g.fillRect(Math.min(xa,xb),mmZ(-21,h),Math.abs(xb-xa),mmZ(16,h)-mmZ(-21,h)); g.fillStyle=t?'rgba(208,70,90,.9)':'rgba(228,178,58,.9)'; g.fillRect(xa+(t?0:-2*dpr),mmZ(-21,h),2*dpr,mmZ(16,h)-mmZ(-21,h)); }
       g.fillStyle='rgba(240,196,70,.95)'; for(const t of [0,1]) for(const m of RL_MINE[t]){ g.beginPath(); g.arc(mmX(m.x,w),mmZ(m.z,h),2.8*dpr,0,TAU); g.fill(); } } }
   if(RL.mmBg) c.drawImage(RL.mmBg,0,0);
+  fowMinimap(c,w,h);
 }
 function rlMinimapZones(c,w,h,dpr){
   for(const Z of RL.zones){ const x=mmX(Z.x,w), y=mmZ(Z.z,h), r=Math.max(5*dpr,RL_ZR/(MM.x1-MM.x0)*w*1.25), own=Z.owner;
@@ -631,14 +637,3 @@ function rlHeld(t){ let n=0; for(const Z of RL.zones) if(Z.owner===t) n++; retur
 function rlCaptureTarget(r){ if(!RL.zones.length||!regAlive(r).length) return null; const c=regCenter(r), t=r.team;
   let best=null, bd=1e9; for(const Z of RL.zones){ if(Z.owner===t&&!Z.contest) continue; const d=Math.hypot(Z.x-c.x,Z.z-c.z)-(Z.contest?40:0); if(d<bd){ bd=d; best=Z; } }
   return best; }
-// the computer's general: keeps its main army, sends up to three regiments to take zones it doesn't hold (nearest
-// first) and to relieve ones under attack; a detachment stays to guard its zone once it is taken
-function rlAI(t){
-  const foe=1-t, mine=regs.filter(r=>r.team===t&&regAlive(r).length>=2&&!regAlive(r).some(u=>u.routing));
-  for(const r of mine) if(r.rlZone&&r.order.kind!=='move'&&r.order.kind!=='hold') r.rlZone=null;   // the general called it back
-  const tasked=mine.filter(r=>r.rlZone), maxT=Math.min(3,Math.max(0,mine.length-1)), sx=BASE_X[t];
-  const want=RL.zones.filter(Z=>Z.owner!==t||Z.n[foe]>0).sort((a,b)=>(b.n[foe]>0)-(a.n[foe]>0)||Math.hypot(a.x-sx,a.z)-Math.hypot(b.x-sx,b.z));
-  for(const Z of want){ if(tasked.length>=maxT) break; if(mine.some(r=>r.rlZone===Z.id)) continue;
-    let best=null, bd=1e9; for(const r of mine){ if(r.rlZone||r.order.kind==='attack'||r.order.kind==='charge') continue; const c=regCenter(r), d=Math.hypot(c.x-Z.x,c.z-Z.z); if(d<bd){ bd=d; best=r; } }
-    if(!best) break; best.rlZone=Z.id; orderMove(best,{x:Z.x+(t?1.5:-1.5),z:Z.z},true); tasked.push(best); }
-}
