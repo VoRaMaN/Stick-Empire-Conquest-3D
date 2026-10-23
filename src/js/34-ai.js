@@ -26,6 +26,7 @@ function brain(u,dt){
     u.desired.set(dx/d*sc.speed,0,dz/d*sc.speed); u.faceGoal=sc.face&&sc.face.alive?Math.atan2(sc.face.pos.x-u.pos.x,sc.face.pos.z-u.pos.z):Math.atan2(dx,dz); return; }
   if(!u.ai) return;
   if(u.state==='stunned') return;
+  if(u.camp&&rlCampBrain(u,dt)) return;   // neutral camp guards (37f)
   if(u.T.brain&&u.T.brain(u,dt)) return;
   u.retarget-=dt;
   if(u.retarget<=0||(u.target&&(!u.target.alive||u.target.state==='stunned'))){ u.target=nearestEnemy(u); const far=u.target?Math.hypot(u.target.pos.x-u.pos.x,u.target.pos.z-u.pos.z):99; u.retarget=(far>18?.9:.3)+Math.random()*.25; }

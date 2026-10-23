@@ -116,6 +116,33 @@ castle, in packs of up to three.
 - Long arrow shots arc high like a real volley: past ~18 m the archer aims up and the arrow climbs (about 20–25 m
   at 70 m) and drops onto where the target will be.
 
+**Day and night, terrain and objectives (v0.20):**
+- **Day and night:** a six-minute day runs morning, day, dusk, night and dawn, and the battle card shows the time of
+  day. At night everyone sees 40% less, fires light the ground round them for both armies, and every regiment's
+  standard-bearer carries a torch. Ninjas strike 35% harder, run faster and can't be seen unless an enemy is within
+  9 m.
+- **Ambush:** soldiers inside a forest can't be seen by the enemy unless one comes within 9 m or they attack. Their
+  first blows from hiding do 40% more damage.
+- **Fords:** four shallow crossings lie between the bridges. Wading halves speed, adds 25% to damage taken, and
+  nobody can dodge or parry in the water. Route-finding uses a ford only when it is much shorter than a bridge.
+- **Supply lines:** a soldier more than 75 m from his castle and 40 m from any zone his army holds is out of supply,
+  and his morale slowly drains.
+- **New objectives:**
+  - E and F, militia villages: a free swordsman every 30 s.
+  - G and H, watchtowers: see 70 m around.
+  - I and J, resurrection shrines: raise one of your fallen every 25 s.
+- **Neutral camps:** two bandit camps and two ogre dens guard 300 and 450 gold. They attack anyone who comes close;
+  the army that kills the last guard takes the gold, and the camp refills after three minutes.
+
+**Veteran regiments and formations (every battle except the classic regression mix):**
+- **Veterans:** a regiment earns a star at 4, 10 and 20 kills. Each star gives +8% damage dealt and 6% less damage
+  taken, and the stars show above its banner.
+- **Formations:** set with the regiment's Formation button or the V key.
+  - Wedge: +25% charge damage.
+  - Shield wall: ranged damage −45%, slower.
+  - Loose order: splash damage −40%, wider spacing.
+  - Square: braced against charges, no flanks or rear, slowest.
+
 **RTS controls** (Settings → Interface, on by default):
 - PC: drag a box to select regiments (Shift adds), click one to select it, double-click to select every regiment of
   that kind on screen, right-click the ground to march (several regiments line up side by side), right-click an

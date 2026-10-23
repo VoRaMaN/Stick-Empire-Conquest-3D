@@ -51,7 +51,7 @@ function netSnapshot(){
     U.push([u.id,NTI[u.type],u.team,r2(u.pos.x),r2(u.pos.z),r3(wrapA(u.face)),Math.max(1,Math.round(u.hp)),Math.round(u.maxHp),unitFlags(u),u.reg?u.reg.id:0,
       Math.abs(u.s-u.T.s)>1e-3?r2(u.s):0,u.chg?u.chg.i+1:0]); }
   for(const r of regs){ if(!regAlive(r).length) continue; const o=r.order||{kind:'army'};
-    R.push([r.id,r.team,NTI[r.type],r.num,ORD[o.kind]||0,o.x!==undefined?r2(o.x):0,o.z!==undefined?r2(o.z):0,o.a!==undefined?r3(o.a):0,o.target?o.target.id:0,o.unit&&o.unit.alive?o.unit.id:0]); }
+    R.push([r.id,r.team,NTI[r.type],r.num,ORD[o.kind]||0,o.x!==undefined?r2(o.x):0,o.z!==undefined?r2(o.z):0,o.a!==undefined?r3(o.a):0,o.target?o.target.id:0,o.unit&&o.unit.alive?o.unit.id:0,r.rank||0,FORMS.indexOf(r.form||'line')]); }
   const C=CASTLES.map(Cs=>{ if(!Cs) return null; const b={};
     for(const B of [...Cs.list,Cs.keep]){ const tr=B.train, rs=B.res;
       if(!(B.q&&B.q.length)&&!tr&&!(B.exitQ&&B.exitQ.length)&&!rs) continue;
@@ -94,6 +94,7 @@ function applyCmd(team,type,p,local){
       if(p.k==='hold'){ orderHold(r,quiet); return true; }
       if(p.k==='charge'){ r.order={kind:'charge'}; return true; }
       if(p.k==='army'){ r.order={kind:'army'}; return true; }
+      if(p.k==='form'){ if(!FORMS.includes(p.f)) return 'bad_payload'; r.form=p.f; return true; }
       if(p.k==='attack'){ const tr=p.tr?regs.find(x=>x.id===p.tr):null, tu=p.tu?units.find(u=>u.id===p.tu&&u.alive&&u.isUnit):null;
         if(tr&&(tr.team===team||!regAlive(tr).length)) return 'bad_target';
         if(!tr&&(!tu||tu.team===team)) return 'bad_target';
@@ -197,9 +198,9 @@ function netApplyTick(s){
   s.sh.forEach((h,i)=>{ const st=statues[i]; if(st){ st.hp=h[0]; st.max=h[1]; } });
   // regiments first (units point at them)
   const seenR=new Set();
-  for(const R of s.r){ const [id,team,ti,num,ok,ox,oz,oa,tr,tu]=R; seenR.add(id); let r=regById(id);
+  for(const R of s.r){ const [id,team,ti,num,ok,ox,oz,oa,tr,tu,rk,fm]=R; seenR.add(id); let r=regById(id);
     if(!r){ r={id,team,type:NTYPES[ti],units:[],num,order:{kind:'army'}}; regs.push(r); makeBanner(r); if(team===0) regNum[0]=Math.max(regNum[0],num); else regNum[1]=Math.max(regNum[1],num); }
-    const k=ORDN[ok]||'army';
+    r.rank=rk||0; r.form=FORMS[fm]||'line'; const k=ORDN[ok]||'army';
     r.order=k==='move'||k==='hold'?{kind:k,x:ox/100,z:oz/100,a:oa/1000}:k==='attack'?{kind:'attack',target:tr?regById(tr):null,unit:tu?NETG.byId.get(tu)||null:null}:{kind:k}; }
   for(let i=regs.length-1;i>=0;i--){ const r=regs[i]; if(!seenR.has(r.id)){ if(r.banner) dropRoot(r.banner); if(selRegs.includes(r)) setSelection(selRegs.filter(x=>x!==r)); regs.splice(i,1); } }
   for(const r of regs) r.units.length=0;

@@ -37,7 +37,8 @@ function damage(t,amt,src,dirW,kb,up,blocked,at){
   if(!blocked&&amt>0&&t.T.crawler) puff(at||t.j.chest,3,.09,2.6,'#ff7a2a');   // magma spills from a wounded Hellcrawler
   if(t.invuln||NET.guest) return;   // online guest: health only ever comes from the host
   if(amt>0) t.hurtAt=game.time;   // Chaos regeneration waits for the wounds to stop
-  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src))*(RL.on?rlDmgMul(src):1); if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
+  if(src&&src.team!==undefined&&src.team<2){ t.lastHitTeam=src.team; t.lastHitBy=src; }
+  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)*vetDealt(src)*vetTaken(t)*formTaken(t,src))*(RL.on?rlDmgMul(src)*rlSysMul(t,src):1); if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
   if(t.hp<=0){ kill(t,dirW.clone().multiplyScalar(2.5*(kb||1)).add(new V3(0,1.8+(kb||1)*.6+(up||0),0)),{}); }
 }
 function kill(t,impWorld,opt){
@@ -86,7 +87,7 @@ function startAttack(u,t,forced){
   if(cname){ u.chg=null; u.chgCD=1.5; u.chgW=0; }
   if(tUnit){ const d=Math.hypot(tUnit.pos.x-u.pos.x,tUnit.pos.z-u.pos.z), fwd=c.keys.reduce((m,k)=>Math.max(m,k.fwd),0)*u.s;
     u.fwdScale=fwd>0?clamp((d-(T.reach+(tUnit.s-1)*.35))/fwd,0,2.4):1;
-    planDefense(tUnit,u,c); if(RL.on&&T.ranged&&!(T.meleeSet&&T.meleeSet.has(name))) rlProjDefense(tUnit,u,c); }
+    planDefense(tUnit,u,c); if(RL.on) ambushStart(u); if(RL.on&&T.ranged&&!(T.meleeSet&&T.meleeSet.has(name))) rlProjDefense(tUnit,u,c); }
   if(c.aim&&t){ const d=Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z); u.aimPitch=clamp(d*.018,0,.3);
     if(RL.on&&d>18){ const Tf=arrowT(d), up=.5*14*Tf/(d/Tf); u.aimPitch=clamp(up*.9,.3,1.05); } }   // a far shot: the bow points up into the sky
   u.cdT=T.cd*rand(.85,1.15)*(c.dur>1.2?1.12:1);
@@ -115,6 +116,7 @@ function canFinish(u,t){
   return game.finMode===2||Math.random()<.4;
 }
 function startFinisher(u,v,forced){
+  if(u.team<2){ v.lastHitTeam=u.team; v.lastHitBy=u; }   // the finisher's kill is his (veterans, camp gold)
   const list=FINS[u.type]; let name=forced;
   if(!name){ let g=0; do{ name=list[Math.floor(Math.random()*list.length)]; }while(name===u.lastFin&&++g<6); }
   u.lastFin=name;

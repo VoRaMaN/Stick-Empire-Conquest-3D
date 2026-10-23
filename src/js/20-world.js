@@ -12,7 +12,7 @@ function groundAt(u,x,z){return u&&u.gy!==undefined?u.gy:u&&u.inCastle?castleFlo
 function castleFloor(u,x,z){ const t=u.team, lx=t?MAP.cf-x:x+MAP.cf, f=CGY[t]+.08; if(lx<-.5) return f; return lerp(f,H(x,z),smooth(clamp((lx+.5)/5,0,1))); }
 
 function makeUnit(type,team,x,z,opt){
-  opt=opt||{};
+  opt=opt||{}; if(team===2) rlNeutralTeam();   // a neutral camp's colours, made on first use (37f)
   const T=TYPES[type], s=opt.s||T.s;
   const u={id:++uid,type,team,T,s,pos:new V3(x,0,z),vel:new V3(),av:new V3(),last:new V3(x,0,z),spd:0,
     face:team===0?Math.PI/2:-Math.PI/2,faceGoal:0,hp:T.hp,maxHp:T.hp,alive:true,state:'ok',ai:opt.ai!==false,

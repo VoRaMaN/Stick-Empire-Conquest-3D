@@ -80,7 +80,7 @@ function draw(){
     if(s!==hudCache){ hudCache=s; hudEls.gA.textContent=Math.floor(game.gold[0]).toLocaleString(); hudEls.gB.textContent=Math.floor(game.gold[1]).toLocaleString();
       const mOn=!game.classicMix; if(hudEls.mA){ hudEls.mA.textContent=Math.floor(game.mana[0]); hudEls.mB.textContent=Math.floor(game.mana[1]); if(hudEls.mA.parentNode) hudEls.mA.parentNode.hidden=!mOn; if(hudEls.mB.parentNode) hudEls.mB.parentNode.hidden=!mOn; }
       hudEls.hpA.style.width=(statues[0].hp/statues[0].max*100)+'%'; hudEls.hpB.style.width=(statues[1].hp/statues[1].max*100)+'%';
-      const SN={defend:'defending',hold:'holding',charge:'charging'}; const ZN=t=>MAP.id==='classic'?'':' · '+rlHeld(t)+(rlHeld(t)===1?' zone':' zones');
+      const SN={defend:'defending',hold:'holding',charge:'charging'}; const ZN=t=>MAP.id==='classic'?'':' · '+rlHeld(t)+(rlHeld(t)===1?' zone':' zones')+(t===0?' · '+dnLabel():'');
       hudEls.cA.textContent=count(0)+' units · '+SN[game.stance[0]]+ZN(0); hudEls.cB.textContent=count(1)+' units · '+SN[game.stance[1]]+ZN(1);
       const me=myTeam(); for(const t of FAC(me).roster){ const el=document.getElementById('chip-'+t); if(el){ el.style.opacity=game.gold[me]>=TYPES[t].cost&&game.mana[me]>=unitMana(t)?1:.55; const q=el.querySelector&&el.querySelector('.qn'); if(q){ const n=castleOn()?queuedType(me,t):0; q.textContent=n?'×'+n:''; } } } }
   }
@@ -111,7 +111,7 @@ function frame(now){
 window.__SE3D={THREE,sun,setDistance,applyDistances,closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
   renderer,sceneRef:scene,sunScreen,applyQuality,GFX_PRESETS,GFX_DEF,post,GFX:()=>GFX,CASTLES,recruit,buyUnit,startResearch,resLvl,hasRes,openPanel,closePanel,pickBuilding,setHover,queued,ICONS,makeUnitIcons,VOX,narrate,loadAssets,BUILDINGS,
   NET,applyCmd,buyFor,netSnapshot,netApplyTick,netBeforeStep,netAfterStep,hitStatue,netTest:()=>NETT,uiMode,setUiMode,uiSuggest,layoutTop,selectReg,
-  setTerrain,startSkirmish,CW3,CW,CW_REGIONS,openCampaign,closeCampaign,getCamp:()=>camp,campCanAttack,renderCampaign,campSelect,RL,MAP,BASE_X,setFactions,rlCaptureTarget,regAlive,regCenter,issue};
+  RLD:()=>({rlRiverD,RL_FORESTS,rlInCastle,rlInCamp,RL_MINE,RL_VIL,RL_TOWERS,RL_RUINS,rlRoadD}),setTerrain,startSkirmish,CW3,CW,CW_REGIONS,openCampaign,closeCampaign,getCamp:()=>camp,campCanAttack,renderCampaign,campSelect,RL,MAP,BASE_X,setFactions,rlCaptureTarget,regAlive,regCenter,issue};
 // start: apply saved settings, then open on the title screen with a battle playing behind it
 game.finMode=settings.finMode; game.auto[0]=settings.auto; game.size=settings.size; tune.blood=settings.blood;
 applyUiMode(); syncBattleButtons(); syncSettingsUI(); syncMinimap(); applyQuality();

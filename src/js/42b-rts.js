@@ -61,6 +61,7 @@ function rtsMoveMany(list,gx,gz){
 function rtsCmd(k){
   if(!selRegs.length) return;
   if(k==='capture'){ const Z=rlCaptureTarget(selReg); if(!Z) return; sfx('order'); rtsMoveMany(selRegs,Z.x,Z.z); marker.at(Z.x,Z.z,'#ffd36b'); updateRegbar(); return; }
+  if(k==='form'){ const f=FORMS[(FORMS.indexOf(selReg.form||'line')+1)%FORMS.length]; for(const r of selRegs) issue('reg',{r:r.id,k:'form',f}); sfx('order'); updateRegbar(); toast('Formation: '+FORM_NAME[f]); return; }
   for(const r of selRegs) issue('reg',{r:r.id,k}); sfx(k==='charge'?'horn':'order'); updateRegbar();
 }
 // the selection box
@@ -89,7 +90,7 @@ window.addEventListener('keydown',e=>{
     const L=(RTS.groups[dig]||[]).map(id=>regs.find(r=>r.id===id)).filter(r=>r&&regAlive(r).length); if(!L.length) return;
     const now=performance.now(); setSelection(L); if(RTS.lastG===dig&&now-RTS.lastGT<420) centerOn(L); RTS.lastG=dig; RTS.lastGT=now; return; }
   if(!selRegs.length) return;
-  if(k==='h') rtsCmd('hold'); else if(k==='c') rtsCmd('charge'); else if(k==='x') rtsCmd('army'); else if(k==='z'&&MAP.id!=='classic') rtsCmd('capture');
+  if(k==='v') rtsCmd('form'); else if(k==='h') rtsCmd('hold'); else if(k==='c') rtsCmd('charge'); else if(k==='x') rtsCmd('army'); else if(k==='z'&&MAP.id!=='classic') rtsCmd('capture');
   else if(k===' '){ e.preventDefault(); centerOn(selRegs); }
 });
 // the screen edges scroll the camera (mouse over the battlefield only)

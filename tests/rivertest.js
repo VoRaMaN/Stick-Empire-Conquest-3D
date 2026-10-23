@@ -24,7 +24,7 @@ const run=(n,each)=>{ for(let i=0;i<n;i++){ S.step(1/60); if(i%6===0) chk(); if(
 const t0=Date.now();
 S.settings.map='river'; S.settings.side='order'; S.startSkirmish(0);
 console.log('built in',Date.now()-t0,'ms · obstacles',S.RL.obst.length,'· zones',S.RL.zones.map(z=>z.id).join(''),'· castles at',S.CASTLES.map(C=>C.group.position.x).join(', '));
-ok(S.MAP.id==='river'&&S.RL.zones.length===4,'Riverlands is the map in play, with zones A, B, C and D');
+ok(S.MAP.id==='river'&&S.RL.zones.map(z=>z.id).join('')==='ABCDEFGHIJ','Riverlands is the map in play, with zones A–D and the objectives E–J (militia villages, watchtowers, resurrection shrines)');
 const hs=[]; for(let x=-84;x<=84;x+=12) for(let z=-84;z<=84;z+=12) hs.push(S.H(x,z));
 ok(hs.every(isFinite),'the ground has a height everywhere ('+Math.min(...hs).toFixed(2)+' to '+Math.max(...hs).toFixed(2)+' m)');
 ok(S.H(0,0)>.6,'the stone bridge carries soldiers over the river at the centre (deck '+S.H(0,0).toFixed(2)+' m)');

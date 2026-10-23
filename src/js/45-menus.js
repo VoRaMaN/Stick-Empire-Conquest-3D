@@ -5,7 +5,7 @@ const setBodyClass=(c,on)=>{ if(bodyEl&&bodyEl.classList) bodyEl.classList[on?'a
 // battle statistics for the results screen
 function statsReset(){ game.stats={t0:game.time,kills:[0,0],losses:[0,0],fins:[0,0],arrows:[0,0],gold:[0,0],peak:[0,0],bought:0}; }
 statsReset();
-function onKill(t){ if(!t.isUnit||!game.stats) return; game.stats.losses[t.team]++; game.stats.kills[1-t.team]++; }
+function onKill(t){ if(t.lastHitBy&&t.lastHitBy.team!==t.team) vetKill(t.lastHitBy); if(t.camp){ rlCampDeath(t); return; } if(RL.on) rlOnDeath(t); if(!t.isUnit||!game.stats) return; game.stats.losses[t.team]++; game.stats.kills[1-t.team]++; }
 function onFinisher(u){ if(game.stats) game.stats.fins[u.team]++; }
 function onArrow(u){ if(game.stats&&u&&u.team!==undefined) game.stats.arrows[u.team]++; }
 function onGold(team,n){ if(game.stats) game.stats.gold[team]+=n; }

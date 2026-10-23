@@ -8,7 +8,7 @@ function rlRangeMode(on){
   for(const k in RL_RANGE){ const T=TYPES[k]; if(!T) continue; if(T.range0===undefined) T.range0=T.range;
     T.range=on?T.range0*RL_RANGE[k]:T.range0; } }
 // how far a soldier sees: three times the old engagement distance (+200%), and at least as far as he shoots
-function rlSight(u){ const T=u.T; let r=T.worker?26:42; if(T.ranged) r=Math.max(r,T.range+3); if(u.fl) r+=8; return r; }
+function rlSight(u){ const T=u.T; let r=T.worker?26:42; if(T.ranged) r=Math.max(r,T.range+3); if(u.fl) r+=8; return r*(1-.4*dnNight()); }   // night: 40% less
 // the old look-out distances, tripled on Riverlands
 const sightK=()=>RL.on?3:1;
 
@@ -25,11 +25,11 @@ function rlRoute(u,dt){
     if(rlDeck(px,pz)>-1e8||gside===side) return;                     // on a bridge already, or no need to cross
     const gx=G.x, gz=G.z;
     let best=0, bc=1e9;
-    RL_BRIDGES.forEach((B,i)=>{ const A=side<0?B.w:B.e, E=side<0?B.e:B.w, c=Math.hypot(A[0]-px,A[1]-pz)+Math.hypot(gx-E[0],gz-E[1]); if(c<bc){ bc=c; best=i; } });
+    rlCrossings().forEach((B,i)=>{ const A=side<0?B.w:B.e, E=side<0?B.e:B.w, c=(Math.hypot(A[0]-px,A[1]-pz)+Math.hypot(gx-E[0],gz-E[1]))*(B.ford?1.5:1); if(c<bc){ bc=c; best=i; } });   // a ford is slow: only worth it when much shorter
     X=u.rlX={b:best,side,ph:0,t:0};
   }
   X.t+=dt; if(X.t>45){ u.rlX=null; return; }
-  const B=RL_BRIDGES[X.b], s=X.side, A0x=(s<0?B.w[0]:B.e[0])+B.ax*s*2.5, A0z=(s<0?B.w[1]:B.e[1])+B.az*s*2.5,
+  const B=rlCrossings()[X.b], s=X.side, A0x=(s<0?B.w[0]:B.e[0])+B.ax*s*2.5, A0z=(s<0?B.w[1]:B.e[1])+B.az*s*2.5,
     A1x=(s<0?B.e[0]:B.w[0])-B.ax*s*2.5, A1z=(s<0?B.e[1]:B.w[1])-B.az*s*2.5;
   if(X.ph===0){
     if(gside===s){ u.rlX=null; return; }                             // changed his mind: his goal is on this bank now
@@ -53,7 +53,7 @@ function rlGoal(u){
 function rlRiverCollide(u){
   if(u.fl&&u.fl.air) return;
   const rx=rlRiverX(u.pos.z), W=rlRiverW(u.pos.z)*1.04, dx=u.pos.x-rx;
-  if(Math.abs(dx)>=W||rlDeck(u.pos.x,u.pos.z)>-1e8) return;
+  if(Math.abs(dx)>=W||rlDeck(u.pos.x,u.pos.z)>-1e8||rlFordK(u.pos.z)>.45) return;   // bridges and fords
   if(u.last&&rlDeck(u.last.x,u.last.z)>-1e8){ u.pos.x=u.last.x; u.pos.z=u.last.z; return; }
   const s=u.last?(Math.sign(u.last.x-rlRiverX(u.last.z))||Math.sign(dx)||1):(Math.sign(dx)||1);
   u.pos.x=rx+s*W; rlTouch(u,s,0);
@@ -62,7 +62,7 @@ function rlRiverCollide(u){
 /* ---------- dodging and parrying arrows, bolts and spells ---------- */
 // a soldier who sees a shot coming may step out of its way, or take it on his blade or shield
 function rlProjDefense(t,u,c){
-  if(!t||!t.alive||!t.isUnit||t.state==='stunned'||t.fin||(t.action&&!t.action.c.idle)||t.defQ||t.routing||t.inCastle) return;
+  if(!t||!t.alive||!t.isUnit||t.state==='stunned'||t.fin||(t.action&&!t.action.c.idle)||t.defQ||t.routing||t.inCastle||t.wadeT>game.time) return;   // nobody dodges knee-deep in a ford
   const o=DEF_ODDS[t.type], CL=CLIPS[t.type]; if(!o||!CL) return;
   const d=Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z); if(d<5) return;
   const K=.55, r=Math.random(), pd=o.dodge*K, pg=(o.block+o.parry)*K;
@@ -85,13 +85,15 @@ function rlAvoid(t,src){
 /* ---------- capture zones: what holding each one gives ---------- */
 // the two markets (B, C) pay gold; the two shrines (A, D) give mana and sharpen the whole army. Every zone held
 // is also a watchtower (it reveals the ground round it) and a field hospital (soldiers standing in it heal).
-const RL_KIND={market:{name:'Market',gold:6,mana:0,dmg:0,txt:'+6 gold a second'},shrine:{name:'Shrine',gold:2,mana:2,dmg:.1,txt:'+2 mana a second · +10% damage'}};
-const RL_ZKIND={A:'shrine',B:'market',C:'market',D:'shrine'};
+const RL_KIND={market:{name:'Market',gold:6,mana:0,dmg:0,txt:'+6 gold a second'},shrine:{name:'Shrine',gold:2,mana:2,dmg:.1,txt:'+2 mana a second · +10% damage'},
+  militia:{name:'Militia village',gold:1,mana:0,dmg:0,txt:'a militia swordsman every 30 s'},tower:{name:'Watchtower',gold:1,mana:0,dmg:0,txt:'sees 70 m around'},
+  altar:{name:'Resurrection shrine',gold:0,mana:1,dmg:0,txt:'raises one of your fallen every 25 s'}};
+const RL_ZKIND={A:'shrine',B:'market',C:'market',D:'shrine',E:'militia',F:'militia',G:'tower',H:'tower',I:'altar',J:'altar'};
 const RL_HEAL=3, RL_ZSIGHT=30;
 function rlKind(Z){ return RL_KIND[RL_ZKIND[Z.id]||'market']; }
 function rlZoneBonusTick(dt){   // every quarter second, on the host
   RL.dmg=RL.dmg||[1,1]; RL.dmg[0]=RL.dmg[1]=1;
-  for(const Z of RL.zones){ if(Z.owner<0) continue; const K=rlKind(Z); RL.dmg[Z.owner]+=K.dmg;
+  for(const Z of RL.zones){ if(Z.owner<0) continue; const K=rlKind(Z); RL.dmg[Z.owner]+=K.dmg; rlObjTick(Z,dt);
     gridEach(Z.x,Z.z,RL_ZR,u=>{ if(u.alive&&u.isUnit&&u.team===Z.owner&&u.hp<u.maxHp&&(u.pos.x-Z.x)**2+(u.pos.z-Z.z)**2<RL_ZR*RL_ZR){ u.hp=Math.min(u.maxHp,u.hp+RL_HEAL*dt); if(u.st) u.st.healF=Math.max(u.st.healF||0,.25); } }); }
 }
 const rlDmgMul=src=>RL.dmg&&src&&src.team!==undefined&&RL.dmg[src.team]||1;
@@ -116,7 +118,8 @@ function fowUpdate(){
   for(const t of [0,1]) FOW.vis[t].fill(0);
   for(const u of units){ if(!u.alive||!u.isUnit||u.team>1) continue; fowStamp(u.team,u.pos.x,u.pos.z,rlSight(u),seen[u.team]); }
   for(const t of [0,1]){ const sx=(t?1:-1)*(RL_CF+18); fowStamp(t,sx,-2.5,62,seen[t]); fowStamp(t,BASE_X[t],0,48,seen[t]); }
-  for(const Z of RL.zones) if(Z.owner>=0) fowStamp(Z.owner,Z.x,Z.z,RL_ZSIGHT,seen[Z.owner]);
+  for(const Z of RL.zones) if(Z.owner>=0) fowStamp(Z.owner,Z.x,Z.z,RL_ZKIND[Z.id]==='tower'?70:RL_ZSIGHT,seen[Z.owner]);
+  const nk=dnNight(); if(nk>.3) for(const f of RL.fires) if(!f.small) for(const t of [0,1]) fowStamp(t,f.x,f.z,11,seen[t]);   // at night a fire lights the ground round it for everyone
   for(const t of [0,1]){ const V=FOW.vis[t], E=FOW.exp[t]; for(let k=0;k<N*N;k++) if(V[k]) E[k]=1; }
   // what this screen shows: its own army's view, eased so the edges don't jump
   const me=myTeam(), V=FOW.vis[me], E=FOW.exp[me], D=FOW.disp;
@@ -134,7 +137,7 @@ function fowStep(dt){
 function fowSees(team,o){
   if(!FOW.on||o.team===team||team===undefined||team>1) return true;
   const N=FOW.N, i=Math.floor((o.pos.x-FOW.X0)/FOW.S), j=Math.floor((o.pos.z-FOW.X0)/FOW.S);
-  if(i<0||j<0||i>=N||j>=N) return true; return FOW.vis[team][j*N+i]===1; }
+  if(i<0||j<0||i>=N||j>=N) return true; if(o.stealth&&stealthHides(team,o)) return false; return FOW.vis[team][j*N+i]===1; }
 // can this screen see that spot? (glows, sparks, smoke, fire, blood, arrows and spells in the fog aren't drawn)
 function fowVisXZ(x,z){ if(!FOW.on||FOW.reveal||!FOW.vis[0]) return true; const N=FOW.N, i=Math.floor((x-FOW.X0)/FOW.S), j=Math.floor((z-FOW.X0)/FOW.S);
   if(i<0||j<0||i>=N||j>=N) return true; return FOW.vis[myTeam()][j*N+i]===1; }

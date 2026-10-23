@@ -12,7 +12,8 @@
    tiles so whatever is off screen (or beyond the haze) is skipped. */
 const RL={built:false,on:false,WL:-.45,zones:[],obst:[],og:null,ogN:85,ogS:4,og0:-170,sway:{value:0},flow:null,mills:[],fires:[],flags:[],tiles:[],mmBg:null,mmKey:'',low:null};
 const RL_CF=118, RL_HALF=160, RL_LIM=156, RL_EDGE=200;   // castle walls at |x| 118; soldiers within ±156; ground out to ±200
-const RL_ZONES=[{id:'A',x:32,z:-132},{id:'B',x:-32,z:-46},{id:'C',x:32,z:46},{id:'D',x:-32,z:132}];
+const RL_ZONES=[{id:'A',x:32,z:-132},{id:'B',x:-32,z:-46},{id:'C',x:32,z:46},{id:'D',x:-32,z:132},
+  {id:'E',x:-34,z:81},{id:'F',x:34,z:-81},{id:'G',x:-33,z:-74},{id:'H',x:33,z:74},{id:'I',x:-72,z:42},{id:'J',x:72,z:-42}];   // E–J: militia villages, watchtowers, resurrection shrines (37f)
 const RL_ZR=8, RL_CAPT=11, RL_INCOME=5;   // zone radius (m), seconds to capture alone, gold a second for each zone held
 // two mines a side, in the corners beside the castles, each with a storehouse nearer the field
 const RL_MINE=[[{x:-122,z:-112,dx:-110,dz:-100},{x:-122,z:112,dx:-110,dz:100}],[{x:122,z:-112,dx:110,dz:-100},{x:122,z:112,dx:110,dz:100}]];
@@ -43,7 +44,8 @@ function rlGroundH(x,z){
   for(const Z of RL.zones){ const d=Math.hypot(x-Z.x,z-Z.z); if(d<RL_ZR+4) h=lerp(Z.h,h,smooth(clamp((d-RL_ZR-.5)/3.5,0,1))); }
   // the river: a channel about 9 m wide; the banks widen where the land is high so it cuts a gorge, not a cliff
   const d=rlRiverD(x,z);
-  if(d<3.4){ const bed=-.3-1.1*Math.max(0,1-d*d); if(d<1) h=bed; else { const wb=.9+Math.max(0,h-.6)*.16; h=lerp(-.3,h,smooth(clamp((d-1)/wb,0,1))); } }
+  if(d<3.4){ const bed=-.3-1.1*Math.max(0,1-d*d); if(d<1) h=bed; else { const wb=.9+Math.max(0,h-.6)*.16; h=lerp(-.3,h,smooth(clamp((d-1)/wb,0,1))); }
+    const fk=rlFordK(z); if(fk>0&&h<RL.WL-.2) h=lerp(h,RL.WL-.2,fk); }   // fords: the bed rises to a wadeable shallow (37f)
   return h;
 }
 // bridges: a deck across the river, arched for the stone ones. Walking height is the higher of ground and deck.
@@ -246,8 +248,9 @@ function mapSteer(u,dt){
       d.x=tx*u.slS*sp; d.z=tz*u.slS*sp; } }
 }
 // wading: the river slows everyone on foot, and splashes
-function mapWade(u){ if(u.fl) return; const dep=RL.WL-H(u.pos.x,u.pos.z); if(dep<.05) return;
-  const k=1-Math.min(.5,dep*.65); u.desired.x*=k; u.desired.z*=k;
+function mapWade(u){ if(u.type==='ninja'&&dnNight()>.5){ u.desired.x*=1.15; u.desired.z*=1.15; }   // ninjas run freely in the dark
+  if(u.fl) return; const dep=RL.WL-H(u.pos.x,u.pos.z); if(dep<.05) return;
+  u.wadeT=game.time+.3; const k=Math.min(.5,1-Math.min(.5,dep*.65));   // wading a ford: half speed and exposed (37f) u.desired.x*=k; u.desired.z*=k;
   if(u.spd>.8&&Math.random()<.06) puff(new V3(u.pos.x,RL.WL+.05,u.pos.z),1,.18,.6,'#d6e6e8'); }
 
 /* ---------- capture zones ---------- */
@@ -304,13 +307,13 @@ function rlBuildZone(Z,K){
 function rlFlagTextures(){ const key=facOf(0)+facOf(1); if(RL.flagKey===key) return; RL.flagKey=key;
   const tx=[rlFlagTex(0),rlFlagTex(1)];
   for(const Z of RL.zones) for(let t=0;t<2;t++){ const m=Z.cloth[t].material; if(m.map) m.map.dispose(); m.map=tx[t]; m.color.set(tx[t]?'#ffffff':RL_TEAMC[t]); m.needsUpdate=true; } }
-function rlResetZones(){ for(const Z of RL.zones){ Z.s=0; Z.owner=-1; Z.n=[0,0]; Z.contest=false; Z.cap=-1; Z.held=[0,0]; } RL.zT=0; RL.dmg=[1,1]; RL.ai=[{},{}]; if(RL.on) fowReset(); rlFlagTextures(); }
+function rlResetZones(){ for(const Z of RL.zones){ Z.s=0; Z.owner=-1; Z.n=[0,0]; Z.contest=false; Z.cap=-1; Z.held=[0,0]; Z.tk=0; Z.mil=[]; } RL.zT=0; RL.dmg=[1,1]; RL.ai=[{},{}]; RL_DEAD[0].length=RL_DEAD[1].length=0; if(RL.on){ fowReset(); rlCampsReset(); } rlFlagTextures(); }
 const rlZoneName=Z=>'zone '+Z.id;
 function rlZonesStep(dt){
   if(game.mode!=='battle'||NET.guest) return;   // online, the host holds the zones and sends them round
   RL.zT-=dt; if(RL.zT<=0){ RL.zT=.25; rlZoneBonusTick(.25);
     for(const Z of RL.zones){ Z.n[0]=Z.n[1]=0;
-      gridEach(Z.x,Z.z,RL_ZR,u=>{ if(!u.alive||!u.isUnit||u.T.worker||(u.fl&&u.fl.air)||u.routing) return; if((u.pos.x-Z.x)**2+(u.pos.z-Z.z)**2<RL_ZR*RL_ZR) Z.n[u.team]++; });
+      gridEach(Z.x,Z.z,RL_ZR,u=>{ if(!u.alive||!u.isUnit||u.team>1||u.T.worker||(u.fl&&u.fl.air)||u.routing) return; if((u.pos.x-Z.x)**2+(u.pos.z-Z.z)**2<RL_ZR*RL_ZR) Z.n[u.team]++; });
       Z.contest=Z.n[0]>0&&Z.n[1]>0; Z.cap=Z.contest?-1:Z.n[0]>0?0:Z.n[1]>0?1:-1; } }
   if(game.over>0) return;
   for(const Z of RL.zones){ const s0=Z.s;
@@ -396,6 +399,7 @@ function rlBuild(){
 
   // --- capture zones ---
   for(const Z of RL.zones) rlBuildZone(Z,K);
+  rlBuildFords(K);
 
   // --- trees: pines and broadleaf in the forests, the odd one in the open, a thick belt round the rim ---
   const pines=[], oaks=[], placed=new Map(), PC=6;
@@ -573,6 +577,7 @@ function setMapMode(river){
   for(const C of CASTLES) if(C&&C.group){ C.group.position.x=C.team?MAP.cf:-MAP.cf; C.group.updateMatrixWorld(true); }
   if(RL.group) RL.group.visible=river;
   if(river) fowPatchScene(); else { FOW.on=false; FOW.uOn.value=0; }
+  dnLightsOn(river);
   if(groundMesh) groundMesh.visible=!river; if(rocksIM) rocksIM.visible=!river;
   // a greener, hazier light on the valley; the dusk plain keeps its own. The sky follows the camera on the big map.
   FOG0.near=river?70:38; FOG0.far=river?215:105; HORIZON.set(river?'#d6d3b4':'#e3c79a'); if(scene.fog) scene.fog.color.copy(HORIZON);
@@ -591,7 +596,7 @@ function rlStep(dt){
   for(const m of RL.mills) m.rotation.z+=dt*.6;
   for(let i=0;i<RL.flags.length;i++) RL.flags[i].rotation.y=.3*Math.sin(game.time*1.6+i*1.7)+.12*Math.sin(game.time*4+i);
   if(RL.zones.length) rlZonesStep(dt);
-  fowStep(dt);
+  fowStep(dt); rlSysStep(dt);   // day and night, stealth, supply, camps (37f)
   rlZonesDraw();
   // the sky dome and sun stay round the camera, so a far corner of the valley still has a sky
   if(skyDome) skyDome.position.set(camera.position.x,0,camera.position.z); if(sunDisc) sunDisc.position.set(camera.position.x-90,60,camera.position.z-170);
@@ -603,8 +608,10 @@ function rlStep(dt){
   for(const f of RL.fires) if((f.x-cx)**2+(f.z-cz)**2<R2&&Math.random()<dt*(f.camp?14:f.small?3:5)) emitFire(new V3(f.x+(Math.random()-.5)*.3,f.y,f.z+(Math.random()-.5)*.3),1,f.camp?.42:f.small?.16:.26,0,f.camp?1.2:.8,0,.25,f.camp?.75:.5);
 }
 const _rlp=new V3();
-function rlDrawFx(){ rlCullTiles(); const T=game.time, cx=cam.target.x, cz=cam.target.z;
-  for(const f of RL.fires){ if((f.x-cx)**2+(f.z-cz)**2>160*160) continue; _rlp.set(f.x,f.y+(f.camp?.25:.05),f.z); glowAt(_rlp,(f.camp?.36:f.small?.14:.18)*(1+.12*Math.sin(T*11+f.x)),f.camp?'#ff7a22':'#ff8a2a'); } }
+function rlDrawFx(){ rlCullTiles(); const T=game.time, cx=cam.target.x, cz=cam.target.z, nk=dnNight(), big=1+nk*1.6;
+  for(const f of RL.fires){ if((f.x-cx)**2+(f.z-cz)**2>160*160) continue; _rlp.set(f.x,f.y+(f.camp?.25:.05),f.z); glowAt(_rlp,(f.camp?.36:f.small?.14:.18)*big*(1+.12*Math.sin(T*11+f.x)),f.camp?'#ff7a22':'#ff8a2a'); }
+  // at night every regiment's standard-bearer carries a torch
+  if(nk>.2) for(const r of regs){ const b=regAlive(r)[0]; if(!b||b.fowH||b.fl) continue; _rlp.copy(b.j.hL).addScaledVector(UP,.35*b.s); glowAt(_rlp,(.16+.03*Math.sin(T*17+r.id))*nk,'#ffa040'); if(Math.random()<.15*nk) emitFire(_rlp,1,.1,0,.5,0,.1,.35); } }
 
 /* ---------- the battlefield map (minimap) ---------- */
 function rlMinimapBg(c,w,h,dpr){
@@ -620,6 +627,8 @@ function rlMinimapBg(c,w,h,dpr){
       for(let t=0;t<2;t++){ const xa=mmX((t?1:-1)*RL_CF,w), xb=mmX((t?1:-1)*(RL_CF+36.5),w); g.fillStyle='rgba(130,122,108,.9)'; g.fillRect(Math.min(xa,xb),mmZ(-21,h),Math.abs(xb-xa),mmZ(16,h)-mmZ(-21,h)); g.fillStyle=t?'rgba(208,70,90,.9)':'rgba(228,178,58,.9)'; g.fillRect(xa+(t?0:-2*dpr),mmZ(-21,h),2*dpr,mmZ(16,h)-mmZ(-21,h)); }
       g.fillStyle='rgba(240,196,70,.95)'; for(const t of [0,1]) for(const m of RL_MINE[t]){ g.beginPath(); g.arc(mmX(m.x,w),mmZ(m.z,h),2.8*dpr,0,TAU); g.fill(); } } }
   if(RL.mmBg) c.drawImage(RL.mmBg,0,0);
+  // fords: a dotted crossing
+  c.fillStyle='rgba(214,200,160,.9)'; for(const F of RL_FORDS){ const x=rlRiverX(F.z); for(let i=-2;i<=2;i++){ c.beginPath(); c.arc(mmX(x+i*2.2,w),mmZ(F.z,h),Math.max(1,dpr),0,TAU); c.fill(); } }
   fowMinimap(c,w,h);
 }
 function rlMinimapZones(c,w,h,dpr){

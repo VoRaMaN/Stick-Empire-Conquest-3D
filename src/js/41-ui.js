@@ -40,6 +40,7 @@ $('#rgHold').onclick=()=>rtsCmd('hold');
 $('#rgCharge').onclick=()=>rtsCmd('charge');
 $('#rgCapture').onclick=()=>rtsCmd('capture');
 $('#rgRelease').onclick=()=>rtsCmd('army');
+if($('#rgForm')) $('#rgForm').onclick=()=>rtsCmd('form');
 $('#rgFollow').onclick=()=>{ if(selReg){ const b=regAlive(selReg)[0]; if(b){ cam.follow=b; cam.dGoal=Math.min(cam.dGoal,b.s>1.5?14:10); updateFollowUI(); } } };
 $('#mDuel').onclick=()=>{ game.spent=false; closeCampaign(); if(game.mode!=='duel'){ game.campFight=null; setTerrain('skirmish'); setMode('duel'); } };
 for(const [id,key] of [['Step','step'],['Bob','bob'],['Lean','lean'],['Spring','spring'],['Speed','speed']]){

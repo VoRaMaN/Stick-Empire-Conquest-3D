@@ -43,6 +43,7 @@ function cleanRegs(){
 }
 function regSlot(r,u){
   const a=regAlive(r).sort((p,q)=>p.id-q.id), i=Math.max(0,a.indexOf(u)), n=a.length, o=r.order;
+  if(r.form&&r.form!=='line') return formSlot(r,u,a,i,n,FORM[r.type]||{cols:5,gap:1.4,depth:1.4},o);   // wedge, shield wall, loose order, square (37f)
   const F=FORM[r.type], cols=Math.min(n,F.cols), gap=F.gap, row=Math.floor(i/cols), col=i%cols, inRow=Math.min(cols,n-row*cols);
   const fx=Math.sin(o.a), fz=Math.cos(o.a), rx=fz, rz=-fx;
   return {x:o.x+rx*(col-(inRow-1)/2)*gap-fx*row*F.depth, z:o.z+rz*(col-(inRow-1)/2)*gap-fz*row*F.depth};
@@ -64,7 +65,7 @@ function regBrain(u,o){
     if(fd<4.5){ u.desired.set(-(foe.pos.x-u.pos.x)/fd*u.T.speed*.7,0,-(foe.pos.z-u.pos.z)/fd*u.T.speed*.7); }
     if(!u.action&&u.cdT<=0&&Math.abs(wrapA(u.faceGoal-u.face))<.4) startAttack(u,foe); return true; }
   const dx=sl.x-u.pos.x,dz=sl.z-u.pos.z,d=Math.hypot(dx,dz);
-  if(d>.35){ const sp=u.T.speed*clamp(d/1.6,.25,1)*(d>5?1:.85); u.desired.set(dx/d*sp,0,dz/d*sp); u.faceGoal=d>1.2?Math.atan2(dx,dz):o.a; }
+  if(d>.35){ const sp=u.T.speed*clamp(d/1.6,.25,1)*(d>5?1:.85)*(r_fs(u.reg)); u.desired.set(dx/d*sp,0,dz/d*sp); u.faceGoal=d>1.2?Math.atan2(dx,dz):o.a; }
   else u.faceGoal=o.a;
   return true;
 }
@@ -104,7 +105,8 @@ function updateRegbar(){
   const ST={army:'following army orders',move:'marching',hold:'holding',attack:'attacking',charge:'charging'};
   if(selRegs.length>1){ const k={}; let tot=0; for(const r of selRegs){ const m=regAlive(r).length; tot+=m; k[r.type]=(k[r.type]||0)+m; }
     $('#rgTitle').textContent=selRegs.length+' regiments'; $('#rgSub').textContent=tot+' soldiers · '+Object.keys(k).map(t=>k[t]+' '+(TYPE_PL[t]||t)).join(', '); }
-  else { $('#rgTitle').textContent='Regiment '+ROMAN(selReg.num); $('#rgSub').textContent=n+' '+TYPE_PL[selReg.type]+' · '+ST[o]; }
+  else { $('#rgTitle').textContent='Regiment '+ROMAN(selReg.num)+(selReg.rank?' '+'★'.repeat(selReg.rank):''); $('#rgSub').textContent=n+' '+TYPE_PL[selReg.type]+' · '+ST[o]+(regAlive(selReg).some(u=>u.noSupply)?' · out of supply':''); }
+  const fb=$('#rgForm'); if(fb) fb.textContent=FORM_NAME[selReg.form||'line'];
   const cb=$('#rgCapture'); if(cb){ const Z=MAP.id==='classic'?null:rlCaptureTarget(selReg); cb.hidden=!Z; if(Z) cb.textContent='Capture '+Z.id; }
 }
 
@@ -112,12 +114,14 @@ function updateRegbar(){
 function tacticMods(att,tgt,melee){
   const dx=att.pos.x-tgt.pos.x, dz=att.pos.z-tgt.pos.z, d=Math.hypot(dx,dz)||1, f=(dx*tgt.fwdW.x+dz*tgt.fwdW.z)/d;
   const r={mul:1,kb:1,mor:0,txt:null,col:'#ffd36b'};
-  if(f<-.45){ r.mul*=1.6; r.mor+=10; r.txt='Rear attack'; r.col='#ff7a5c'; }
-  else if(f<.3){ r.mul*=1.25; r.mor+=4; r.txt='Flanked'; }
+  const sq=tgt.reg&&tgt.reg.form==='square';   // a square has no flank and no rear
+  if(f<-.45&&!sq){ r.mul*=1.6; r.mor+=10; r.txt='Rear attack'; r.col='#ff7a5c'; }
+  else if(f<.3&&!sq){ r.mul*=1.25; r.mor+=4; r.txt='Flanked'; }
   const dh=att.pos.y-tgt.pos.y; if(dh>.45){ r.mul*=1.2; r.txt=r.txt||'High ground'; } else if(dh<-.45) r.mul*=.85;
   if(melee&&att.charging){
-    if(tgt.type==='spear'&&tgt.spd<.5&&f>.3&&tgt.state!=='stunned'){ r.mul*=.55; r.kb*=.5; r.txt='Braced!'; r.col='#9fd8ff'; react(att,new V3(dx/d,0,dz/d),2.6); att.morale-=6; }
-    else { r.mul*=1.35; r.kb*=1.6; r.mor+=6; r.txt='Charge!'; r.col='#ffb347'; }
+    if(tgt.reg&&tgt.reg.form==='square'&&tgt.state!=='stunned'){ r.mul*=.55; r.kb*=.4; r.txt='Square holds!'; r.col='#9fd8ff'; react(att,new V3(dx/d,0,dz/d),2.4); att.morale-=6; }
+    else if(tgt.type==='spear'&&tgt.spd<.5&&f>.3&&tgt.state!=='stunned'){ r.mul*=.55; r.kb*=.5; r.txt='Braced!'; r.col='#9fd8ff'; react(att,new V3(dx/d,0,dz/d),2.6); att.morale-=6; }
+    else { r.mul*=1.35; r.kb*=1.6; r.mor+=6; r.txt='Charge!'; r.col='#ffb347'; if(att.reg&&att.reg.form==='wedge'){ r.mul*=1.25; r.txt='Wedge charge!'; } }
     att.charging=false;
   }
   return r;
@@ -153,3 +157,6 @@ function setTerrain(name){ if(terrName===name) return; terrName=name; const rive
   if(river!==(MAP.id==='river')) setMapMode(river);   // Riverlands is a map of its own (37d); every other ground is the classic field
   if(!river){ const p=TPRESET[name]; TERR.wave=p.wave; TERR.m=p.m; } buildTerrain(); }
 
+
+// a regiment's marching speed in its formation (line and wedge as before)
+function r_fs(r){ return r&&r.form&&FORM_SPEED[r.form]||1; }

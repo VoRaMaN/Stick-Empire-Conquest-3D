@@ -35,7 +35,7 @@ function drawMinimap(){
     c.strokeStyle=col; c.lineWidth=dpr; c.strokeRect(x-s,y-s,2*s,2*s); }
   // soldiers
   const r=Math.max(1.2,1.5*dpr);
-  for(const team of [0,1]){ c.fillStyle=team?'#ff6b7d':'#ffd25e';
+  for(const team of [0,1,2]){ c.fillStyle=team===2?'#d8c08a':team?'#ff6b7d':'#ffd25e';
     for(const u of units){ if(!u.alive||u.team!==team||!u.isUnit||u.fowH) continue; const rr=u.s>1.5?r*1.9:r; c.fillRect(mmX(u.pos.x,w)-rr,mmZ(u.pos.z,h)-rr,rr*2,rr*2); } }
   for(const sr of selRegs){ c.strokeStyle='#ffffff'; c.lineWidth=dpr; for(const u of sr.units){ if(!u.alive) continue; c.strokeRect(mmX(u.pos.x,w)-r*1.8,mmZ(u.pos.z,h)-r*1.8,r*3.6,r*3.6); } }
   // camera footprint

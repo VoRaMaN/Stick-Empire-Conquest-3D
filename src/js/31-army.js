@@ -140,7 +140,7 @@ function assignSlots(team){
     x-=dir*(L.rows*L.F.depth+LINE_GAP*P.k); }
 }
 function moraleTick(u,dt){
-  if(game.mode!=='battle'||!u.isUnit) return;
+  if(game.mode!=='battle'||!u.isUnit||u.team>1) return;
   u.mT=(u.mT||0)-dt; if(u.mT>0) return; u.mT=.25; const step=.25;
   let foes=0,friends=0,giantNear=false;
   gridEach(u.pos.x,u.pos.z,6,o=>{ if(!o.alive||o===u) return; const d=Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z); if(d>6) return;
@@ -148,7 +148,7 @@ function moraleTick(u,dt){
   const resist=u.type==='giant'?.3:u.type==='spear'?.75:1;
   let dm=0;
   if(foes>2*(friends+1)) dm-=7; if(giantNear&&u.type!=='giant') dm-=5;
-  if(!foes) dm+=5; if(Math.abs(u.pos.x-BASE_X[u.team])<9) dm+=10; if(game.stance[u.team]==='charge'&&friends>=3) dm+=1.5;
+  if(!foes) dm+=5; if(u.noSupply) dm-=6.5; if(Math.abs(u.pos.x-BASE_X[u.team])<9) dm+=10; if(game.stance[u.team]==='charge'&&friends>=3) dm+=1.5;
   u.morale=clamp(u.morale+(dm<0?dm*resist:dm)*step,0,100);
   if(!u.routing&&u.morale<22&&u.type!=='giant'){ u.routing=true; u.target=null; if(cam.follow===u) showBanner('Routing!','morale broke',1.2); }
   else if(u.routing&&(u.morale>55||Math.abs(u.pos.x-BASE_X[u.team])<7)){ u.routing=false; u.morale=Math.max(u.morale,60); }
