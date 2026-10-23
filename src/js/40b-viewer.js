@@ -59,7 +59,7 @@ function viewerInfo(t){
   const abil=(I.abil||[]).slice(); if(chaos) abil.push('Infernal Regeneration: heals itself after a few seconds unhurt');
   $('#vwAbil').innerHTML=abil.map(a=>'<li>'+vwEsc(a)+'</li>').join('');
   const n=x=>x?x.length:0, moves=new Set(T.attacks||[]).size;
-  $('#vwCount').textContent=n(IDLES[t])+' idles · '+moves+' moves · '+n(FINS[t])+' finishers · '+n(CHG[t])+' charges';
+  $('#vwCount').textContent=animSummary(t)||(n(IDLES[t])+' idles · '+moves+' moves · '+n(FINS[t])+' finishers · '+n(CHG[t])+' charges');   // the animation registry (14b)
 }
 function resetViewer(){
   clearAll(); ensureCastles(); syncTeamNames(); setupStatues(); resetCastles(); closePanel(); game.duel=null;

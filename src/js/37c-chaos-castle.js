@@ -51,7 +51,7 @@ const BUILDINGS_CHAOS=[
 ];
 const BUILDINGS_OF={order:BUILDINGS,chaos:BUILDINGS_CHAOS};
 for(const B of BUILDINGS_CHAOS) if(B.trains) for(const ty of B.trains) TRAINED_AT[ty]=B.id;
-Object.assign(TRAIN_T,{hound:1.2,cerberus:6,thrall:2.0,dread:3.2,harvester:3.0,boner:2.6,bomber:3.0,oracle:3.8,reaper:4.6,hades:10});
+Object.assign(TRAIN_T,{hound:1.2,cerberus:6,thrall:2.0,dread:3.2,harvester:3.0,boner:2.6,bomber:3.0,oracle:3.8,reaper:4.6,hades:12});
 const hornPut=(C,b,p,d,ax,ang,len,r,n)=>{ for(const [g,m] of crHorn(p,d,ax,ang,len,r,n)) (b?bPut(C,b,'bone',g,m):C.kit.put('bone',g,m)); };
 
 // bone spikes along the battlements and on the towers, skulls over the gate, a moat of magma along the front

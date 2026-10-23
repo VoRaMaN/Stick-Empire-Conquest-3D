@@ -5,7 +5,7 @@
    Moves: the Cerberus' attacks, four combos where hound and rider strike in turn, five abilities (Infernal Strike,
    Cerberus Rage, Soul Drain, Shadow Step, Apocalypse), five mounted finishers. Four colour variants: Infernal
    (default), Frost, Toxic and Shadow. */
-TYPES.hades={name:'Hades',engage:2.6,reach:1.9,s:1.32,hp:1300,dmg:60,range:2,speed:5.2,cd:.85,cost:400,thick:1,turn:6,acc:6,armor:.28,
+TYPES.hades={name:'Hades',engage:2.6,reach:1.9,s:1.32,hp:1300,dmg:60,range:2,speed:5.2,cd:.85,cost:700,thick:1,turn:6,acc:6,armor:.28,
   crawler:true,hound:true,heads:3,gearX:true,armReach:.95,chaos:true,cav:true,hadesRider:true,tailLow:-.3,tailL:.85,foreW:.55,hindW:.9,
   body:[new THREE.Color('#241a16'),new THREE.Color('#241a16')]};
 RAW.hades=Object.assign({},RAW.cerberus); POSES.hades=POSES.cerberus; IDLES.hades=IDLES.cerberus.slice(); CHG.hades=CHG.cerberus.slice();

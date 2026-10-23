@@ -36,7 +36,7 @@ const RESEARCH={
 };
 const rName=(R,team)=>R.cname&&facOf(team)==='chaos'?R.cname:R.name, rDesc=(R,team)=>R.cdesc&&facOf(team)==='chaos'?R.cdesc:R.desc;
 const RES_BY_ID={}; for(const k in RESEARCH) for(const r of RESEARCH[k]) RES_BY_ID[r.id]=Object.assign({bid:k},r);
-const MANA_COST={wizard:75,cleric:40,wing:40,oracle:40,hades:100};
+const MANA_COST={wizard:75,cleric:40,wing:40,oracle:40,hades:100,knight:40};   // v0.31: the wyvern costs mana too
 const unitMana=t=>castleOn()?(MANA_COST[t]||0):0;
 function resLvl(team,id){ if(game.mode==='duel') return RES_BY_ID[id]?RES_BY_ID[id].lv:1; if(game.classicMix||!CASTLES[team]) return 0; return CASTLES[team].res[id]||0; }
 const hasRes=(team,id)=>resLvl(team,id)>0;

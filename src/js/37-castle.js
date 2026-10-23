@@ -335,7 +335,7 @@ function castleGround(){ if(!castleReady) return; for(const C of CASTLES){ if(!C
 loadAssets().then(A=>{ if(A) applyCastleTextures(A); });   // (the castles themselves are raised at the end of 37c)
 
 /* ---------- castle state: training queues, doors, garrison ---------- */
-const TRAIN_T={knight:5.5,miner:2.2,sword:2.4,spear:3.4,archer:2.8,ninja:3.2,cleric:3.6,wizard:4.4,wing:4.4,giant:7,crawler:1.1};
+const TRAIN_T={knight:7,miner:2.2,sword:2.4,spear:3.4,archer:2.8,ninja:3.2,cleric:3.6,wizard:4.4,wing:4.4,giant:7,crawler:1.1};
 // castles only run in a real skirmish/campaign battle; the classic regression mix and the Lab keep the old spawn
 const castleOn=()=>game.mode==='battle'&&!game.classicMix;
 function resetCastles(){
