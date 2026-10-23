@@ -82,7 +82,7 @@ function updateCamera(rdt){
     if(D.att.script){ cam.goal.set(a.x,0,a.z); cam.dGoal=D.att.s>1.5?12:8; }
     else cam.goal.set((a.x+b.x)/2,0,(a.z+b.z)/2);
     cam.goal.y=H(cam.goal.x,cam.goal.z)+1.1*(D.att.s>1.5?1.6:1);
-  } else if(game.mode==='viewer'&&VW.u){ viewerCamera(rdt);
+  } else if(game.mode==='viewer'&&VW.u){ viewerCamera(rdt); armFrame();
   } else if(cam.follow){
     const f=cam.follow; const p=f.rag?f.j.pelvis:f.pos; cam.goal.set(p.x,H(p.x,p.z)+1.1*Math.sqrt(f.s),p.z);
     if(!f.alive&&f.rag&&f.rag.age>3){ cam.follow=null; updateFollowUI(); }

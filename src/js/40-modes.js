@@ -102,6 +102,7 @@ function setTab(t){ $('#mBattle').setAttribute('aria-selected',t==='battle'); $(
 function syncModeUI(){ const m=game.mode; selectReg(null);
   $('#hudBattle').hidden=m!=='battle'; $('#actBattle').hidden=m!=='battle'; $('#orders').hidden=m!=='battle'; $('#actDuel').hidden=m!=='duel'; $('#actView').hidden=m!=='viewer'; $('#viewer').hidden=m!=='viewer'; renderChips(); syncMinimap(); }
 function setMode(m){
+  if(ARM.on&&m!=='viewer') armClose();
   if(game.demo&&menuEl&&!menuEl.hidden) closeMenu();
   game.mode=m; setTab(m==='duel'?'duel':(game.campFight?'camp':'battle'));
   syncModeUI();

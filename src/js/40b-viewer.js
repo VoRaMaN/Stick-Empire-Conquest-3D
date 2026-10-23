@@ -73,6 +73,7 @@ function resetViewer(){
   cam.dGoal=ty==='giant'?10:big?4.9*u.s:ty==='wing'?8:u.T.crawler?5.4*Math.max(1,u.s):ty==='dread'||ty==='reaper'?5.6:4.8; cam.pitch=.14;
   cam.target.copy(cam.goal); cam.dist=cam.dGoal;   // open straight on the unit, no long pan from wherever the camera was
   viewerInfo(ty); syncViewerButtons();
+  if(ARM.on) armAfterReset(u);   // the Armory's room (40d)
 }
 function viewerCamera(rdt){
   const u=VW.u; if(!u) return; const p=u.rag?u.j.pelvis:u.pos;

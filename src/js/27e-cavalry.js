@@ -139,7 +139,7 @@ function drawRiderArmor(J,rs,kind,team,R,U,F){
 function drawRider(u){
   if(!u.alive||!u.cr||!riderOf(u)||(u.cloak&&u.alive)) return;
   const R=riderOf(u), rs=R.rs, d=riderPose(u), chaos=R.kind==='chaos', team=u.team, tm=TEAM[team]||TEAM[0];
-  if(R.kind==='hades'){ hxDrawRider(u,R,d); return; }   // the lord of the underworld (27g)
+  if(R.kind==='hades'){ hxDrawRider(u,R,d); armDraw(u,RJ,rs,_kvF,_kvR,false); return; }   // the lord of the underworld (27g)
   const elf=!chaos&&facOf(team)==='wild';
   drawFigure(RJ,rs,chaos?RC.cbody:elf?WILD_BODY[0]:tm.body,1,_kvF,null,false,false);
   if(elf) elfDress(RJ,rs,u.id||0,'rider',_kvF,_kvR); else drawRiderArmor(RJ,rs,R.kind,team,_kvR,_kvU,_kvF);   // a Woodland Wyvern Rider is an elf (36c)
@@ -158,6 +158,7 @@ function drawRider(u){
     _kvP.copy(RJ.eL).lerp(RJ.hL,.45).addScaledVector(_kvR,-.08*rs).addScaledVector(_kvU,-.02*rs);
     blob(_kvP,_kvQ,.022*rs,.2*rs,.15*rs,tm.acc.color); _kvT.copy(_kvP).addScaledVector(_kvU,-.16*rs); blob(_kvT,_kvQ,.02*rs,.12*rs,.075*rs,tm.acc.color);
     _kvT.copy(_kvP).addScaledVector(_kvR,-.022*rs); sph(_kvT,.035*rs,RC.steel,jointIM); }
+  armDraw(u,RJ,rs,_kvF,_kvR,false);   // the rider's kit from the Armory (40d)
 }
 // the mount dies: the rider is thrown clear and falls as a body of his own
 function throwRider(u,imp){

@@ -452,6 +452,7 @@ function drawUnit(u){
   drawFigure(u.j,u.s,col,u.thick,u.fwdW,u.cloak&&u.alive?GHOST:null,!!u.T.robe,!!u.T.skel);
   if(u.T.plateLimbs) drawPlateLimbs(u);
   if(u.T.wild&&!(u.cloak&&u.alive)) drawWildFx(u);
+  if(!(u.cloak&&u.alive)) armDraw(u);   // the kit from the Armory (40d)
   if(u.riderK) drawRiderArmor(u.j,u.s,u.riderK,u.team,null,null,null);
   if(u.hero&&u.alive&&!u.cloak) drawHeroFx(u);
   if((u.wallT>game.time||u.rallyT>game.time||u.rootT>game.time||u.bloomT>game.time)&&u.alive&&!u.cloak) drawBuffFx(u);

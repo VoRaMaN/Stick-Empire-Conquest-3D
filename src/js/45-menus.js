@@ -17,6 +17,7 @@ const menuEl=$('#menu');
 let menuSize=settings.size||0;
 function showPanel(id){ if(id==='menuStory') renderStory(); for(const p of ['menuMain','menuSkirmish','menuInstall','menuOnline','menuStory']) { const el=$('#'+p); if(el) el.hidden=p!==id; } }
 function openMenu(panel){
+  armClose();
   if(RPL.play) replayExit(true);
   closeOverlays(); closeCampaign(); selectReg(null);
   game.paused=false; game.tutorial=null; endCoach(); game.campFight=null; game.spent=false;
@@ -91,6 +92,7 @@ menuClick('mmCampaign',()=>{ const sv=campLoad(), b=$('#mmCampaign');
   delete b.dataset.armed; closeMenu(); game.demo=false; if(sv&&!sv.over) campNew(); else camp=sv; setTab('camp'); openCampaign(); });
 menuClick('mmTraining',()=>startTutorial());
 menuClick('mmLab',()=>{ closeMenu(); game.campFight=null; setTerrain('skirmish'); setMode('duel'); });
+menuClick('mmArmory',()=>armOpen());
 menuClick('mmViewer',()=>{ closeMenu(); game.campFight=null; setTerrain('skirmish'); setMode('viewer'); });
 menuClick('mmOnline',()=>openOnline());
 menuClick('mmSettings',()=>openSheet('settings'));
