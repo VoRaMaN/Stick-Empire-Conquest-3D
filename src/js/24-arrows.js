@@ -79,6 +79,7 @@ function updateArrows(dt){
       if(a.p.distanceTo(P)<.45*rg.s||a.age>.4){ for(const v of rg.v) v.addScaledVector(a.dir,2.5); rg.v[1].addScaledVector(a.dir,5); wakeRag(rg);
         a.p.copy(P).addScaledVector(a.dir,-.35*a.s); stickInBody(a,rg.u,a.dir.clone()); bleed(P,a.dir,9,2.6); puff(P,3,.15,2,'#f1e6cf'); shakeAt(P,.12); a.special=null; }
       continue; }
+    if(castleBlocks(a.p)){ a.mode='fixed'; a.ttl=24; a.age=0; a.p.addScaledVector(a.dir,-.25*a.s); sfx('arrowShield',a.p,.5); puff(a.p,2,.06,1.2,'#bdb3a2'); continue; }   // into a castle wall
     let done=false;
     if(!a.dead){ _near.length=0; gridEach(a.p.x,a.p.z,5,o=>{ _near.push(o); }); }
     if(!a.dead) for(const t of _near){ if(!t.alive||t.team===a.team||t.invuln&&t.state==='stunned') continue;

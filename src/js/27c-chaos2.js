@@ -131,7 +131,7 @@ function updateBombs(dt){
     if(B.roll){ B.p.addScaledVector(B.v,dt); B.p.y=H(B.p.x,B.p.z)+.12; B.v.multiplyScalar(Math.exp(-dt*.6)); }
     else { B.v.y-=14*dt; B.p.addScaledVector(B.v,dt); }
     if(Math.random()<dt*30) puff(B.p,1,.05,.3,'#ffb347');
-    let hit=B.age>B.max||(!B.roll&&B.p.y<=H(B.p.x,B.p.z)+.1);
+    let hit=B.age>B.max||(!B.roll&&B.p.y<=H(B.p.x,B.p.z)+.1)||castleBlocks(B.p);
     if(!hit) for(const o of units){ if(!o.alive||o.team===B.team) continue; if(o.j.chest.distanceTo(B.p)<.5*o.s||(B.roll&&Math.hypot(o.pos.x-B.p.x,o.pos.z-B.p.z)<.6)){ hit=true; break; } }
     if(hit){ explode(B.p,B.r,B.dmg,B.team,B.src); bombs.splice(i,1); } }
 }

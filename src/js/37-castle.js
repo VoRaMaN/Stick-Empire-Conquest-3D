@@ -449,3 +449,20 @@ function updateGarrison(C,dt){
     g.pos.x=cwx(g.team,g.post[0]); g.pos.z=g.post[2]; if(g.vel) g.vel.set(0,0,0);
   }
 }
+
+/* ---------- castle walls stop arrows, bolts and spells ----------
+   Solid parts of each castle in its own frame (x: the wall's outer face is 0 and the castle runs toward -x; z; height
+   above the yard): the front curtain either side of the gate, the two gate towers, the gate passage (open below the
+   lintel only while the portcullis is up), the back and north walls and the four corner towers. A shot that reaches
+   one of them below its top is stopped there. */
+const CWALLS=[[-3,0,-18,.5,8],[-3,0,11.5,13.4,8],[-4,1,.5,3.5,12],[-4,1,8.5,11.5,12],[-3,0,3.5,8.5,9,'gate'],[-36,-33,-19,14.2,7],[-34,-1.5,-20.4,-18,7.5],
+  [-3.9,.9,12.3,17.1,10],[-4.4,1.4,-22.2,-16.4,11],[-37.2,-31.8,-22,-16.6,9.5],[-36.7,-32.3,12.5,16.9,6.5]];
+function castleBlocks(p){
+  if(typeof castleReady!=='undefined'&&!castleReady) return false;
+  for(let t=0;t<2;t++){ const C=CASTLES[t]; if(!C||!C.group||!C.group.visible) continue;
+    const lx=t?MAP.cf-p.x:p.x+MAP.cf, y=p.y-CGY[t]; if(lx<-38||lx>2||p.z<-23||p.z>18||y>12.5) continue;
+    for(const w of CWALLS){ if(lx<w[0]||lx>w[1]||p.z<w[2]||p.z>w[3]||y>w[4]||y<-1) continue;
+      if(w[5]==='gate'&&(C.portOpen||0)>.6&&y<5.6) continue;
+      return true; } }
+  return false;
+}

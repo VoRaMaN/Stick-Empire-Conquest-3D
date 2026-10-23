@@ -69,10 +69,10 @@ function draw(){
   for(const st of statues){ const f=st.fig; if(!f.rag){ drawFigure(f.j,f.s,f.col,f.thick,f.fwdW); if(f.T.plateLimbs) drawPlateLimbs(f,f.col,f.col); } }
   for(const u of units) if(u.alive){ if(u.fowH) continue; drawUnit(u); if(tune.dbg) drawDebug(u);
     if(u.isUnit&&(u.hp<u.maxHp||u.morale<99||cam.follow===u)&&!u.invuln) drawBar(u); }
-  for(const u of corpses) drawUnit(u);
-  for(const C of CASTLES) for(const g of C.garrison) drawUnit(g);
+  for(const u of corpses) if(!u.fowH) drawUnit(u);
+  for(const C of CASTLES) for(const g of C.garrison) if(!u_fowOut(g)) drawUnit(g);
   castleFx(); if(MAP.id!=='classic') rlDrawFx();
-  for(const list of [units,corpses,CASTLES[0].garrison,CASTLES[1].garrison]) for(const u of list){ const st=u.G&&u.G.str; if(st&&st.vis&&!u.G.o.dropped){ cyl(st.a,st.m,.006*u.s,WHITE,strIM); cyl(st.m,st.b,.006*u.s,WHITE,strIM); } }
+  for(const list of [units,corpses,CASTLES[0].garrison,CASTLES[1].garrison]) for(const u of list){ if(u.fowH||u_fowOut(u)) continue; const st=u.G&&u.G.str; if(st&&st.vis&&!u.G.o.dropped){ cyl(st.a,st.m,.006*u.s,WHITE,strIM); cyl(st.m,st.b,.006*u.s,WHITE,strIM); } }
   drawPuffs(); drawSpells(); drawChaos(); drawFire();
   for(const [im,n] of CNT){ im.count=n; im.instanceMatrix.needsUpdate=true; if(im.instanceColor) im.instanceColor.needsUpdate=true; }
   if(game.mode==='battle'){

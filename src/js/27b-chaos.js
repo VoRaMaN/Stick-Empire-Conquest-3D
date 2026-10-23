@@ -261,7 +261,7 @@ function updateChaos(dt){
   for(let i=souls.length-1;i>=0;i--){ const S=souls[i]; S.age+=dt;
     if(S.t&&(S.t.alive||S.t.isStatue)){ const P=aimPoint(S.t,_ch3); if(P){ const sp=S.v.length(); _ch2.subVectors(P,S.p).normalize().multiplyScalar(sp); S.v.lerp(_ch2,Math.min(1,dt*5)); } }
     S.p.addScaledVector(S.v,dt); if(S.col&&Math.random()<dt*28) puff(S.p,1,.07,.25,'#5dffc8');   // the Harvester's soul sheds its own smoke (26c)
-    let hit=null, gone=S.age>(RL.on?5:2.4)||S.p.y<H(S.p.x,S.p.z)+.08;
+    let hit=null, gone=S.age>(RL.on?5:2.4)||S.p.y<H(S.p.x,S.p.z)+.08||castleBlocks(S.p);
     if(!gone) for(const o of units){ if(!o.alive||o.team===S.team) continue; if(o.j.chest.distanceTo(S.p)<.45*o.s){ hit=o; break; } }
     if(hit){ soulHit(S,hit); souls.splice(i,1); continue; }
     if(!gone&&S.t&&S.t.isStatue&&Math.hypot(S.t.pos.x-S.p.x,S.t.pos.z-S.p.z)<1.4){ hitStatue(S.t,S.dmg); soulBurst(S.p,1); souls.splice(i,1); continue; }

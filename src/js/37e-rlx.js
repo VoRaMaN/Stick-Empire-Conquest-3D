@@ -168,7 +168,11 @@ function fowHideNow(u){
   if(u.G){ u.fowV=u.fowV||{}; for(const k in u.G){ const g=u.G[k]; if(g&&g.isObject3D){ if(u.fowV[k]===undefined) u.fowV[k]=g.visible; g.visible=false; } } if(u.cr) u.crVis=false; }
   if(u.cape&&u.cape.cs){ const cp=u.cape, pa=cp.cs.g.attributes.position.array; pa.fill(0,cp.slot*72,cp.slot*72+72); cp.cs.g.attributes.position.needsUpdate=true; }
 }
-function fowDrawPrep(){ if(!RL.on) return; for(const u of units) if(u.alive) fowHideGear(u,fowHidden(u)); }
+function fowDrawPrep(){ if(!RL.on) return; for(const u of units) if(u.alive) fowHideGear(u,fowHidden(u));
+  for(const u of corpses) fowHideGear(u,FOW.on&&!FOW.reveal&&!fowVisXZ(u.pos.x,u.pos.z));   // the fallen, too: bodies, bows and strings
+  for(const C of CASTLES) if(C) for(const g of C.garrison) fowHideGear(g,u_fowOut(g)); }
+// an enemy soldier in a place this screen can't see (castle garrisons and corpses use this)
+const u_fowOut=u=>FOW.on&&!FOW.reveal&&u.team!==myTeam()&&!fowVisXZ(u.pos.x,u.pos.z);
 // the battlefield map: dark where never seen, dimmed where not seen now
 function fowMinimap(c,w,h){
   if(!FOW.on||FOW.reveal||!FOW.vis[0]) return; const N=FOW.N;
