@@ -11,6 +11,7 @@ function pfTrail(o,n){ const T=o.trail||(o.trail=[]); const last=T[T.length-1]; 
 // two axes across the direction of flight
 function pfAxes(v){ _pfa.copy(v); if(_pfa.lengthSq()<1e-6) _pfa.set(0,0,1); _pfa.normalize(); _pfb.set(0,1,0); if(Math.abs(_pfa.y)>.95) _pfb.set(1,0,0); _pf1.crossVectors(_pfa,_pfb).normalize(); _pf2.crossVectors(_pf1,_pfa).normalize(); }
 function drawOrb(O){
+  if(O.acid){ drawAcid(O); return; }   // an Acid Spitter's gob (27k)
   const t=game.time, T=pfTrail(O,O.big?10:8);
   if(O.big){   // meteor
     glowAt(O.p,.36+.05*Math.sin(t*40),'#ffd27a'); glowAt(O.p,.7,'#7a2a08');

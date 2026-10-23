@@ -35,7 +35,9 @@ function makeUnit(type,team,x,z,opt){
 
 function buildGear(u){
   const tm=TEAM[u.team], acc=u.statue?M.stoneD:tm.acc, acc2=u.statue?M.stoneD:tm.acc2, steel=u.statue?M.stone:M.steel, G={};
-  switch(u.type){
+  if(u.T.siege) buildSiegeGear(u,G);   // the Ballista and its crewman's helmet (27k)
+  else if(u.T.wild&&!u.T.summoned&&buildElfGear(u,G)){}   // the Elven Host's own arms (36d)
+  else switch(u.type){
     case 'sword':{const w=grp(); w.add(mesh(GEO.blade,steel,0,.5,0),mesh(GEO.guard,acc,0,.08,0),mesh(GEO.pommel,acc,0,-.07,0)); G.w=w;
       if(!u.statue){const h=grp(); h.add(mesh(GEO.band,acc2,0,.03,0)); const t1=mesh(GEO.tail,acc2,0,-.02,-.22); t1.rotation.x=.9; h.add(t1); G.h=h;} break;}
     case 'spear':{ // Spartan hoplite
@@ -62,10 +64,11 @@ function buildGear(u){
     default: buildGearX(u,G,acc,acc2,steel);
   }
   for(const k of ['w','o','h','b']) if(G[k]){ G[k].scale.setScalar(u.s); freezeGear(G[k]); }
+  if(u.T.wild) for(const k of ['w2','r','k','k2','k3']) if(G[k]){ G[k].scale.setScalar(u.s); freezeGear(G[k]); }
   if(G.nock){ G.nock.scale.setScalar(u.s); freezeGear(G.nock); }
   u.G=G;
 }
-function destroyGear(u){const G=u.G; if(u.arrows) for(const a of u.arrows) a.remove=true;
+function destroyGear(u){const G=u.G; if(u.arrows) for(const a of u.arrows) a.remove=true; if(u.armCape) armCapeDrop(u);
   if(u.cape){ freeCape(u.cape); const i=capes.indexOf(u.cape); if(i>=0) capes.splice(i,1); u.cape=null; }
   if(!G)return; for(const k in G){ if(G[k]&&G[k].isObject3D) dropRoot(G[k]); } u.G=null;}
 

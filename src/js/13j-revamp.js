@@ -39,7 +39,7 @@ Object.assign(RAW.ninja,{
   njSmokeStrike:{keys:[{t:0},{t:.12,...NJ.SEAL,crouch:.2},{t:.25,e:'o',...NJ.STABW,crouch:.25},{t:.4,e:'o',...NJ.STAB,lean:.5,fwd:1.5},{t:.55},R_(.9)],ev:[{t:.2,e:'njSmoke'},{t:.4,e:'hit',dmg:1.3,kb:1.5}]},
   njBlossom:{keys:[{t:0},{t:.15,...NJ.HIGH},{t:.25,e:'o',...NJ.CUT,lean:.3},{t:.35,...NJ.SIDEW},{t:.45,e:'o',...NJ.SIDE,twist:.5},{t:.55,...NJ.STABW},{t:.7,e:'o',...NJ.STAB,lean:.45,fwd:.3},{t:1},R_(1.4)],
     ev:[{t:.25,e:'jolt',mag:.5},{t:.45,e:'jolt',mag:.5},{t:.7,e:'kill',imp:[0,1,3],shake:.15},{t:.72,e:'njSmoke'}]},
-  njSilentEnd:{keys:[{t:0},{t:.2,...NJ.SEAL},{t:.3,e:'njSmoke'},{t:.5,...NJ.BACK,crouch:.2,fwd:.6},{t:.65,e:'o',...NJ.STAB,lean:.3,fwd:.8},{t:1.1},R_(1.5)],
+  njSilentEnd:{keys:[{t:0},{t:.2,...NJ.SEAL},{t:.5,...NJ.BACK,crouch:.2,fwd:.6},{t:.65,e:'o',...NJ.STAB,lean:.3,fwd:.8},{t:1.1},R_(1.5)],
     ev:[{t:.3,e:'njSmoke'},{t:.65,e:'kill',imp:[0,.5,2],shake:.1}]},
   idle_njScan:{idle:1,keys:[{t:0},{t:.4,crouch:.35,lean:.3,look:-.8},{t:1.3,look:-.8},{t:1.9,look:.8},{t:2.6,look:.8},{t:3,look:0,crouch:.12},R_(3.3)]},
   idle_njKunaiSpin:IDLE_COMMON.twirl('R','wR',[.28,-.15,.3],SPIN4,.2),

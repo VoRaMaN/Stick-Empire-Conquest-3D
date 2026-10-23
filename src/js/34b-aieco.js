@@ -50,6 +50,7 @@ function aiWorkerTarget(t){
   const mines=RL.on?2:1, sat=(chaos?8:6)*mines;   // a pit holds more Thralls (each carries less)
   let n=(RL.on?5:3)+Math.floor(bt/(RL.on?35:45));
   if(chaos) n=Math.round(n*1.35);
+  n+=aiPers(t).workers;   // a Rusher digs less, a Turtle more (34c)
   const g=game.gold[t]; if(g>2600) n-=2; else if(g<250&&bt>40) n+=1;   // a full treasury needs fighters, an empty one diggers
   const floor=RL.on?4:2;
   if(have>=floor&&(AIE.press[t]||count(t)>=POP_CAP*.85)) n=Math.min(n,have);   // pressed or crowded: soldiers first (but always replace the losses)
@@ -59,6 +60,7 @@ function aiWorkerTarget(t){
 function aiPick(t){
   if(game.classicMix) return factionPick(t);
   const C=AIE.comp[t]; if(!C) return factionPick(t);
+  if(t!==myTeam()||game.demo||game.auto[t]){ const cands=[]; for(let i=0;i<4;i++){ const c=factionPick(t); if(TYPES[c]) cands.push(c); } const m=cands.length&&aiPickMind(t,cands); if(m) return m; }   // the general's mind (34c)
   const g=game.gold[t]; let best=null, bs=-1;
   for(let i=0;i<4;i++){ const c=factionPick(t); if(!TYPES[c]) continue;
     const B=AI_BEATS[aiRole(c)]||{}; let s=1; for(const k in C) s+=C[k]*(B[k]||0)*1.6;

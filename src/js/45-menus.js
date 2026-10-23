@@ -3,7 +3,7 @@ const bodyEl=document.body;
 const setBodyClass=(c,on)=>{ if(bodyEl&&bodyEl.classList) bodyEl.classList[on?'add':'remove'](c); };
 
 // battle statistics for the results screen
-function statsReset(){ game.stats={t0:game.time,kills:[0,0],losses:[0,0],fins:[0,0],arrows:[0,0],gold:[0,0],peak:[0,0],bought:0,dmg:[0,0],series:[],regK:{}}; }
+function statsReset(){ game.stats={t0:game.time,kills:[0,0],losses:[0,0],fins:[0,0],arrows:[0,0],gold:[0,0],peak:[0,0],bought:0,dmg:[0,0],dmgT:[{},{}],series:[],regK:{}}; }
 statsReset();
 function onKill(t){ if(t.lastHitBy&&t.lastHitBy.team!==t.team){ vetKill(t.lastHitBy); heroKill(t.lastHitBy); recordKill(t); } if(t.camp){ rlCampDeath(t); return; } if(RL.on) rlOnDeath(t); if(!t.isUnit||!game.stats) return; game.stats.losses[t.team]++; game.stats.kills[1-t.team]++; }
 function onFinisher(u){ if(game.stats) game.stats.fins[u.team]++; }
@@ -82,6 +82,15 @@ if(menuEl.querySelectorAll) menuEl.querySelectorAll('.side-pick').forEach(b=>b.a
 // the skirmish enemy: Auto (the side's usual foe) or any of the three
 function syncFoeUI(){ const P=$('#foePills'); if(P&&P.querySelectorAll) P.querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.foe||'')===(settings.foe||'')))); }
 { const P=$('#foePills'); if(P&&P.querySelectorAll) P.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); settings.foe=b.dataset.foe||''; saveSettings(); syncFoeUI(); })); syncFoeUI(); }
+// the enemy general: difficulty (how he thinks, not how rich he is) and personality (34c)
+const DIFF_NOTE={easy:'Reacts slowly, rarely reads your army, charges rashly.',normal:'Counter-picks your army and charges when he is stronger.',
+  hard:'Quick to react; focuses your archers and casters, pulls wounded regiments out, flanks.',brutal:'Ruthless: all of Hard, faster, with raids on your miners.'};
+const PERS_NOTE={'':'A personality picked for each battle.',balanced:'Steady: builds, counters, charges when ahead.',rusher:'Few miners, fast cheap troops, early relentless charges.',turtle:'A big economy and ranged troops behind his walls, then one great push.',raider:'Fast detachments hunt your miners and back line.'};
+function syncDiffUI(){ const d=settings.aiDiff||'normal', p=settings.aiPers||'';
+  for(const [id,key,v] of [['#diffPills','diff',d],['#persPills','pers',p]]){ const P=$(id); if(P&&P.querySelectorAll) P.querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',String((b.dataset[key]||'')===v))); }
+  const n=$('#diffNote'); if(n) n.textContent=(DIFF_NOTE[d]||'')+' '+(PERS_NOTE[p]||''); }
+for(const [id,key,skey] of [['#diffPills','diff','aiDiff'],['#persPills','pers','aiPers']]){ const P=$(id); if(P&&P.querySelectorAll) P.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); settings[skey]=b.dataset[key]||''; saveSettings(); syncDiffUI(); })); }
+syncDiffUI();
 syncSideUI();
 menuClick('skBack',()=>showPanel('menuMain'));
 menuClick('skStart',()=>startSkirmish(menuSize));
@@ -94,6 +103,8 @@ menuClick('mmCampaign',()=>{ const sv=campLoad(), b=$('#mmCampaign');
 menuClick('mmTraining',()=>startTutorial());
 menuClick('mmLab',()=>{ closeMenu(); game.campFight=null; setTerrain('skirmish'); setMode('duel'); });
 menuClick('mmArmory',()=>armOpen());
+menuClick('mmForms',()=>formOpen());
+{ const b=$('#pForms'); if(b&&b.addEventListener) b.addEventListener('click',()=>{ sfx('ui'); formOpen(); }); }
 menuClick('mmViewer',()=>{ closeMenu(); game.campFight=null; setTerrain('skirmish'); setMode('viewer'); });
 menuClick('mmOnline',()=>openOnline());
 menuClick('mmSettings',()=>openSheet('settings'));

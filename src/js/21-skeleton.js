@@ -104,10 +104,12 @@ function buildSkel(u,p,dt){
   if(u.aim) applyAim(u,dt,p);
   if(u.fl) flyArms(u,p,dt);
   if(p.pR) toW(_pole,j.sR,p.pR,s); else _pole.copy(j.sR).addScaledVector(UP,-1*s).addScaledVector(_r,.38*s).addScaledVector(_f,-.08*s);
-  ik2(j.sR,u.hand.R,.32*s,.32*s,_pole,j.eR,j.hR);
+  if(u.T.handHook) u.T.handHook(u,p,s);   // a Ballista's crewman keeps his hands on its grips (27k)
+  const al=.32*s*(u.T.armK||1);   // a Devil Bat's arms are long
+  ik2(j.sR,u.hand.R,al,al,_pole,j.eR,j.hR);
   if(u.type==='spear'&&u.G&&u.G.o&&!u.G.o.dropped) hopliteArm(u,s);
   else { if(p.pL) toW(_pole,j.sL,p.pL,s); else _pole.copy(j.sL).addScaledVector(UP,-1*s).addScaledVector(_r,-.38*s).addScaledVector(_f,-.08*s);
-    ik2(j.sL,u.hand.L,.32*s,.32*s,_pole,j.eL,j.hL); }
+    ik2(j.sL,u.hand.L,al,al,_pole,j.eL,j.hL); }
   u.draw=p.draw;
   // legs
   for(let i=0;i<2;i++){
@@ -217,19 +219,20 @@ function updateGear(u){
   const G=u.G, j=u.j; if(!G) return;
   const fl=_tmp2.copy(u.fwdW).addScaledVector(u.spine,-u.fwdW.dot(u.spine)).normalize();
   if(G.w&&!G.w.dropped){ orient(G.w,j.hR,u.wRw,u.rightW); }
-  if(G.o&&!G.o.dropped){
+  if(G.o&&!G.o.dropped&&!u.T.siege){
     if(u.type==='spear'){ aspisFrame(u); orient(G.o,_gc,_gy,_gn); }
     else orient(G.o,j.hL,_tmp.copy(u.spine).addScaledVector(u.wLw,-u.spine.dot(u.wLw)),u.wLw);
   }
   if(G.h&&!G.h.dropped){ _tmp.subVectors(j.head,j.neck); const lk=u.alive?(u.look||0):0; if(lk){ fl.multiplyScalar(Math.cos(lk)).addScaledVector(u.rightW,Math.sin(lk)).normalize(); } orient(G.h,j.head,_tmp,fl); }
-  if(G.b){ _tmp.copy(j.chest).addScaledVector(fl,-.19*u.s).addScaledVector(u.spine,-.1*u.s); orient(G.b,_tmp,u.spine,fl); if(u.T.worker) G.b.visible=u.carry; }
-  if(G.str&&!G.o.dropped){
+  if(G.b&&!u.T.siege){ _tmp.copy(j.chest).addScaledVector(fl,-.19*u.s).addScaledVector(u.spine,-.1*u.s); orient(G.b,_tmp,u.spine,fl); if(u.T.worker) G.b.visible=u.carry; }
+  if(G.str&&G.o&&!G.o.dropped){
     G.o.updateMatrixWorld(); const a=G.str.a.copy(BOW_TOP).applyMatrix4(G.o.matrixWorld), b=G.str.b.copy(BOW_BOT).applyMatrix4(G.o.matrixWorld);
     const d=u.alive?u.draw:0;
     const mid=G.str.m.copy(a).add(b).multiplyScalar(.5).lerp(j.hR,clamp(d*1.2,0,1)); G.str.vis=true;
     G.nock.visible=u.alive&&d>.12;
     if(G.nock.visible){ _tmp.subVectors(j.hL,mid); const L=_tmp.length(); _tmp.multiplyScalar(1/Math.max(L,1e-4)); _tmp2.copy(mid).addScaledVector(_tmp,.4*u.s); orient(G.nock,_tmp2,_tmp,u.rightW);}
   }
+  if(u.T.gearHook) u.T.gearHook(u);   // the Ballista, the Hawk Archer's hawk (27k)
   if(u.T.gearX) updateGearX(u);
 }
 

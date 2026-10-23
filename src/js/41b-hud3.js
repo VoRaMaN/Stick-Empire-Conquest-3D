@@ -251,8 +251,8 @@ function applyAccess(){
 function accessUI(){
   const sc=$('#sUiScale'), so=$('#oUiScale'); if(sc){ sc.value=settings.uiScale||1; if(so) so.textContent=Math.round((settings.uiScale||1)*100)+'%';
     sc.oninput=()=>{ settings.uiScale=+sc.value; if(so) so.textContent=Math.round(settings.uiScale*100)+'%'; applyAccess(); saveSettings(); }; }
-  for(const [id,key] of [['#sBigText','bigText'],['#sCblind','cblind'],['#sCalm','calm'],['#sHeroes','heroes'],['#sTheme','themeMusic']]){ const el=$(id); if(!el) continue;
-    el.checked=key==='heroes'||key==='themeMusic'?settings[key]!==false:!!settings[key]; el.onchange=()=>{ settings[key]=el.checked; saveSettings(); applyAccess(); }; }
+  for(const [id,key] of [['#sBigText','bigText'],['#sCblind','cblind'],['#sCalm','calm'],['#sHeroes','heroes'],['#sTheme','themeMusic'],['#sWyAuto','wyAuto']]){ const el=$(id); if(!el) continue;
+    el.checked=key==='heroes'||key==='themeMusic'||key==='wyAuto'?settings[key]!==false:!!settings[key]; el.onchange=()=>{ settings[key]=el.checked; saveSettings(); applyAccess(); }; }
 }
 
 /* ---------- the end-of-battle report: two charts over time and the regiment of the battle ---------- */
@@ -267,9 +267,25 @@ function resultsReport(me){
   box.innerHTML=(extra.length?'<p class="rc-x">'+extra.join('<br>')+'</p>':'')+
     '<div class="rc-legend"><span><i style="background:'+PAL.chart[me]+'"></i>'+esc3(teamName(me))+' (you)</span><span><i class="dash" style="border-color:'+PAL.chart[1-me]+'"></i>'+esc3(teamName(1-me))+'</span></div>'+
     '<figure><figcaption>Army strength (gold value of the soldiers on the field)</figcaption><canvas id="rcArmy" height="120"></canvas></figure>'+
-    '<figure><figcaption>Enemies slain</figcaption><canvas id="rcKills" height="120"></canvas></figure><div class="rc-tip" id="rcTip" hidden></div>';
+    '<figure><figcaption>Enemies slain</figcaption><canvas id="rcKills" height="120"></canvas></figure>'+
+    (S.dmgT?'<figure><figcaption>Damage by unit type</figcaption><canvas id="rcDmg" height="150"></canvas></figure>':'')+'<div class="rc-tip" id="rcTip" hidden></div>';
   const mk=(id,get,fmt)=>chartLine($('#'+id),ser,get,me,fmt);
-  requestAnimationFrame(()=>{ mk('rcArmy',(s,t)=>s.p?s.p[t]:s.a[t],v=>v>=1000?(v/1000).toFixed(1)+'k':String(Math.round(v))); mk('rcKills',(s,t)=>s.k[t],v=>String(Math.round(v))); });
+  requestAnimationFrame(()=>{ mk('rcArmy',(s,t)=>s.p?s.p[t]:s.a[t],v=>v>=1000?(v/1000).toFixed(1)+'k':String(Math.round(v))); mk('rcKills',(s,t)=>s.k[t],v=>String(Math.round(v))); if(S.dmgT) chartBars($('#rcDmg'),S.dmgT,me); });
+}
+// damage dealt by each unit type, your army's bars beside the enemy's (the biggest dealers first)
+function chartBars(cv,D,me){
+  if(!cv||!cv.getContext) return; const types=new Set([...Object.keys(D[0]||{}),...Object.keys(D[1]||{})]);
+  const rows=[...types].map(ty=>({ty,a:(D[me]||{})[ty]||0,b:(D[1-me]||{})[ty]||0})).filter(r=>r.a+r.b>=1).sort((x,y)=>Math.max(y.a,y.b)-Math.max(x.a,x.b)).slice(0,8);
+  if(!rows.length){ cv.parentElement.hidden=true; return; }
+  const dpr=Math.min(2,window.devicePixelRatio||1), W=cv.clientWidth||300, rh=17, Hh=rows.length*rh*2+10; cv.style.height=Hh+'px'; cv.width=W*dpr; cv.height=Hh*dpr; const c=cv.getContext('2d'); c.scale(dpr,dpr);
+  const padL=110, padR=48; let mx=1; for(const r of rows) mx=Math.max(mx,r.a,r.b);
+  const fmt=v=>v>=1000?(v/1000).toFixed(1)+'k':String(Math.round(v)), name=(ty,t)=>TYPES[ty]?tName(ty,t):ty;
+  c.font='11px '+getComputedStyle(document.body).fontFamily; c.textBaseline='middle';
+  rows.forEach((r,i)=>{ const y=6+i*rh*2;
+    for(const [v,t,k] of [[r.a,me,0],[r.b,1-me,1]]){ const yy=y+k*(rh-3), w=(W-padL-padR)*v/mx;
+      c.fillStyle='rgba(245,236,217,'+(k?.55:.85)+')'; c.textAlign='right'; c.fillText(v?name(r.ty,t):'',padL-6,yy+6);
+      c.fillStyle=PAL.chart[t]; c.globalAlpha=k?.6:1; c.fillRect(padL,yy,Math.max(v?2:0,w),rh-6); c.globalAlpha=1;
+      if(v){ c.fillStyle='rgba(245,236,217,.8)'; c.textAlign='left'; c.fillText(fmt(v),padL+w+5,yy+6); } } });
 }
 function chartLine(cv,ser,get,me,fmt){
   if(!cv||!cv.getContext) return; const dpr=Math.min(2,window.devicePixelRatio||1), W=cv.clientWidth||300, Hh=120; cv.width=W*dpr; cv.height=Hh*dpr; const c=cv.getContext('2d'); c.scale(dpr,dpr);

@@ -142,6 +142,7 @@
       <button id="mmTraining" class="mm"><span>Training</span><small>Learn to command in two minutes</small></button>
       <button id="mmLab" class="mm"><span>Finisher Lab</span><small>140 finishers, 130 charges, every move</small></button>
       <button id="mmArmory" class="mm"><span>Armory</span><small>Kit out your army: thirteen kinds of gear in your faction's own armoury</small></button>
+      <button id="mmForms" class="mm"><span>Formations</span><small>How your army lines up: rows, ranks and blocks, saved per army</small></button>
       <button id="mmViewer" class="mm"><span>Unit Viewer</span><small>Every unit up close, with its story, stats and abilities</small></button>
       <div class="mm-row">
         <button id="mmSettings" class="mm small">Settings</button>
@@ -172,6 +173,14 @@
       <div class="pills foe-pills" role="radiogroup" aria-label="Enemy" id="foePills">
         <button role="radio" data-foe="">Auto</button><button role="radio" data-foe="order">Order Empire</button><button role="radio" data-foe="chaos">Chaos Empire</button><button role="radio" data-foe="wild">Wildlands</button>
       </div>
+      <h2 class="panel-h">The enemy general</h2>
+      <div class="pills" role="radiogroup" aria-label="Difficulty" id="diffPills">
+        <button role="radio" data-diff="easy">Easy</button><button role="radio" data-diff="normal">Normal</button><button role="radio" data-diff="hard">Hard</button><button role="radio" data-diff="brutal">Brutal</button>
+      </div>
+      <div class="pills" role="radiogroup" aria-label="Personality" id="persPills">
+        <button role="radio" data-pers="">Auto</button><button role="radio" data-pers="balanced">Balanced</button><button role="radio" data-pers="rusher">Rusher</button><button role="radio" data-pers="turtle">Turtle</button><button role="radio" data-pers="raider">Raider</button>
+      </div>
+      <p class="note" id="diffNote"></p>
       <button id="skStart" class="mm primary"><span>Start battle</span></button>
       <button id="skBack" class="mm small">Back</button>
     </div>
@@ -229,6 +238,7 @@
       <div class="stack">
         <button id="pResume" class="mm primary"><span>Resume</span></button>
         <button id="pRestart" class="mm small">Restart battle</button>
+        <button id="pForms" class="mm small">Formations</button>
         <button id="pSettings" class="mm small">Settings</button>
         <button id="pHelp" class="mm small">How to play</button>
         <button id="pMenu" class="mm small">Main menu</button>
@@ -311,6 +321,7 @@
       </div>
       <label class="tg" for="sAuto">Auto-spawn soldiers for my army <input id="sAuto" type="checkbox" checked></label>
       <label class="tg tg-n" for="sHeroes"><span>Generals<small>Each army fields a hero who levels up, inspires the troops around him and has two abilities (T and Y).</small></span><input id="sHeroes" type="checkbox" checked></label>
+      <label class="tg tg-n" for="sWyAuto"><span>Wyvern Knights fight on their own<small>Once the Aerie has taught them, your Wyvern Knights use their abilities by themselves when the moment is right (the keys still work).</small></span><input id="sWyAuto" type="checkbox" checked></label>
     </section>
     <section class="set-sec">
       <h3>More</h3>

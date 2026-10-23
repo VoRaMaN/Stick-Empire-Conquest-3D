@@ -98,6 +98,8 @@ function wyTouch(u){ const F=u.wy; F.mode='ground'; F.air=false; F.fastDown=fals
   if(!u.action&&u.state==='ok') { play(u,'wyLand'); u.fwdScale=0; }
   puff(u.pos,6,.4*u.s,2,'#8a7a66'); shakeAt(u.pos,.12); sfx('wyvernLand',u.pos,.6); }
 function wyAIOwned(u){ return game.mode==='battle'&&!NET.on&&!game.tutorial&&(u.team===1||game.demo||game.auto[u.team]); }
+// your own knights cast what the Aerie has taught them by themselves (Settings: Wyvern Knights fight on their own)
+function wyAutoAb(u){ return game.mode==='battle'&&!NET.on&&!game.tutorial&&u.team===myTeam()&&settings.wyAuto!==false; }
 
 /* ---------- every frame (host and guest): altitude, wings, speed in the air, the abilities ---------- */
 function wyTick(u,dt){
@@ -107,8 +109,13 @@ function wyTick(u,dt){
   // altitude
   const tgt=F.mode==='ground'||F.mode==='down'?0:(F.altT||WY_CRUISE);
   if(F.mode==='down'){ F.alt=Math.max(0,F.alt-dt*(F.fastDown?11:3.4)*(.45+F.alt/WY_CRUISE)); if(F.alt<=.06){ F.alt=0; if(wyWet(u.pos.x,u.pos.z)&&!NET.guest){ F.mode='air'; } else wyTouch(u); } }
-  else if(F.mode!=='ground'){ F.alt+=(tgt-F.alt)*(1-Math.exp(-dt*(F.mode==='up'?1.8:1.5))); if(F.mode==='up'&&F.alt>tgt-.7) F.mode='air'; }
-  F.air=F.alt>1.2;
+  else if(F.mode!=='ground'){ if(F.mode==='up'&&F.alt<3.6) F.alt=Math.min(tgt,F.alt+dt*2.3); else F.alt+=(tgt-F.alt)*(1-Math.exp(-dt*(F.mode==='up'?1.8:1.5))); if(F.mode==='up'&&F.alt>tgt-.7) F.mode='air'; }
+  // taking off and landing it is low, slow and labouring: exposed (more damage, double from arrows and bolts; the
+  // low part of it within a spear's reach)
+  const an=u.action&&u.action.c.name, vuln=(F.mode==='up'&&F.alt<3.6)||(F.mode==='down'&&F.alt<3.4)||an==='wyTakeoff'||an==='wyLand';
+  if(vuln&&!F.vuln&&u.alive) callout(u,'Exposed!','#ffd36a');
+  F.vuln=vuln;
+  F.air=F.alt>1.2&&!(vuln&&F.alt<2.6);
   // wings: spread aloft, beat to the demand
   const flying=F.mode!=='ground'; F.sp+=((flying?1:0)-F.sp)*(1-Math.exp(-dt*(flying?5:3)));
   if(flying){ const climb=F.mode==='up'||tgt-F.alt>1, desc=F.mode==='down', gl=!climb&&!desc&&u.spd>5.5?1:0;
@@ -123,7 +130,7 @@ function wyTick(u,dt){
   if(F.br>0) F.br-=dt; if(F.glow>0) F.glow-=dt;
   if(!host) return;
   if(F.ab) wyAbTick(u,F,dt); else wyAuto(u,F,dt);
-  if(wyAIOwned(u)) wyAI(u,F,dt);
+  if(wyAIOwned(u)||wyAutoAb(u)) wyAI(u,F,dt);
 }
 // when to fly: far targets and long marches; land to fight (never in a river); the breath from the air
 function wyAuto(u,F,dt){
@@ -220,7 +227,7 @@ function wyAbTick(u,F,dt){
 }
 // the computer general's wyvern knights use their abilities when they pay off
 function wyAI(u,F,dt){
-  F.aiT=(F.aiT||rand(.5,1.5))-dt; if(F.aiT>0) return; F.aiT=rand(.8,1.4);
+  F.aiT=(F.aiT||rand(.5,1.5))-dt; if(F.aiT>0) return; F.aiT=rand(.8,1.4)*(u.team===myTeam()&&!game.demo?1:aiDiff().abilityCd);
   const r=u.reg; if(!r||F.ab||u.action&&!u.action.c.idle) return;
   const ready=ab=>regAbReady(r,ab), cast=ab=>{ if(ready(ab)) regAbility(u.team,r,ab); };
   const near=n=>wyFoes(u,n,o=>!isAir(o)).length, now=game.time;
@@ -287,6 +294,7 @@ function wyMul(t,src){
   if(t.crownT>now) k*=1-(t.crownK||.3);
   if(src&&src.wy&&src.wy.prey===t&&src.wy.preyT>now) k*=1.5;
   if(src&&src.wy&&isAir(t)&&!src.wy.air) k*=.5;
+  if(t.wy&&t.wy.vuln) k*=src&&src.T&&src.T.ranged?2:1.5;   // caught taking off or landing
   return k; }
 function wyDie(u){ if(!u.wy) return; u.wy.mode='ground'; u.wy.air=false; u.wy.ab=null; u.wyA=0; }
 
@@ -358,6 +366,7 @@ function wyModel(u){
 const _wf1=new V3();
 function wyFx(u){
   const F=wyU(u), cr=u.cr, s=u.s; if(!cr) return;
+  if(F.vuln){ const k=.5+.5*Math.sin(game.time*14); glowAt(u.j.chest,(.16+.08*k)*s,'#ffd36a'); }   // exposed: a pulse over the heart, for the archers
   _wc.crossVectors(cr.hd,cr.hu).normalize();
   for(const sd of [-1,1]){ _wf1.copy(F.head).addScaledVector(cr.hd,.2*s*1.15).addScaledVector(cr.hu,.1*s).addScaledVector(_wc,sd*.085*s*1.15); glowAt(_wf1,.03*s,'#ffb43a'); }
   if(F.br>0&&u.alive){ const n=settings.calm?1:3, sp=8.5; for(let i=0;i<n;i++){ const dx=F.hd.x+rand(-.12,.12), dy=F.hd.y+rand(-.1,.1), dz=F.hd.z+rand(-.12,.12);

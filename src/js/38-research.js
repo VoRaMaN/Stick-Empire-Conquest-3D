@@ -24,7 +24,9 @@ const RESEARCH={
   ],
   temple:[{id:'cure',name:'Cure',lv:1,cost:[[300,150]],t:[16],desc:'Clerics cleanse poison and burning'},
     {id:'grove',name:'Call of the Forest',lv:1,cost:[[450,150]],t:[24],desc:'Druids can summon Treants out of the ground (ability bar, I): two in a forest, for 40 s',fac:'wild'}],
-  aerie:[{id:'blazing',name:'Blazing Bolts',lv:1,cost:[[500,200]],t:[22],desc:'Wing Archers loose burning bolts'}],
+  aerie:[{id:'blazing',name:'Blazing Bolts',lv:1,cost:[[500,200]],t:[22],desc:'Wing Archers loose burning bolts'},
+    {id:'wyArts',name:"Knight's Arts",lv:1,cost:[[600,200]],t:[26],desc:"Wyvern Knights learn Royal Lance Charge, Aerial Execution, Shield of the Crown, Royal Pursuit and King's Judgment, and use them on their own"},
+    {id:'wyMastery',name:'Wyvern Mastery',lv:1,cost:[[650,220]],t:[28],desc:"Wyverns learn Infernal Breath, Talon Dive, Wingstorm, Predator's Screech and Aerial Assault, and use them on their own"}],
   prison:[{id:'growth',name:'Giant Growth',lv:2,cost:[[600,200],[900,300]],t:[24,32],desc:'Giants grow 12% bigger and 30% tougher'}],
   // Chaos (prices in souls)
   quarry:[{id:'soulSiphon',name:'Soul Siphon',lv:1,cost:[[120,0]],t:[16],desc:'Thralls dig faster and haul more crystals a trip',native:1}],
@@ -99,12 +101,12 @@ function aiResearch(team){
     if(!N||game.time>sv.until){ aiSave[team]=null; return; }
     if(!b.res&&game.gold[team]>=N.cost[0]&&game.mana[team]>=N.cost[1]){ startResearch(team,sv.id); aiSave[team]=null; }
     return; }
-  if(Math.random()<.55||game.time<(aiSave['n'+team]||0)) return;
+  if(Math.random()>.45*(game.classicMix?1:aiDiff().research*(aiPers(team).research||1))||game.time<(aiSave['n'+team]||0)) return;   // a keener general researches more (34c)
   const have={}; for(const u of units) if(u.alive&&u.team===team&&u.isUnit) have[u.type]=1;
   const want=facOf(team)==='chaos'?['income','castleArchers','soulSiphon','soulRend','hellCleave','magmaClaws','infernalPlate','cerbRider','resilience','income','castleArchers']
-    :facOf(team)==='wild'?['income','castleArchers','hustle','volley','rage','fireArrows','grove','growth','resilience','cure','shinobi','income','castleArchers']
-    :['income','castleArchers','hustle','volley','rage','shieldWall','fireArrows','growth','resilience','cure','shinobi','poison','ewall','blazing','income','castleArchers'];
-  const UNIT_OF={hustle:'miner',rage:'sword',shieldWall:'spear',fireArrows:'archer',volley:'archer',growth:'giant',cure:'cleric',grove:'cleric',shinobi:'ninja',poison:'wizard',ewall:'wizard',blazing:'wing',
+    :facOf(team)==='wild'?['income','castleArchers','hustle','volley','rage','fireArrows','grove','growth','resilience','cure','shinobi','wyArts','wyMastery','income','castleArchers']
+    :['income','castleArchers','hustle','volley','rage','shieldWall','fireArrows','growth','resilience','cure','shinobi','poison','ewall','blazing','wyArts','wyMastery','income','castleArchers'];
+  const UNIT_OF={hustle:'miner',rage:'sword',shieldWall:'spear',fireArrows:'archer',volley:'archer',growth:'giant',cure:'cleric',grove:'cleric',shinobi:'ninja',poison:'wizard',ewall:'wizard',blazing:'wing',wyArts:'knight',wyMastery:'knight',
     soulSiphon:'thrall',magmaClaws:'crawler',hellCleave:'dread',infernalPlate:'dread',soulRend:'harvester'};
   for(const id of want){ const N=resNext(team,id); if(!N) continue; if(UNIT_OF[id]&&!have[UNIT_OF[id]]) continue;
     const b=resBuilding(team,N.R.bid); if(b.res) continue;

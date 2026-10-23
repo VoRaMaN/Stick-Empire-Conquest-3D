@@ -40,7 +40,7 @@ for(const [f0,f1] of [['wild','chaos'],['chaos','wild']]){
 }
 console.log('wild names',[...wildNames].join(', '));
 console.log('treants summoned',summons,'regrowth ticks',regrow,'rooted',roots,'bloomed',bloom);
-const missing=[]; if(!summons) missing.push('summon'); if(!regrow) missing.push('regrow'); if(!wildNames.has('Sylvan Ranger')) missing.push('names');
+const missing=[]; if(!summons) missing.push('summon'); if(!regrow) missing.push('regrow'); if(!wildNames.has('Elf Archer')) missing.push('names');
 console.log('battle nan',nan,'missing powers',missing.join(',')||'none');
 
 // ---------- 2. the story missions: each one starts, runs a minute and can be won ----------

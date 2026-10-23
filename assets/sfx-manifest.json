@@ -629,6 +629,42 @@
    "prompt": "An electric zap",
    "dur": 0.5,
    "n": 2
+  },
+  "ballistaShot": {
+   "cat": "combat",
+   "prompt": "Heavy wooden siege ballista firing: rope string snap, deep twang, wooden thump, bolt whoosh",
+   "dur": 1.0,
+   "n": 1,
+   "alias": {
+    "to": "crossbow"
+   }
+  },
+  "acidSpit": {
+   "cat": "creature",
+   "prompt": "A monster hawks and spits a glob of acid: gurgle, splurt, sizzle",
+   "dur": 1.5,
+   "n": 1,
+   "alias": {
+    "to": "crHiss"
+   }
+  },
+  "batScreech": {
+   "cat": "creature",
+   "prompt": "A demonic giant bat shrieks: piercing leathery screech with a growl",
+   "dur": 1.5,
+   "n": 1,
+   "alias": {
+    "to": "crScreech"
+   }
+  },
+  "hawkCry": {
+   "cat": "creature",
+   "prompt": "A hunting hawk's cry and a burst of wing beats as it launches",
+   "dur": 1.0,
+   "n": 1,
+   "alias": {
+    "to": "flap"
+   }
   }
  }
 }

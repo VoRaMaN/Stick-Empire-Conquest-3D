@@ -68,26 +68,28 @@ const ELF_HOOD=[new THREE.Color('#2f5a2a'),new THREE.Color('#3e4a1e'),new THREE.
 const ELF_ROLE={miner:'plain',sword:'sentinel',spear:'hunter',archer:'hood',ninja:'assassin',cleric:'druid',wizard:'mage',wing:'hood',rider:'rider'};
 const _wl1=new V3(),_wl2=new V3(),_wl3=new V3(),_wl4=new V3(),_wlq=new THREE.Quaternion(),_wlm=new THREE.Matrix4();
 // drawn over a stick figure's head and hands: j = its joints, F/R its forward and right
+const ELF_ARM={helm:false,cape:false};   // an Armory helm or cape replaces the elf's own hood, hair crown and cloak (40d)
 function elfDress(j,s,id,role,F,R){
   id=Math.abs(id|0); const U=_wl2.subVectors(j.head,j.neck).normalize(), skin=ELF_SKIN[(id*7)%4], hair=ELF_HAIR[(id*3+1)%5];
   sph(j.head,.2*s,skin,sphIM);
-  sph(_wl1.copy(j.head).addScaledVector(F,-.055*s).addScaledVector(U,.035*s),.2*s,hair,sphIM);   // hair over the crown and back
+  if(!ELF_ARM.helm) sph(_wl1.copy(j.head).addScaledVector(F,-.055*s).addScaledVector(U,.035*s),.2*s,hair,sphIM);   // hair over the crown and back
   if(role!=='assassin'&&role!=='rider'){ _wl3.copy(j.neck).addScaledVector(F,-.13*s).addScaledVector(U,-.12*s); cyl(_wl1.copy(j.head).addScaledVector(F,-.12*s),_wl3,.085*s,hair,limbIM); }
   for(const sd of [-1,1]){ _wl1.copy(j.head).addScaledVector(R,sd*.175*s).addScaledVector(F,-.01*s); _wl3.copy(_wl1).addScaledVector(R,sd*.12*s).addScaledVector(U,.14*s).addScaledVector(F,-.07*s);
     cyl(_wl1,_wl3,.026*s,skin,limbIM); sph(_wl1,.034*s,skin,jointIM); }
   sph(j.hL,.068*s,skin,jointIM); sph(j.hR,.068*s,skin,jointIM);
   const hood=ELF_HOOD[id%3];
-  if(role==='hood'||role==='assassin'||role==='hunter'){ sph(_wl1.copy(j.head).addScaledVector(F,-.07*s).addScaledVector(U,.03*s),.218*s,hood,sphIM); }
+  if(!ELF_ARM.helm&&(role==='hood'||role==='assassin'||role==='hunter')){ sph(_wl1.copy(j.head).addScaledVector(F,-.07*s).addScaledVector(U,.03*s),.218*s,hood,sphIM); }
   if(role==='sentinel'||role==='hunter'||role==='rider'){ for(const sh of [j.sL,j.sR]){ sph(_wl1.copy(sh).addScaledVector(U,.03*s),.1*s,LEAF[2],jointIM); } }
-  if(role==='sentinel'||role==='rider'||role==='mage'||role==='druid'){ _wl1.copy(j.head).addScaledVector(F,.17*s).addScaledVector(U,.09*s); glowAt(_wl1,.025*s,role==='mage'?'#9aff9a':'#ffe08a');
+  if(!ELF_ARM.helm&&(role==='sentinel'||role==='rider'||role==='mage'||role==='druid')){ _wl1.copy(j.head).addScaledVector(F,.17*s).addScaledVector(U,.09*s); glowAt(_wl1,.025*s,role==='mage'?'#9aff9a':'#ffe08a');
     for(const sd of [-1,1]){ _wl3.copy(j.head).addScaledVector(R,sd*.15*s).addScaledVector(U,.1*s); cyl(_wl1,_wl3,.012*s,ELF_GOLD,limbIM); } }
-  if(role==='hood'||role==='druid'||role==='mage'||role==='sentinel'||role==='assassin'){   // the cloak
+  if(!ELF_ARM.cape&&(role==='hood'||role==='druid'||role==='mage'||role==='sentinel'||role==='assassin')){   // the cloak
     _wl1.copy(j.neck).lerp(j.pelvis,.55).addScaledVector(F,-.15*s); _wl3.subVectors(j.neck,j.pelvis).normalize(); _wl4.crossVectors(_wl3,R).normalize();
     _wlm.makeBasis(R,_wl3,_wl4); _wlq.setFromRotationMatrix(_wlm); blob(_wl1,_wlq,.19*s,.4*s,.025*s,role==='druid'||role==='mage'?LEAF[0]:ELF_CLOAK); }
 }
 function drawWildFx(u){
   const j=u.j, s=u.s; _wl2.subVectors(j.head,j.neck).normalize();
   if(u.type==='giant'){
+    drawElfDress(u,'giant');
     for(const [sh,sd] of [[j.sL,-1],[j.sR,1]]){ _wl1.copy(sh).addScaledVector(_wl2,.32*s).addScaledVector(u.rightW,sd*.16*s); cyl(sh,_wl1,.05*s,BARK,limbIM);
       _wl3.copy(_wl1).addScaledVector(_wl2,.22*s).addScaledVector(u.rightW,sd*.12*s).addScaledVector(u.fwdW,-.06*s); cyl(_wl1,_wl3,.03*s,BARK,limbIM);
       for(let k=0;k<3;k++){ _wl1.copy(_wl3).addScaledVector(u.fwdW,(k-1)*.08*s).addScaledVector(_wl2,(k%2)*.06*s); sph(_wl1,.1*s,LEAF[k],jointIM); }
@@ -96,6 +98,8 @@ function drawWildFx(u){
     return; }
   if(!u.elfDone){ u.elfDone=1; if(u.G&&u.G.h){ dropRoot(u.G.h); u.G.h=null; } }   // no helmets, hats or beards on an elf
   const role=ELF_ROLE[u.type]||'plain';
-  elfDress(j,s,u.id||0,role,u.fwdW,u.rightW);
-  if(role==='assassin'&&u.alive){ _wl1.copy(j.hL).addScaledVector(u.wLw,.58*s); cyl(j.hL,_wl1,.014*s,ELF_STEEL,limbIM); }   // the second blade
+  drawElfDress(u,role);   // the clan's armour (36d)
+  if(u.team===myTeam()||ARM.on){ armKit(u,facOf(u.team)); ELF_ARM.helm=armHas(u,'helm'); ELF_ARM.cape=armHas(u,'cape'); }
+  elfDress(j,s,u.id||0,role,u.fwdW,u.rightW); ELF_ARM.helm=ELF_ARM.cape=false;
+  if(role==='assassin'&&u.alive&&!(u.G&&u.G.w2)){ _wl1.copy(j.hL).addScaledVector(u.wLw,.58*s); cyl(j.hL,_wl1,.014*s,ELF_STEEL,limbIM); }   // the second blade (an old save's soldier)
 }

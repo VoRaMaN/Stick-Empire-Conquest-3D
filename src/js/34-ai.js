@@ -1,7 +1,7 @@
 // Crimson general: masses an army in formation, charges when strong, falls back to the line when beaten.
 function enemyCommander(dt){
   if(game.tutorial||NET.on) return;   // online, both armies are commanded by people
-  game.aiT-=dt; if(game.aiT>0) return; game.aiT=2;
+  game.aiT-=dt; if(game.aiT>0) return; game.aiT=game.classicMix?2:aiDiff().tick;   // how quickly he thinks (34c)
   aiResearch(1); if(game.demo) aiResearch(0);
   aiEcoTick(1); if(game.demo||game.auto[0]) aiEcoTick(0);   // the enemy's make-up, a pressed castle, raided miners (34b)
   if(game.mission&&game.mission.D.passive) return;   // a story mission's enemy that stays behind its walls (40c)
@@ -10,10 +10,12 @@ function enemyCommander(dt){
   const threat=units.some(u=>u.alive&&u.team===0&&!u.T.worker&&u.pos.x>BASE_X[1]-20);
   game.bt=(game.bt||0)+2;   // seconds since the battle began (this runs every 2s)
   const full=count(1)>=Math.min(POP_CAP*.9,Math.max(24,BATTLE_SIZES[game.size].start*1.15))&&game.bt>20;
-  if(st!=='charge'&&(mine>Math.max(1500,theirs*1.25)||full||(threat&&mine>theirs))) { setStance(1,'charge'); if(game.mode==='battle'&&!game.demo){ showBanner(teamName(1).split(' ').pop()+' charges!','',1.4); sfx('hornEnemy'); }
+  const rule=game.classicMix?null:aiChargeRule(1,mine,theirs,full,threat);   // his nerve and character (34c)
+  if(!game.classicMix) aiTick(1), game.demo&&aiTick(0);
+  if(st!=='charge'&&(game.classicMix?(mine>Math.max(1500,theirs*1.25)||full||(threat&&mine>theirs)):rule==='charge')) { setStance(1,'charge'); if(game.mode==='battle'&&!game.demo){ showBanner(teamName(1).split(' ').pop()+' charges!','',1.4); sfx('hornEnemy'); }
     const archers=regs.filter(r=>r.team===0&&r.type==='archer'&&regAlive(r).length);
     for(const r of regs) if(r.team===1&&r.type==='sword'&&archers.length&&Math.random()<.45) r.order={kind:'attack',target:archers[Math.floor(Math.random()*archers.length)]}; }
-  else if(st==='charge'&&mine<theirs*.6&&!full){ setStance(1,'defend'); for(const r of regs) if(r.team===1) r.order={kind:'army'}; }
+  else if(st==='charge'&&(game.classicMix?mine<theirs*.6&&!full:rule==='fallback')){ setStance(1,'defend'); for(const r of regs) if(r.team===1) r.order={kind:'army'}; }
   if(MAP.id!=='classic'){ rlAI(1); if(game.demo) rlAI(0); }   // Riverlands: detachments go out to take and hold the capture zones
 }
 // the nearest enemy on foot within r, by plain distance (nearestEnemy's crowd penalty would hide one already brawling with our own)

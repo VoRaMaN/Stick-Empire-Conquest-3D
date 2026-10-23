@@ -112,17 +112,23 @@ const FORM_ORDER=['spear','sword','giant','archer'], FIELD_W=27, BLOCK_GAP=1.6, 
 // and 26 m in front of it, leaving a no-man's-land in the middle instead of the two fronts deploying into each other.
 const ARMY_ROOM=32, ARMY_BACK=6;
 function formLines(team,k){
-  const lines=[], bg=BLOCK_GAP*k;
-  for(const type of FORM_ORDER){
-    const F0=FORM[type], F={cols:F0.cols,gap:F0.gap*k,depth:F0.depth*k}, blocks=[];
-    for(const r of regs) if(r.team===team&&r.type===type){ const a=r.units.filter(u=>u.alive&&u.isUnit); if(a.length) blocks.push(a); }
-    const free=units.filter(u=>u.alive&&u.team===team&&u.type===type&&u.isUnit&&!u.reg); if(free.length) blocks.push(free);
-    let line=null;
-    for(const b of blocks){ const cols=Math.min(F.cols,b.length), bw=(cols-1)*F.gap, rows=Math.ceil(b.length/cols);
-      if(!line||line.w+bg+bw>FIELD_W){ line={F,blocks:[],w:-bg,rows:0}; lines.push(line); }
-      line.blocks.push({b,cols,bw}); line.w+=bg+bw; line.rows=Math.max(line.rows,rows); }
+  const lines=[], bg=BLOCK_GAP*k, FP=formPreset(team);   // your saved formation (41c), or the classic battle line
+  const groups=[];
+  if(FP){ const R=[[],[],[],[]]; for(const type of FORM_ORDER){ const r=FP.rows[type]; R[clamp(r===undefined?formRowOf(type):r,0,3)].push(type); } for(const g of R) if(g.length) groups.push(g); }
+  else for(const type of FORM_ORDER) groups.push([type]);
+  for(const g of groups){ let line=null;
+    for(const type of g){
+      const F0=FORM[type]; if(!F0) continue; const gk=FP?FP.gapK||1:1, ck=FP?FP.colsK||1:1;
+      const F=FP?{cols:Math.max(1,Math.round(F0.cols*ck)),gap:F0.gap*k*gk,depth:F0.depth*k*gk}:{cols:F0.cols,gap:F0.gap*k,depth:F0.depth*k}, blocks=[];
+      for(const r of regs) if(r.team===team&&r.type===type){ const a=r.units.filter(u=>u.alive&&u.isUnit); if(a.length) blocks.push(a); }
+      const free=units.filter(u=>u.alive&&u.team===team&&u.type===type&&u.isUnit&&!u.reg); if(free.length) blocks.push(free);
+      if(!FP) line=null;   // the classic line: every type starts its own line
+      for(const b of blocks){ const cols=Math.min(F.cols,b.length), bw=(cols-1)*F.gap, rows=Math.ceil(b.length/cols);
+        if(!line||line.w+bg+bw>FIELD_W){ line={F,blocks:[],w:-bg,rows:0,d:0}; lines.push(line); }
+        line.blocks.push({b,cols,bw,F}); line.w+=bg+bw; line.rows=Math.max(line.rows,rows); line.d=Math.max(line.d,rows*F.depth); }
+    }
   }
-  let depth=0; for(const L of lines) depth+=L.rows*L.F.depth+LINE_GAP*k;
+  let depth=0; for(const L of lines) depth+=L.d+LINE_GAP*k;
   return {lines,depth,k,bg};
 }
 function assignSlots(team){
@@ -133,11 +139,11 @@ function assignSlots(team){
   let x=game.stance[team]==='hold'?game.holdX[team]:BASE_X[team]+dir*clamp(P.depth+3,9,ARMY_ROOM-ARMY_BACK);
   x=dir>0?Math.max(x,back+d):Math.min(x,back-d); // never push the rear ranks off the field
   for(const L of P.lines){ let z=-L.w/2;
-    for(const B of L.blocks){ const n=B.b.length; B.b.sort((a,b)=>a.id-b.id);
-      B.b.forEach((u,i)=>{ const row=Math.floor(i/B.cols), col=i%B.cols, inRow=Math.min(B.cols,n-row*B.cols), off=(B.cols-inRow)*L.F.gap/2;
-        u.slot={x:x-dir*row*L.F.depth,z:clamp(z+off+col*L.F.gap,-14,14)}; });
+    for(const B of L.blocks){ const n=B.b.length, F=B.F; B.b.sort((a,b)=>a.id-b.id);
+      B.b.forEach((u,i)=>{ const row=Math.floor(i/B.cols), col=i%B.cols, inRow=Math.min(B.cols,n-row*B.cols), off=(B.cols-inRow)*F.gap/2;
+        u.slot={x:x-dir*row*F.depth,z:clamp(z+off+col*F.gap,-14,14)}; });
       z+=B.bw+P.bg; }
-    x-=dir*(L.rows*L.F.depth+LINE_GAP*P.k); }
+    x-=dir*(L.d+LINE_GAP*P.k); }
 }
 function moraleTick(u,dt){
   if(game.mode!=='battle'||!u.isUnit||u.team>1) return;

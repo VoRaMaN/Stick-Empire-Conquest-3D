@@ -26,7 +26,7 @@ function capeSet(team,kind){
   for(let k=0;k<CAPE_MAX;k++){ const o=k*24; for(let iy=0;iy<5;iy++) for(let ix=0;ix<3;ix++){ const a=o+ix+4*iy, b=o+ix+4*(iy+1), c=o+ix+1+4*(iy+1), d=o+ix+1+4*iy; idx.push(a,b,d,b,c,d); } }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); g.setAttribute('normal',new THREE.BufferAttribute(nor,3)); g.setIndex(idx);
   g.attributes.position.setUsage(THREE.DynamicDrawUsage); g.attributes.normal.setUsage(THREE.DynamicDrawUsage);
-  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:kind==='r'?REAPER_CAPE[team]:kind==='d'?DREAD_CAPE[team]:TEAM[team].cape,side:THREE.DoubleSide})); m.castShadow=true; m.frustumCulled=false; scene.add(m);
+  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:kind&&kind[0]==='a'?armCapeCol(kind):kind==='r'?REAPER_CAPE[team]:kind==='d'?DREAD_CAPE[team]:TEAM[team].cape,side:THREE.DoubleSide})); m.castShadow=true; m.frustumCulled=false; scene.add(m);
   return capeSets[key]={g,m,free:Array.from({length:CAPE_MAX},(_,i)=>CAPE_MAX-1-i)}; }
 capeSet(0); capeSet(1);   // made up front: creating them mid-battle would draw random ids and shift a seeded battle
 // kind 'r': the Soul Harvester's longer, ragged reaper cape (its own mesh and colour)
@@ -40,6 +40,8 @@ function freeCape(cp){ const pa=cp.cs.g.attributes.position.array; pa.fill(0,cp.
 const CAPE_KIND={std:{w:.34,len:.8,back:.13},r:{w:.38,len:1.08,back:.13},d:{w:.52,len:1.02,back:.22}};   // r: Soul Harvester, d: Dreadguard (hangs clear of his backplate)
 function capeAnchor(u,c,out,w,back){ const s=u.s; return out.copy(u.j.chest).addScaledVector(u.rightW,(c/3-.5)*(w||.34)*s).addScaledVector(u.fwdW,-(back||.13)*s).addScaledVector(u.spine,.04*s); }
 function stepCape(cp,dt){
+  if(cp.hide||(cp.u.cloak&&cp.u.alive)){ if(!cp.hid){ cp.hid=true; const pa=cp.cs.g.attributes.position.array; pa.fill(0,cp.slot*72,cp.slot*72+72); cp.cs.g.attributes.position.needsUpdate=true; } return; }   // under an Armory cape, or cloaked
+  if(cp.hid){ cp.hid=false; cp.init=false; }
   const u=cp.u, s=u.s, dx=(cp.w||.34)*s/3, dy=(cp.len||.8)*s/5, P=cp.P, O=cp.O; cp.t+=dt;
   if(!cp.init){ for(let r=0;r<6;r++) for(let c=0;c<4;c++){ capeAnchor(u,c,P[r*4+c],cp.w,cp.back).addScaledVector(u.spine,-dy*r).addScaledVector(u.fwdW,-.02*r*s); O[r*4+c].copy(P[r*4+c]); } cp.init=true; }
   const g=-12*dt*dt, wind=Math.sin(cp.t*2.3+u.id)*.004*s;

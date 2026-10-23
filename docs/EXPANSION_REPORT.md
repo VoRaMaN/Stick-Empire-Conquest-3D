@@ -25,3 +25,20 @@ Versions v0.22.1 → v0.31.0, each built, committed to `main`, deployed to `gh-p
 
 ## Where things live
 `13h-wyvern.js` / `27f-wyvern.js` (Wyvern Knight) · `13i-hades.js` / `27g-hades.js` (Hades) · `13j-revamp.js` / `26e-revamp.js` / `27h-revamp-ai.js` (Reaver, Ninja) · `13k-elves.js` + `36c-wild.js` (elves) · `40d-armory.js` (Armory) · `44b-music.js` (theme music) · `44c-sfx.js` + `assets/sfx-manifest.json` + `tools/sfx-generate.mjs` (sound) · `37h-frontier.js` + parametric `37d/37e/37f` (Frontier) · `34b-aieco.js` (AI economy) · `14b-animreg.js` (animation registry).
+
+## v0.33.0: the armory, elves, Hades, riders, air war and the enemy general
+
+| Request | Where | What |
+|---|---|---|
+| Armory fit, every unit | `40d-armory.js` | Pieces are forged models (lathes, extrusions, tubes) in instanced batches, placed on bone frames each frame: head, torso, back, pauldron (turns with the arm), upper arm, forearm, hand, thigh, shin, foot, shield (across the forearm), a hanging frame, the weapon, and a beast's back, chest and head. Limb pieces stretch joint to joint. Cloth capes use the Spartan cape simulation. All 70 pieces show; the old white blob (a plain sphere drawn with a clobbered position) is gone. Beasts take barding and trinkets. Verified in Chromium for every unit of all three factions. |
+| Elves look like elves | `36d-elfgear.js`, `36c-wild.js` | Their own weapons (gear) and clan dress (Armory pieces) per role; an Armory kit replaces the matching dress pieces. |
+| Hades as on the sheet | `27g-hades.js`, `13i-hades.js` | Spiked plate with glow lines, crowned helm, cape, hell scythe, chained dark Cerberus; Slash Combo, Claw Swipe, Tail Sweep, Head Bite, Hellfire Execution. |
+| Rider arms (IK, 10 animations) | `27i-rider-anim.js`, `27e-cavalry.js` | 11 rider animations on two-bone IK, chosen by the mount's move and timed to its hit; Hades' bident events play his strikes. |
+| Formation editor | `41c-formations.js`, `31-army.js` | Rows, ranks, block width; six built-in formations and saved ones per army; Main menu and Pause. |
+| AI personalities + difficulty | `34c-aimind.js` | Easy / Normal / Hard / Brutal change reaction time, counter-picking, nerve, research, focus fire, retreats, flanks, raids. Rusher, Turtle, Raider, Balanced (or Auto). Gold is the same at every level. |
+| Wyverns exposed on take-off/landing | `27f-wyvern.js` | 1.5× damage taken (2× from arrows and bolts), the low part within reach, an "Exposed!" call-out and a pulse. |
+| Anti-air per faction | `13l-airunits.js`, `27k-airunits.js`, `41d-airreg.js` | Ballista (Order, Archery Range), Acid Spitter (Chaos, Hellpit), Elf Hawk Archer (Wildlands, Eagle Eyrie). |
+| Devil Bat | same | A Spartan-sized flying demon with long, wide arms and bat wings on its back (Soul Spire). |
+| Battle stats charts | `41b-hud3.js` | Army value over time (existing) and damage by unit type (new). |
+| Armory set trading | `40e-armtrade.js` | Profiles on one device, send/take a set or a whole kit, share codes. |
+| Wyvern abilities | `38-research.js`, `37g-heroes.js`, `27f-wyvern.js` | Researched at the Aerie (Knight's Arts, Wyvern Mastery), used on their own (Settings switch). |

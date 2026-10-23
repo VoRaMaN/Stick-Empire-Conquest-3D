@@ -35,7 +35,7 @@ function buildPit(C){
   const sp=new THREE.Mesh(mergeUV(spikes),CRM.bone); sp.castShadow=true; g.add(sp);
   const hull=new THREE.Mesh(new THREE.TorusGeometry(2.45,.14,8,48),HULL_MAT); hull.rotation.x=-Math.PI/2; hull.position.y=.4; hull.visible=false; hull.renderOrder=-1; g.add(hull);
   scene.add(g); g.updateMatrixWorld(true);
-  const b={id:'pit',name:'Hellpit',emb:7,desc:'Hellcrawlers claw their way up out of the abyss',team:t,bx:PIT_L[0],row:0,trains:['crawler','hound','cerberus'],q:[],train:null,exitQ:[],res:null,
+  const b={id:'pit',name:'Hellpit',emb:7,desc:'Hellcrawlers claw their way up out of the abyss',team:t,bx:PIT_L[0],row:0,trains:['crawler','hound','cerberus','spitter'],q:[],train:null,exitQ:[],res:null,
     pit:true,grp:g,lava:pool,hull,box:new THREE.Box3(new V3(-2.5,-.2,-2.5),new V3(2.5,1.6,2.5)),wbox:new THREE.Box3()};
   b.wbox.copy(b.box).applyMatrix4(g.matrixWorld);
   C.B.pit=b; C.list.push(b); C.pit=b;

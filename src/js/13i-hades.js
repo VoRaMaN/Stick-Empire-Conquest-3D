@@ -12,6 +12,7 @@ RAW.hades=Object.assign({},RAW.cerberus); POSES.hades=POSES.cerberus; IDLES.hade
 DEF_ODDS.hades=Object.assign({},DEF_ODDS.cerberus,{block:.25}); ATK_AIM_X.hades=ATK_AIM_X.cerberus||{};
 const HXK=(c,extra,drop)=>{ const keys=JSON.parse(JSON.stringify(c.keys)), ev=(c.ev||[]).filter(e=>!(drop&&drop[e.e])).map(e=>Object.assign({},e)).concat(extra||[]); ev.sort((a,b)=>a.t-b.t); return {keys,ev}; };
 const CBR=RAW.cerberus;
+const HXR=(c,k,d)=>{ const h=(c.ev||[]).find(e=>e.e==='hit'); return HXK(c,[{t:Math.max(0,(h?h.t:.3)-.24),e:'hdRide',k,d}]); };   // the rider strikes with the hound's blow
 Object.assign(RAW.hades,{
   // ---- combos: hound and rider strike in turn ----
   hxBidentFang:{keys:[{t:0},{t:.2,lean:-.15,crouch:.12},{t:.32,e:'o',lean:.25,fwd:.3},{t:.5,draw:.8,hbJ:.6,hcJ:.6},{t:.62,e:'o',draw:0,hbJ:0,hcJ:0,lean:.4,fwd:.55},
@@ -21,6 +22,11 @@ Object.assign(RAW.hades,{
     ev:[{t:.07,e:'cbSnort'},{t:.42,e:'hit',arc:1,dmg:1,kb:4},{t:.55,e:'hdRide',k:'slam',d:.55},{t:.98,e:'hit',aoe:1,stomp:1,dmg:1.3,kb:4},{t:.99,e:'hellfire',r:2.4,at:.9}]},
   hxThreeHeads:HXK(CBR.cbTripleBite,[{t:.68,e:'hdRide',k:'thrust'},{t:.82,e:'hit',dmg:1,kb:2.5}]),
   hxInfernalWhirl:HXK(CBR.cbCyclone,[{t:.12,e:'hdRide',k:'sweep',d:.5},{t:.42,e:'hellfire',r:2.8,at:0}]),
+  // ---- v0.33, the reference sheet's combos ----
+  hxSlashCombo:{keys:[{t:0},{t:.18,lean:-.1,crouch:.1},{t:.3,e:'o',lean:.25,fwd:.35},{t:.55,lean:-.05},{t:.68,e:'o',lean:.3,fwd:.7},{t:.9,lean:-.2,crouch:.15},{t:1.08,e:'o',lean:.45,crouch:.3,fwd:1.0},{t:1.25,lean:.15},R_(1.6)],
+    ev:[{t:.1,e:'hdRide',k:'sweep',d:.3},{t:.3,e:'hit',arc:1.2,dmg:.7,kb:1.5},{t:.48,e:'hdRide',k:'sweep',d:.3},{t:.68,e:'hit',arc:1.2,dmg:.7,kb:1.5},{t:.82,e:'hdRide',k:'slam',d:.42},{t:1.08,e:'hit',dmg:1.2,kb:3.5},{t:1.09,e:'hellfire',r:1.8,at:.9}]},
+  hxClawSwipe:HXR(CBR.cbPawMaul,'sweep',.35),
+  hxTailSweep:HXR(CBR.cbSerpentLash,'sweep',.35),
   // ---- abilities ----
   hxInfernalStrike:HXK(CBR.cbCrushLeap,[{t:.35,e:'hdRide',k:'slam',d:.4},{t:.68,e:'hxStrike'}],{hit:1}),
   hxRage:HXK(CBR.cbInfernalHowl,[{t:.62,e:'hxRage'}],{hit:1}),
@@ -34,8 +40,8 @@ Object.assign(RAW.hades,{
   idle_hxSalute:{idle:1,keys:[{t:0},{t:.5,lean:-.35,draw:.4,hbJ:.5,hcJ:.5},{t:1.4,lean:-.3},R_(2)],ev:[{t:.3,e:'hdRide',k:'raise',d:1.3},{t:.6,e:'cbHowl',mini:1}]},
 });
 IDLES.hades.push('idle_hxSurvey','idle_hxSalute');
-TYPES.hades.attacks=TYPES.cerberus.attacks.slice().concat(['hxBidentFang','hxOnslaught','hxThreeHeads','hxInfernalWhirl']);
-Object.assign(MOVE_NAMES,{hxBidentFang:'Bident and Fang',hxOnslaught:'Underworld Onslaught',hxThreeHeads:'Three Heads, One Lord',hxInfernalWhirl:'Infernal Whirl',
+TYPES.hades.attacks=TYPES.cerberus.attacks.slice().concat(['hxBidentFang','hxOnslaught','hxThreeHeads','hxInfernalWhirl','hxSlashCombo','hxClawSwipe','hxTailSweep']);
+Object.assign(MOVE_NAMES,{hxSlashCombo:'Slash Combo',hxClawSwipe:'Claw Swipe',hxTailSweep:'Tail Sweep',hxBidentFang:'Scythe and Fang',hxOnslaught:'Underworld Onslaught',hxThreeHeads:'Head Bite',hxInfernalWhirl:'Infernal Whirl',
   hxInfernalStrike:'Infernal Strike',hxRage:'Cerberus Rage',hxDrain:'Soul Drain',hxShadowStep:'Shadow Step',hxApocalypse:'Apocalypse'});
 Object.assign(IDLE_NAMES,{hxSurvey:'Survey the Field',hxSalute:'Raise the Bident'});
 // mounted finishers: the hound pins, the lord ends it
@@ -46,6 +52,7 @@ FINS.hades=[];
     hxJudgment:{name:'Judgment of Three',src:'cbThreeJaws',add:[{t:.95,e:'hdRide',k:'slam',d:.3}]},
     hxHellfall:{name:'Hellfall',src:'cbInferno',add:[{t:.25,e:'hdRide',k:'raise',d:.5}]},
     hxSoulRip:{name:'Soul Rip',src:'cbHoundToss',add:[{t:.6,e:'hdRide',k:'raise',d:.6},{t:.9,e:'hxSoul'}]},
+    hxHellExec:{name:'Hellfire Execution',src:'cbPinRend',add:[{t:.85,e:'hdRide',k:'slam',d:.8},{t:1.3,e:'hellfire',r:2.6,at:.9},{t:1.32,e:'hxSoul'}]},
   };
   for(const n in F){ const d=F[n], c=HXK(CBR[d.src],d.add); RAW.hades[n]=c; const def=FIN[d.src]||{}; FIN[n]={name:d.name,clip:n,contact:def.contact||1.9,victim:def.victim};
     if(FIN_HIT_X[d.src]) FIN_HIT_X[n]=FIN_HIT_X[d.src]; FINS.hades.push(n); }

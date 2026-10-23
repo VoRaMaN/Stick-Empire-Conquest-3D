@@ -119,7 +119,7 @@ function boomFx(p,k){
   puffDir(p,UP,Math.round(6*k),2.6,1.6,'#ff8a2a',.35*k,.6); puffDir(p,UP,Math.round(8*k),1.6,1.2,'#3a2a22',.5*k,1.3);
   const c=p.clone(); c.y=H(c.x,c.z); ring(c,1.8*k); shakeAt(p,.3*k); crSfx('bombBlast','blast',p,.9);
 }
-function explode(p,r,dmg,team,src){
+function bombExplode(p,r,dmg,team,src){   // (was a second explode(): it shadowed the wizard orb blast in 26, whose arguments it misread)
   boomFx(p,r/1.9);
   for(const o of units){ if(!o.alive||o.team===team||isAir(o)) continue; const d=Math.hypot(o.pos.x-p.x,o.pos.z-p.z); if(d>r+o.s*.3) continue;
     const dir=new V3(o.pos.x-p.x,0,o.pos.z-p.z); if(dir.lengthSq()<1e-6) dir.set(1,0,0); dir.normalize();
@@ -133,7 +133,7 @@ function updateBombs(dt){
     if(Math.random()<dt*30) puff(B.p,1,.05,.3,'#ffb347');
     let hit=B.age>B.max||(!B.roll&&B.p.y<=H(B.p.x,B.p.z)+.1)||castleBlocks(B.p);
     if(!hit) for(const o of units){ if(!o.alive||o.team===B.team) continue; if(o.j.chest.distanceTo(B.p)<.5*o.s||(B.roll&&Math.hypot(o.pos.x-B.p.x,o.pos.z-B.p.z)<.6)){ hit=true; break; } }
-    if(hit){ explode(B.p,B.r,B.dmg,B.team,B.src); bombs.splice(i,1); } }
+    if(hit){ bombExplode(B.p,B.r,B.dmg,B.team,B.src); bombs.splice(i,1); } }
 }
 
 /* ---------- the Oracle: void bolts, dark mending ---------- */
@@ -239,7 +239,7 @@ function updateChaos2(dt){
   for(const u of units){ if(u.bombT>0) u.bombT-=dt; if(u.cbBreath) cbBreathTick(u,dt);
     if(u.type==='hades'&&u.alive&&game.mode==='battle'){ u.auraT=(u.auraT||0)-dt; if(u.auraT<=0){ u.auraT=.5;
       for(const o of units){ if(!o.alive||o.team===u.team||isAir(o)) continue; if(Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z)<2.8) applyBurn(o,u,3,1.2); } } } }
-  for(const c of corpses) if(c.type==='bomber'&&!c._boom&&!c.statue){ c._boom=true; explode(c.j.chest.clone(),2.0,c.T.dmg*1.1,c.team,c); }
+  for(const c of corpses) if(c.type==='bomber'&&!c._boom&&!c.statue){ c._boom=true; bombExplode(c.j.chest.clone(),2.0,c.T.dmg*1.1,c.team,c); }
 }
 const _dc2=new V3();
 function drawChaos2(){

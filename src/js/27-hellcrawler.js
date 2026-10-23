@@ -473,7 +473,8 @@ function crPrep(u){
 const _ce=new V3();
 function drawCrawlerFx(u){
   if(u.T.horse||u.rider) drawRider(u);
-  if(u.alive&&armMounted(u.type)) armDraw(u,null,null,null,null,true);   // barding (40d)
+  if(u.alive) armDraw(u,null,null,null,null,true);   // barding and trinkets (40d)
+  if(u.T.spitter) spitterFx(u);   // the acid sacs (27k)
   if(u.T.wyvern&&u.alive) wyFx(u);
   if(!u.alive||!u.cr||u.T.horse) return;
   const cr=u.cr, s=u.s, hr=_cm2.crossVectors(cr.hd,cr.hu).normalize();

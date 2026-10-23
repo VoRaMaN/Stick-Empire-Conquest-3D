@@ -79,7 +79,8 @@ function gxInit(){
   GX.cbBolt=new THREE.CylinderGeometry(.011,.011,.36,5); GX.cbTip=new THREE.ConeGeometry(.022,.07,5);
 }
 function buildGearX(u,G,acc,acc2,steel){
-  if(u.T.crawler){ buildCrawler(u,G); return; }
+  if(u.T.crawler){ buildCrawler(u,G); if(u.T.spitter) spitterCoat(u,G); return; }
+  if(u.T.bat){ buildBatGear(u,G); return; }   // the Devil Bat's wings (27k)
   if(u.T.chaos){ buildChaosGear(u,G); if(u.type==='boner') brDress(u,G); return; }   // the Bone Reaver's new look (26e)
   gxInit(); const team=u.team;
   switch(u.type){
@@ -111,7 +112,7 @@ function buildGearX(u,G,acc,acc2,steel){
       G.h=h;
       const b=grp(); const sc=mesh(GX.scab,lamOf('#1c1612'),0,0,-.02); sc.rotation.z=.75; b.add(sc); G.b=b; njDress(u,G,acc,acc2); break; }   // the Ninja's new look (26e)
     case 'wing':{
-      const mem=lamOf(team?'#7a4650':'#ad9560',{side:THREE.DoubleSide}), frame=lamOf('#3b2b1c');
+      const mem=lamOf(u.T.wild?(team?'#7a5a34':'#9a7444'):team?'#7a4650':'#ad9560',{side:THREE.DoubleSide}), frame=lamOf(u.T.wild?'#e8dcc4':'#3b2b1c');   // an Eagle Scout's wings are hawk-brown with pale quills
       for(const [key,geo,fr] of [['wl1',GX.wIn,GX.frameIn],['wl2',GX.wOut,GX.frameOut],['wr1',GX.wIn,GX.frameIn],['wr2',GX.wOut,GX.frameOut]]){
         const g=grp(); g.add(mesh(geo,mem),mesh(fr,frame)); G[key]=g; }
       const b=grp(); b.add(mesh(GX.pack,lamOf('#5b452e'),0,.05,-.03),mesh(GX.packHub,lamOf('#8a6a3a'),0,.18,-.02));
@@ -129,10 +130,12 @@ function buildGearX(u,G,acc,acc2,steel){
 }
 const _gq=new V3(),_gs=new V3(),_gso=new V3(),_gm=new V3(),_ge=new V3(),_gch=new V3(),_gfl=new V3(),_gd=new V3();
 function updateGearX(u){
-  if(u.T.crawler) return;   // a Hellcrawler's model is posed when it's drawn (drawCrawler), and only if it's on screen
+  if(u.T.crawler) return;
+  if(u.T.bat){ batGearUpdate(u); return; }   // a Hellcrawler's model is posed when it's drawn (drawCrawler), and only if it's on screen
   if(u.T.chaos){ updateChaosGear(u); return; }
   const G=u.G, j=u.j, s=u.s; if(!G) return;
   _gfl.copy(u.fwdW).addScaledVector(u.spine,-u.fwdW.dot(u.spine)); if(_gfl.lengthSq()<1e-6) _gfl.copy(u.fwdW); _gfl.normalize();
+  if(G.w2) updateElfGear(u);   // a Twin-Blade Assassin's second blade (36d)
   if(u.type==='ninja'&&G.r) orient(G.r,j.pelvis,u.spine,_gfl);   // the sash
   if(u.type==='cleric'){
     if(G.r) orient(G.r,j.pelvis,u.spine,_gfl);
@@ -405,13 +408,13 @@ function updateSpells(dt){
     let hit=O.age>(RL.on?4.2:2.2)||O.p.y<H(O.p.x,O.p.z)+.1||castleBlocks(O.p);
     if(!hit) for(const o of units){ if(!o.alive||o.team===O.team) continue; if(o.j.chest.distanceTo(O.p)<.45*o.s){ hit=true; break; } }
     if(!hit&&O.t&&O.t.isStatue&&Math.hypot(O.t.pos.x-O.p.x,O.t.pos.z-O.p.z)<1.4) hit=true;
-    if(hit){ explode(O.p,O.team,O.dmg,O.src,O.big); orbs.splice(i,1); } }
+    if(hit){ if(O.acid) acidBurst(O); else explode(O.p,O.team,O.dmg,O.src,O.big); orbs.splice(i,1); } }
   for(let i=flashes.length-1;i>=0;i--){ const f=flashes[i]; f.t+=dt; if(f.t>=f.life) flashes.splice(i,1); }
   for(let i=zaps.length-1;i>=0;i--){ const z=zaps[i]; z.t+=dt; if(z.t>=z.life) zaps.splice(i,1); }
   for(let i=beams.length-1;i>=0;i--){ const b=beams[i]; b.age+=dt; if(b.age>=b.life||!b.u.alive) beams.splice(i,1); }
   for(let i=walls.length-1;i>=0;i--){ const W=walls[i]; W.t-=dt; W.zt-=dt; if(W.zt<=0){ W.zt=.06; wallArcs(W); }
     W.hitT-=dt; const tick=W.hitT<=0; if(tick) W.hitT=.25;
-    for(const o of units){ if(!o.alive||o.team===W.team) continue; if(isAir(o)&&o.fl.h>2.8) continue;
+    for(const o of units){ if(!o.alive||o.team===W.team) continue; if(isAir(o)&&(o.fl?o.fl.h:o.wyA||0)>2.8) continue;
       const d=distSeg(_tmp3.set(o.pos.x,W.a.y,o.pos.z),W.a,W.b); if(d>.55*o.s+.2) continue;
       o.vel.multiplyScalar(.25);
       if(tick){ damage(o,W.dps*.25,W.src,null,.5); if(o.alive&&!o.action&&Math.random()<.4){ play(o,'flinch'); o.fwdScale=1; }
@@ -419,7 +422,7 @@ function updateSpells(dt){
     if(W.t<=0) walls.splice(i,1); }
   for(let i=clouds.length-1;i>=0;i--){ const C=clouds[i]; C.t-=dt; C.tk-=dt;
     if(Math.random()<dt*9){ const q=C.p.clone().add(new V3(rand(-1,1)*C.r,rand(-.5,.6),rand(-1,1)*C.r)); puffDir(q,UP,1,.3,.3,Math.random()<.5?'#7ddf5c':'#4fae45',.35,1.4); }
-    if(C.tk<=0){ C.tk=.4; for(const o of units) if(o.alive&&o.team!==C.team&&(!isAir(o)||o.fl.h<2.6)&&Math.hypot(o.pos.x-C.p.x,o.pos.z-C.p.z)<C.r) applyPoison(o,C.src,C.dps,4); }
+    if(C.tk<=0){ C.tk=.4; for(const o of units) if(o.alive&&o.team!==C.team&&(!isAir(o)||(o.fl?o.fl.h:o.wyA||0)<2.6)&&Math.hypot(o.pos.x-C.p.x,o.pos.z-C.p.z)<C.r) applyPoison(o,C.src,C.dps,4); }
     if(C.t<=0) clouds.splice(i,1); }
 }
 /* ---------- drawing ---------- */
@@ -438,7 +441,7 @@ function drawSpells(){
     _dp.copy(W.a); cyl(_dp,_dq.copy(W.a).setY(W.a.y+2.4),.04,_pc,boltIM); cyl(W.b,_dq.copy(W.b).setY(W.b.y+2.4),.04,_pc,boltIM); }
   for(const a of arrows) if(a.fire&&a.mode==='fly'){ glowAt(a.p,.14,'#ffb347'); if(Math.random()<.3) puff(a.p,1,.06,.3,'#ff8a2a'); }
   for(const u of units){ if(!u.alive||!u.T.staff||u.cloak) continue; staffTip(u,_dp); u.orbGlow=Math.max(0,(u.orbGlow||0)-.02);
-    const pul=.5+.5*Math.sin(game.time*4+u.id); glowAt(_dp,(.11+.03*pul+.12*u.orbGlow)*u.s,u.type==='wizard'?'#9a55d8':'#7a4fd0'); }
+    const pul=.5+.5*Math.sin(game.time*4+u.id); glowAt(_dp,(.11+.03*pul+.12*u.orbGlow)*u.s,u.T.wild?(u.type==='wizard'?'#7ae0d0':'#b8ff7a'):u.type==='wizard'?'#9a55d8':'#7a4fd0'); }
   for(const u of units) if(u.alive&&u.boltFire&&u.G&&u.G.w) glowAt(crossbowTip(u,_dp),.12+.04*Math.random(),'#ffb347');
 }
 function drawUnit(u){
@@ -451,6 +454,7 @@ function drawUnit(u){
     if(S.healF>0){ tc.copy(col).lerp(scol('#fff3a8'),Math.min(1,S.healF*2)); col=tc; } }
   drawFigure(u.j,u.s,col,u.thick,u.fwdW,u.cloak&&u.alive?GHOST:null,!!u.T.robe,!!u.T.skel);
   if(u.T.plateLimbs) drawPlateLimbs(u);
+  if(u.T.bat) drawBatFx(u);   // horns, claws, tail and wing bones (27k)
   if(u.T.wild&&!(u.cloak&&u.alive)) drawWildFx(u);
   if(!(u.cloak&&u.alive)) armDraw(u);   // the kit from the Armory (40d)
   if(u.riderK) drawRiderArmor(u.j,u.s,u.riderK,u.team,null,null,null);

@@ -38,7 +38,7 @@ function damage(t,amt,src,dirW,kb,up,blocked,at){
   if(t.invuln||NET.guest) return;   // online guest: health only ever comes from the host
   if(amt>0) t.hurtAt=game.time;   // Chaos regeneration waits for the wounds to stop
   if(src&&src.team!==undefined&&src.team<2){ t.lastHitTeam=src.team; t.lastHitBy=src; }
-  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)*vetDealt(src)*vetTaken(t)*formTaken(t,src))*(RL.on?rlDmgMul(src)*rlSysMul(t,src):1)*(game.classicMix?1:heroMul(t,src)*wyMul(t,src)*hxMul(t,src)); if(game.mode==='battle'&&!game.classicMix){ alertHit(t,src); fightMark(t); if(src&&src.team<2&&game.stats&&game.stats.dmg) game.stats.dmg[src.team]+=amt; } if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
+  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)*vetDealt(src)*vetTaken(t)*formTaken(t,src))*(RL.on?rlDmgMul(src)*rlSysMul(t,src):1)*(game.classicMix?1:heroMul(t,src)*wyMul(t,src)*hxMul(t,src)); if(game.mode==='battle'&&!game.classicMix){ alertHit(t,src); fightMark(t); if(src&&src.team<2&&game.stats&&game.stats.dmg){ game.stats.dmg[src.team]+=amt; const D=game.stats.dmgT||(game.stats.dmgT=[{},{}]), ty=src.type||'other'; D[src.team][ty]=(D[src.team][ty]||0)+amt; } } if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
   if(t.hp<=0){ kill(t,dirW.clone().multiplyScalar(2.5*(kb||1)).add(new V3(0,1.8+(kb||1)*.6+(up||0),0)),{}); }
 }
 function kill(t,impWorld,opt){
@@ -72,7 +72,7 @@ function updateCharge(u,dt){
   else if(game.mode==='duel') mode=!!u.chgLab;
   const t=u.target, d=t&&t.isUnit&&t.alive?Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z):99, fast=u.spd>.5*u.T.speed;
   if(NET.guest){ const want=u.chg&&!u.action&&u.spd>.45*u.T.speed?1:0; u.chgW=(u.chgW||0)+(want-(u.chgW||0))*(1-Math.exp(-dt*7)); return; }   // the host picks the charge style
-  if(mode&&!u.chg&&!u.chgCD&&fast&&!u.action&&d>3.5&&d<30&&(!u.T.worker||d<12)) u.chg={i:Math.floor(Math.random()*CHG[u.type].length)};
+  if(mode&&!u.chg&&!u.chgCD&&fast&&!u.action&&d>3.5&&d<30&&(!u.T.worker||d<12)&&CHG[u.type]&&CHG[u.type].length) u.chg={i:Math.floor(Math.random()*CHG[u.type].length)};
   if(u.chg&&!mode&&game.mode==='battle') u.chg=null;
   if(u.chg&&!u.action&&u.spd<.2*u.T.speed){ u.chgStop=(u.chgStop||0)+dt; if(u.chgStop>.8&&game.mode==='battle') u.chg=null; } else u.chgStop=0;
   const want=u.chg&&!u.action&&u.spd>.45*u.T.speed?1:0;
@@ -111,6 +111,7 @@ function planDefense(t,u,c){
 }
 function canFinish(u,t){
   if(game.mode==='duel') return false;
+  if(!FINS[u.type]||!FINS[u.type].length) return false;   // a soldier with no finishers (the Devil Bat)
   if(game.finMode===0||!t.alive||t.state==='stunned'||t.fin||t.type==='giant'||t.invuln||t.fl||isAir(t)) return false;
   if(u.T.ranged&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)>(u.T.finR||1.9)) return false;
   const expected=u.T.dmg*(1-(t.T.armor||0));
@@ -197,6 +198,7 @@ function handleEvent0(u,e){
       else if(t&&t.isStatue&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)<4) hitStatue(t,dm);
       break; }
     case 'fire':{
+      if(T.siege){ ballistaFire(u,e); break; }   // a Ballista's bolt (27k)
       if(T.bolt){ fireBolts(u,e); break; }
       const t=u.atkTarget; if(!t) break;
       let aim;
@@ -205,7 +207,7 @@ function handleEvent0(u,e){
       const n=e.n||1, fireA=u.type==='archer'&&!game.classicMix&&hasRes(u.team,'fireArrows');
       for(let i=0;i<n;i++){ const off=(i-(n-1)/2)*(e.spread||0), dx=aim.x-u.pos.x, dz=aim.z-u.pos.z, c=Math.cos(off), sn=Math.sin(off);
         const a2=new V3(u.pos.x+dx*c+dz*sn,aim.y,u.pos.z-dx*sn+dz*c);
-        fireArrow(u,a2,T.dmg*(e.dmg||1),null,{lob:e.lob,power:e.power,fire:fireA}); }
+        fireArrow(u,a2,T.dmg*(e.dmg||1)*(T.antiAir&&t.isUnit&&isAir(t)?T.antiAir:1),null,{lob:e.lob,power:e.power,fire:fireA}); }   // anti-air archers hit flyers harder
       sfx('bow',u.j.hL,.9); if(fireA) sfx('ignite',u.j.hL,.45);
       break; }
     case 'land':{ puff(u.pos,3,.22*u.s,1.4); sfx(u.s>1.5?'giantStep':'land',u.pos,.8); break; }

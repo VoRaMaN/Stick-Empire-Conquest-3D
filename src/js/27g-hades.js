@@ -4,7 +4,7 @@
    Abilities (J K N M B with Hades selected): Infernal Strike · Cerberus Rage · Soul Drain · Shadow Step · Apocalypse. */
 RIDER.hades={seatF:.46,seatH:.33,legW:.33,rs:1.16,kind:'hades'};
 const HX_VAR=[
-  {id:'infernal',name:'Infernal',fire:'#ff7a1a',hot:'#ffcf4a',fur:null,body:'#2a1410'},
+  {id:'infernal',name:'Infernal',fire:'#ff3a1a',hot:'#ffb04a',fur:'#221618',body:'#2a1410'},
   {id:'frost',name:'Frost',fire:'#7ad8ff',hot:'#e8fbff',fur:'#4a5a6c',body:'#1c2634'},
   {id:'toxic',name:'Toxic',fire:'#8aff3a',hot:'#eaff9a',fur:'#28361c',body:'#1a2412'},
   {id:'shadow',name:'Shadow',fire:'#b06aff',hot:'#ead8ff',fur:'#141018',body:'#120c18'}];
@@ -64,7 +64,7 @@ function hxPillar(u,x,z){ const V=hxVar(u), y=H(x,z); _hz1.set(x,y+.1,z); ring(_
     damage(o,u.T.dmg*1.5,u,new V3(dx/d,0,dz/d),3,.6); applyBurn(o,u,8,4); }); }
 const _hz1=new V3(), _hz2=new V3(), _hz3=new V3();
 Object.assign(EXTRA_EV,{
-  hdRide:(u,e)=>{ u.hxR={k:e.k,t:0,d:e.d||(e.k==='sweep'?.35:e.k==='slam'?.55:e.k==='raise'?1:.3)}; if(e.k==='thrust'){ u.lanceT=LANCE_T; u.lanceTgt=u.atkTarget||u.target; } },
+  hdRide:(u,e)=>{ u.hxR={k:e.k,t:0,d:e.d||(e.k==='sweep'?.35:e.k==='slam'?.55:e.k==='raise'?1:.3)}; raRideEvent(u,e.k,e.d); if(e.k==='thrust'){ u.lanceT=LANCE_T; u.lanceTgt=u.atkTarget||u.target; } },
   hxStrike:(u)=>{ const V=hxVar(u); _hz1.copy(u.pos).addScaledVector(u.fwdW,1.1*u.s); _hz1.y=H(_hz1.x,_hz1.z)+.1; ring(_hz1,3.6,V.fire); shakeAt(_hz1,.45); fireBurst(_hz1,16,.3,4,.7);
     flashes.push({p:_hz1.clone().setY(_hz1.y+.6),r0:.4,r1:2,t:0,life:.3,col:V.fire}); sfx('infernalStrike',_hz1,.8);
     if(NET.guest) return;
@@ -91,55 +91,45 @@ Object.assign(EXTRA_EV,{
 function hxMul(t,src){ let k=1; const now=game.time; if(src&&src.hxRageT>now) k*=1.25; if(src&&src.hxShadow>now){ k*=2; src.hxShadow=0; } return k; }
 
 /* ---------- drawing the lord: dark plate, a cloak, a crown of fire, the bident ---------- */
+// v0.33: Hades as the reference sheet draws him: dark spiked plate traced with glowing lines in his variant's fire,
+// a crowned and spiked great helm with a burning visor, a cape, and a hell scythe instead of the bident; Cerberus
+// in a dark coat, bound in chains. The pieces are the Armory's forged shapes (40d), fitted to his bones each frame.
+const HX_CAPE={infernal:'#7a1010',frost:'#1c3a6a',toxic:'#2a4a14',shadow:'#3a1a5a'};
+const HX_METAL={infernal:['#1c1416','#8a5a2a'],frost:['#1a2230','#9ac8e8'],toxic:['#1a2014','#8ab040'],shadow:['#18121e','#8a6ab8']};
+const HX_KIT={};
+function hxKit(V,cape){ const key=V.id+(cape?'':'|nc'); if(HX_KIT[key]) return HX_KIT[key];
+  const [D,T]=HX_METAL[V.id]||HX_METAL.infernal, G=V.fire, BN='#e6dabd';
+  const big=L=>L.map(p=>Object.assign({},p,{p:p.p.map(v=>v*1.12),sc:p.sc.map(v=>v*1.22)}));
+  const kit=[].concat(greatHelm(D,T,G,1),crownOf(T,7,.5),[PT('head','cone','m',T,[0,1.62,.55],[.35,0,0],[.13,.8,.13]),PT('head','arcF','g',G,[0,-.3,0],0,[1.105,.03,1.105])],horns('#2a2024').map(p=>Object.assign({},p,{sc:[.8,.8,.8]})),
+    big(pauldron(D,D,T)),SIDES('pa','cone','m',D,[.08,.11,0],[0,0,-.35],[.028,.2,.028]),SIDES('pa','cone','m',D,[.09,.08,.06],[.45,0,-.6],[.022,.15,.022]),SIDES('pa','cone','m',D,[.09,.08,-.06],[-.45,0,-.6],[.022,.15,.022]),
+    SIDES('pa','box','g',G,[.1,-.02,0],[0,0,-.8],[.005,.07,.1]),
+    plates(D),trims(T),tassets(D,T),[PT('torso','box','g',G,[0,.4,.134],0,[.006,.22,.004]),PT('torso','box','g',G,[.032,.52,.131],[0,0,.75],[.005,.08,.004]),PT('torso','box','g',G,[-.032,.52,.131],[0,0,-.75],[.005,.08,.004]),
+      PT('torso','arcF','g',G,[0,.25,0],0,[.123,.009,.132]),PT('torso','sph','l',BN,[0,.47,.138],0,[.03,.032,.016]),PT('torso','gem','g',G,[.011,.475,.152],0,.006),PT('torso','gem','g',G,[-.011,.475,.152],0,.006)],
+    gauntlets(D,T),SIDES('fa','ring','g',G,[0,.5,0],0,[.066,.08,.066]),SIDES('hd','cone','l',BN,[.025,.09,.02],[.2,0,0],[.012,.1,.012]),SIDES('hd','cone','l',BN,[-.025,.09,.02],[.2,0,0],[.012,.1,.012]),
+    greaves(D,T),SIDES('sn','box','g',G,[0,.5,.069],0,[.006,.5,.004],{leg:1}),SIDES('sn','cone','m',D,[0,.04,.08],[Math.PI/2+.3,0,0],[.022,.12,.022],{leg:1}),
+    ARM_BY.c_chainbelt.P,
+    cape?[PT('back','capeR','c',HX_CAPE[V.id]||HX_CAPE.infernal,[0,-.33,-.01],0,[.15,.9,.155]),PT('back','sph','l',BN,[.085,.06,.065],0,.026),PT('back','sph','l',BN,[-.085,.06,.065],0,.026)]:[]);
+  return HX_KIT[key]=kit; }
+const HX_SCYTHE={};
+function hxScytheParts(V){ if(HX_SCYTHE[V.id]) return HX_SCYTHE[V.id]; const [D,T]=HX_METAL[V.id]||HX_METAL.infernal, G=V.fire;
+  return HX_SCYTHE[V.id]=[PT('wpn','cylC','l','#1a1214',[0,.3,0],0,[.026,2.4,.026]),PT('wpn','ring','m',T,[0,1.42,0],0,[.04,.08,.04]),PT('wpn','ring','m',T,[0,-.2,0],0,[.034,.06,.034]),
+    PT('wpn','sph','l','#e6dabd',[0,1.5,0],0,[.06,.065,.065]),PT('wpn','scythe','m','#2a2226',[0,1.46,0],0,[1,1,1]),PT('wpn','scytheEdge','g',G,[0,1.46,0],0,1),
+    PT('wpn','cone','m',D,[0,-.98,0],[Math.PI,0,0],[.035,.16,.035]),PT('wpn','box','g',G,[0,.75,.024],0,[.012,.05,.004]),PT('wpn','box','g',G,[0,.95,.024],0,[.012,.05,.004]),PT('wpn','box','g',G,[0,1.15,.024],0,[.012,.05,.004])]; }
+let HX_CHAINS=null;   // (made on first use: the Armory's shapes load later)
 function hxDrawRider(u,R,d){
   const V=hxVar(u), rs=R.rs, tt=game.time;
-  drawFigure(RJ,rs,hxC(V.body),1,_kvF,null,false,false);
-  drawRiderArmor(RJ,rs,'chaos',u.team,_kvR,_kvU,_kvF);
-  hxArmour(u,V,rs,tt);   // v0.32: the lord's plate and great helm
-  // the cloak: two dark panels falling behind him
-  _hz1.copy(RJ.neck).addScaledVector(_kvF,-.12*rs); _hz2.copy(RJ.pelvis).addScaledVector(_kvF,-.28*rs).addScaledVector(UP,-.18*rs);
-  _kvM.makeBasis(_kvR,_hz3.subVectors(_hz2,_hz1).normalize(),_kvF); _kvQ.setFromRotationMatrix(_kvM);
-  _hz3.copy(_hz1).lerp(_hz2,.5); blob(_hz3,_kvQ,.2*rs,.42*rs,.02*rs,hxC('#140a0c'));
-  // crown of fire
-  for(let i=0;i<5;i++){ const a=i/5*TAU+tt*1.5; _hz1.copy(RJ.head).addScaledVector(_kvU,.2*rs).addScaledVector(_kvR,Math.cos(a)*.12*rs).addScaledVector(_kvF,Math.sin(a)*.12*rs);
-    glowAt(_hz1,(.06+.02*Math.sin(tt*11+i))*rs,i%2?V.fire:V.hot); }
-  // the bident: shaft, the crossbar, two prongs, tips burning
-  _kvA.copy(RJ.hR).addScaledVector(d,-.9*rs); _kvB.copy(RJ.hR).addScaledVector(d,1.9*rs); cyl(_kvA,_kvB,.028*rs,hxC('#1b1716'),limbIM);
-  _hz1.crossVectors(d,_kvU); if(_hz1.lengthSq()<1e-4) _hz1.copy(_kvR); _hz1.normalize();
-  _hz2.copy(_kvB).addScaledVector(_hz1,-.12*rs); _hz3.copy(_kvB).addScaledVector(_hz1,.12*rs); cyl(_hz2,_hz3,.022*rs,hxC('#3a2a20'),limbIM);
-  for(const sd of [-1,1]){ _hz2.copy(_kvB).addScaledVector(_hz1,sd*.11*rs); _hz3.copy(_hz2).addScaledVector(d,.42*rs); cyl(_hz2,_hz3,.018*rs,hxC('#4a3a2c'),limbIM);
-    glowAt(_hz3,(.07+.02*Math.sin(tt*14+sd))*rs,V.fire); if(Math.random()<.12) puff(_hz3,1,.05*rs,.7,V.fire); }
+  drawFigure(RJ,rs,hxC('#120c0e'),1,_kvF,null,false,false);
+  let C=armCtx(u,RJ,rs,_kvF,_kvR,false); if(!C) return; C.wd=d;
+  armParts(C,hxKit(V,!armHas(u,'cape')),null,false);
+  armParts(C,hxScytheParts(V),null,false);
+  // the crown of fire above the spikes; embers off the blade
+  for(let i=0;i<5;i++){ const a=i/5*TAU+tt*1.5; if(afPt(C,'head',Math.cos(a)*.55,1.6+.08*Math.sin(tt*7+i),Math.sin(a)*.55,_hz1)){ glowAt(_hz1,(.026+.01*Math.sin(tt*11+i))*rs,V.fire); if(Math.random()<.05) emitFire(_hz1,1,.05*rs,0,.8,0,.04,.35); } }
+  if(afPt(C,'wpn',0,1.42,.75,_hz1)){ glowAt(_hz1,(.03+.01*Math.sin(tt*13))*rs,V.fire); if(Math.random()<.1) emitFire(_hz1,1,.05*rs,0,.6,0,.05,.3); }
+  // the hound in chains
+  if(!HX_CHAINS) HX_CHAINS=Array.from({length:24},(_,i)=>PT('mbk','link','m','#2a2226',[0,0,0],0,1,{bd:'chain',i}));
+  C=armCtx(u,null,null,null,null,true); if(C) armParts(C,HX_CHAINS,BARD.hades,false);
 }
-// the lord's armour: a horned great helm with a crown of spikes and a burning visor, spiked pauldrons, a breastplate
-// with a skull, tassets, a skull-buckled belt, gauntlets and spiked greaves, in the variant's metal
-const HX_METAL={infernal:['#5a3a22','#b8863a'],frost:['#46566a','#c8e0f0'],toxic:['#3a4826','#a8c860'],shadow:['#2a2232','#9a7ac8']};
-function hxArmour(u,V,rs,tt){
-  const [m0,m1]=HX_METAL[V.id]||HX_METAL.infernal, A=hxC(m0), B=hxC(m1), dark=hxC('#1a1416'), bone=hxC('#e6dabd');
-  const Uh=_hz1.subVectors(RJ.head,RJ.neck).normalize().clone(), F=_kvF, R=_kvR;
-  // helm
-  sph(_hz2.copy(RJ.head).addScaledVector(F,-.015*rs).addScaledVector(Uh,.02*rs),.228*rs,A,sphIM);
-  _kvM.makeBasis(R,Uh,F); _kvQ.setFromRotationMatrix(_kvM);
-  blob(_hz2.copy(RJ.head).addScaledVector(F,.19*rs).addScaledVector(Uh,-.02*rs),_kvQ,.15*rs,.13*rs,.03*rs,dark);   // the face guard
-  for(const sd of [-1,1]){ glowAt(_hz2.copy(RJ.head).addScaledVector(F,.22*rs).addScaledVector(Uh,.02*rs).addScaledVector(R,sd*.06*rs),.03*rs,V.fire);
-    _hz2.copy(RJ.head).addScaledVector(R,sd*.18*rs).addScaledVector(Uh,.08*rs); _hz3.copy(_hz2).addScaledVector(R,sd*.16*rs).addScaledVector(Uh,.14*rs).addScaledVector(F,-.06*rs); cyl(_hz2,_hz3,.035*rs,bone,limbIM);
-    _kvA.copy(_hz3).addScaledVector(Uh,.12*rs).addScaledVector(R,-sd*.04*rs); cyl(_hz3,_kvA,.02*rs,bone,limbIM); }
-  for(let i=0;i<5;i++){ const a=(i-2)*.42; _hz2.copy(RJ.head).addScaledVector(Uh,.19*rs).addScaledVector(R,Math.sin(a)*.12*rs).addScaledVector(F,Math.cos(a)*.08*rs);
-    _hz3.copy(_hz2).addScaledVector(Uh,(i===2?.16:.1)*rs); cyl(_hz2,_hz3,.018*rs,B,limbIM); }
-  // pauldrons with spikes
-  for(const [sh,sd] of [[RJ.sL,-1],[RJ.sR,1]]){ _hz2.copy(sh).addScaledVector(_kvU,.04*rs).addScaledVector(R,sd*.03*rs); sph(_hz2,.13*rs,A,jointIM); sph(_hz2.addScaledVector(_kvU,.02*rs),.095*rs,B,jointIM);
-    for(let k=0;k<2;k++){ _hz3.copy(sh).addScaledVector(_kvU,.1*rs).addScaledVector(F,(k-.5)*.08*rs); _kvA.copy(_hz3).addScaledVector(_kvU,.16*rs).addScaledVector(R,sd*.08*rs); cyl(_hz3,_kvA,.022*rs,dark,limbIM); } }
-  // breastplate and skull
-  _kvM.makeBasis(R,_kvU,F); _kvQ.setFromRotationMatrix(_kvM);
-  _hz2.copy(RJ.pelvis).lerp(RJ.chest,.72).addScaledVector(F,.07*rs); blob(_hz2,_kvQ,.16*rs,.2*rs,.1*rs,A);
-  _hz2.addScaledVector(F,.09*rs).addScaledVector(_kvU,.03*rs); sph(_hz2,.055*rs,bone,jointIM); for(const sd of [-1,1]) glowAt(_hz3.copy(_hz2).addScaledVector(F,.04*rs).addScaledVector(R,sd*.02*rs),.016*rs,V.fire);
-  // belt, tassets
-  _hz2.copy(RJ.pelvis).addScaledVector(F,.02*rs); blob(_hz2,_kvQ,.17*rs,.045*rs,.13*rs,dark); sph(_hz2.addScaledVector(F,.13*rs),.04*rs,B,jointIM);
-  for(const [hp,sd] of [[RJ.hipL,-1],[RJ.hipR,1]]){ _hz2.copy(hp).addScaledVector(_kvU,-.06*rs).addScaledVector(R,sd*.04*rs); blob(_hz2,_kvQ,.09*rs,.11*rs,.07*rs,A); }
-  // gauntlets and greaves
-  for(const [el,ha] of [[RJ.eL,RJ.hL],[RJ.eR,RJ.hR]]){ cyl(_hz2.copy(el).lerp(ha,.3),ha,.07*rs,A,limbIM); sph(ha,.075*rs,dark,jointIM); }
-  for(const [kn,ft] of [[RJ.kL,RJ.fL],[RJ.kR,RJ.fR]]){ cyl(_hz2.copy(kn).lerp(ft,.1),ft,.085*rs,A,limbIM); sph(kn,.09*rs,B,jointIM);
-    _hz3.copy(kn).addScaledVector(F,.14*rs).addScaledVector(_kvU,.05*rs); cyl(kn,_hz3,.02*rs,dark,limbIM); }
-}
+
 // glows at the mount and the burning ground
 function hxFx(u){ const V=hxVar(u), tt=game.time;
   if(u.hxRageT>tt){ _hz1.copy(u.j.chest).addScaledVector(UP,.2*u.s); glowAt(_hz1,(.3+.06*Math.sin(tt*12))*u.s,V.fire); }
@@ -153,6 +143,6 @@ TYPES.hades.pick=(u,t)=>{
   const crowd=enemiesNear(u.team,u.pos.x,u.pos.z,3.2);
   if(crowd>=3&&(u.cdCrowd||0)<now){ u.cdCrowd=now+5; return pickOf(['hxInfernalWhirl','hxOnslaught','cbRearStomp']); }
   if(d<6&&(u.cdBreath||0)<now&&Math.random()<.35){ u.cdBreath=now+8; return 'cbFireSweep'; }
-  let n,g=0; do{ n=pickOf(['hxBidentFang','hxBidentFang','hxThreeHeads','hxOnslaught','cbTripleBite','cbPawMaul','cbSkullRam','cbRendShake']); }while(n===u.lastAtk&&++g<5); return n;
+  let n,g=0; do{ n=pickOf(['hxSlashCombo','hxSlashCombo','hxBidentFang','hxThreeHeads','hxClawSwipe','hxTailSweep','hxOnslaught','cbTripleBite','cbSkullRam','cbRendShake']); }while(n===u.lastAtk&&++g<5); return n;
 };
 TYPES.hades.brain=(u,dt)=>TYPES.cerberus.brain(u,dt);

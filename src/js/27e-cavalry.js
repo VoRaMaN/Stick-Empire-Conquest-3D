@@ -72,7 +72,7 @@ function buildHorse(u,G){
 
 /* ---------- the rider ---------- */
 const RJ={}; for(const n of ['pelvis','chest','neck','head','sL','sR','eL','eR','hL','hR','hipL','hipR','kL','kR','fL','fR']) RJ[n]=new V3();
-const _kvF=new V3(),_kvR=new V3(),_kvU=new V3(),_kvS=new V3(),_kvT=new V3(),_kvP=new V3(),_kvD=new V3(),_kvQ=new THREE.Quaternion(),_kvM=new THREE.Matrix4(),_kvA=new V3(),_kvB=new V3();
+const _raR=new V3(),_raF=new V3(),_kvF=new V3(),_kvR=new V3(),_kvU=new V3(),_kvS=new V3(),_kvT=new V3(),_kvP=new V3(),_kvD=new V3(),_kvQ=new THREE.Quaternion(),_kvM=new THREE.Matrix4(),_kvA=new V3(),_kvB=new V3();
 const RC={steel:new THREE.Color('#a9b0ba'),steelD:new THREE.Color('#6c737e'),wood:new THREE.Color('#c8ae7c'),dark:new THREE.Color('#141012'),visor:new THREE.Color('#0a0a0c'),
   cbody:new THREE.Color('#1a1012'),clance:new THREE.Color('#1b1716'),chead:new THREE.Color('#5a1a10'),gold:new THREE.Color('#e2ae35')};
 const lanceK=u=>u.lanceT>0?Math.sin(Math.PI*clamp(1-u.lanceT/LANCE_T,0,1)):0;
@@ -82,34 +82,32 @@ function riderPose(u){
   const R=riderOf(u), cr=u.cr, j=u.j, s=u.s, rs=R.rs, k=lanceK(u), RM=u.T.wyvern?wyRiderMode(u):u.T.hadesRider?hxRiderMode(u):null, rw=RM?RM.w:0;
   _kvF.subVectors(j.chest,j.pelvis); if(_kvF.lengthSq()<1e-6) _kvF.copy(u.fwdW); _kvF.normalize();
   _kvR.crossVectors(_kvF,cr.n).normalize(); _kvU.crossVectors(_kvR,_kvF).normalize();
-  const lean=.08+.22*k+(RM&&RM.m==='charge'?.32*rw:RM&&RM.m==='stand'?.5*rw:RM&&RM.m==='raise'?-.12*rw:0);
+  const A=raTargets(u), tw=A.tw;   // the rider's own move (27i)
+  const lean=.08+.22*k+(RM&&RM.m==='charge'?.32*rw:RM&&RM.m==='stand'?.5*rw:0)+A.lean;
   _kvS.copy(_kvU).multiplyScalar(Math.cos(lean)).addScaledVector(_kvF,Math.sin(lean)).lerp(UP,.5).normalize();
   RJ.pelvis.copy(j.pelvis).lerp(j.chest,R.seatF).addScaledVector(cr.n,R.seatH*s).addScaledVector(_kvU,.03*rs+(RM&&RM.m==='stand'?.16*rs*rw:0));
   RJ.hipL.copy(RJ.pelvis).addScaledVector(_kvR,-.05*rs); RJ.hipR.copy(RJ.pelvis).addScaledVector(_kvR,.05*rs);
   RJ.chest.copy(RJ.pelvis).addScaledVector(_kvS,.54*rs); RJ.neck.copy(RJ.pelvis).addScaledVector(_kvS,.62*rs);
   _kvT.copy(_kvS).addScaledVector(_kvF,.12).normalize(); RJ.head.copy(RJ.neck).addScaledVector(_kvT,.19*rs);
-  RJ.sR.copy(RJ.chest).addScaledVector(_kvR,.075*rs); RJ.sL.copy(RJ.chest).addScaledVector(_kvR,-.075*rs);
-  // the lance arm: couched under the arm, driven forward in a thrust
-  _kvT.copy(RJ.chest).addScaledVector(_kvR,.13*rs).addScaledVector(_kvS,-.2*rs+.07*k*rs).addScaledVector(_kvF,(.14+.36*k)*rs);
-  _kvP.copy(RJ.sR).addScaledVector(_kvS,-1*rs).addScaledVector(_kvR,.5*rs).addScaledVector(_kvF,-.4*rs);
-  if(RM&&RM.m==='raise') _kvT.lerp(_kvA.copy(RJ.head).addScaledVector(_kvS,.34*rs).addScaledVector(_kvF,.06*rs).addScaledVector(_kvR,.1*rs),rw);   // the lance high, point down
-  if(RM&&RM.m==='sweep'){ const th=lerp(-.2,2.4,RM.ph); _kvT.lerp(_kvA.copy(RJ.chest).addScaledVector(_kvR,Math.cos(th)*.42*rs).addScaledVector(_kvF,Math.sin(th)*.42*rs+.08*rs).addScaledVector(_kvS,-.05*rs),rw); }   // a bident sweep (27g)
+  // the shoulders turn with the blow (twist about the spine)
+  const ct=Math.cos(tw), st=Math.sin(tw);
+  _raR.copy(_kvR).multiplyScalar(ct).addScaledVector(_kvF,st); _raF.copy(_kvF).multiplyScalar(ct).addScaledVector(_kvR,-st);
+  RJ.sR.copy(RJ.chest).addScaledVector(_raR,.075*rs); RJ.sL.copy(RJ.chest).addScaledVector(_raR,-.075*rs);
+  const loc=(v,out,o)=>out.copy(o||RJ.chest).addScaledVector(_raR,v[0]*rs).addScaledVector(_kvS,v[1]*rs).addScaledVector(_raF,v[2]*rs);
+  // the weapon's direction, then both arms onto their targets by two-bone IK
+  _kvD.set(0,0,0).addScaledVector(_raR,A.wd[0]).addScaledVector(_kvS,A.wd[1]).addScaledVector(_raF,A.wd[2]); if(_kvD.lengthSq()<1e-6) _kvD.copy(_kvF); _kvD.normalize();
+  const t=u.lanceTgt&&u.lanceTgt.alive&&k>0?u.lanceTgt:null;
+  if(t){ _kvT.subVectors(t.j.chest,RJ.hR); const l=_kvT.length(); if(l>.3){ _kvT.multiplyScalar(1/l); if(_kvT.dot(_kvF)>.3) _kvD.lerp(_kvT,k).normalize(); } }
+  loc(A.rh,_kvT); _kvP.copy(RJ.sR).addScaledVector(_kvS,-1*rs).addScaledVector(_raR,.5*rs).addScaledVector(_raF,-.4*rs);
   ik2(RJ.sR,_kvT,.32*rs,.32*rs,_kvP,RJ.eR,RJ.hR);
-  _kvT.copy(RJ.chest).addScaledVector(_kvR,-.05*rs).addScaledVector(_kvS,-.3*rs).addScaledVector(_kvF,.3*rs);
-  _kvP.copy(RJ.sL).addScaledVector(_kvS,-1*rs).addScaledVector(_kvR,-.5*rs).addScaledVector(_kvF,-.2*rs);
-  if(RM&&RM.m==='shield') _kvT.lerp(_kvA.copy(RJ.chest).addScaledVector(_kvF,.36*rs).addScaledVector(_kvS,.16*rs).addScaledVector(_kvR,.02*rs),rw);   // the shield up before him
+  if(A.two) _kvT.copy(RJ.hR).addScaledVector(_kvD,-.17*rs); else loc(A.lh,_kvT);
+  _kvP.copy(RJ.sL).addScaledVector(_kvS,-1*rs).addScaledVector(_raR,-.5*rs).addScaledVector(_raF,-.2*rs);
   ik2(RJ.sL,_kvT,.32*rs,.32*rs,_kvP,RJ.eL,RJ.hL);
   // legs round the barrel
   for(const [hip,kn,ft,sd] of [[RJ.hipL,RJ.kL,RJ.fL,-1],[RJ.hipR,RJ.kR,RJ.fR,1]]){
     _kvT.copy(RJ.pelvis).addScaledVector(_kvR,sd*R.legW*s).addScaledVector(_kvU,-.56*rs).addScaledVector(_kvF,.05*rs);
     _kvP.copy(hip).addScaledVector(_kvF,1.2*rs).addScaledVector(_kvR,sd*.8*rs);
     ik2(hip,_kvT,.445*rs,.445*rs,_kvP,kn,ft); }
-  // the lance: level and a little down at rest, onto the target as it thrusts
-  _kvD.copy(_kvF).setY(0); if(_kvD.lengthSq()<1e-4) _kvD.copy(u.fwdW); _kvD.normalize().addScaledVector(UP,-.08).addScaledVector(_kvR,.03).normalize();   // level, whatever the mount's pitch
-  const t=u.lanceTgt&&u.lanceTgt.alive&&k>0?u.lanceTgt:null;
-  if(t){ _kvT.subVectors(t.j.chest,RJ.hR); const l=_kvT.length(); if(l>.3){ _kvT.multiplyScalar(1/l); if(_kvT.dot(_kvF)>.3) _kvD.lerp(_kvT,k).normalize(); } }
-  if(RM&&RM.m==='raise'){ _kvA.copy(_kvF).setY(0); if(_kvA.lengthSq()<1e-4) _kvA.copy(u.fwdW); _kvA.normalize().multiplyScalar(.5).addScaledVector(UP,-.86).normalize(); _kvD.lerp(_kvA,rw).normalize(); }
-  if(RM&&RM.m==='sweep'){ const th=lerp(-.2,2.4,RM.ph); _kvA.set(0,0,0).addScaledVector(_kvR,Math.cos(th)).addScaledVector(_kvF,Math.sin(th)); _kvA.y=-.15; _kvA.normalize(); _kvD.lerp(_kvA,rw).normalize(); }
   return _kvD;
 }
 // helmet, plate and the trappings (also drawn on a thrown rider's corpse: directionless pieces only)
@@ -138,11 +136,11 @@ function drawRiderArmor(J,rs,kind,team,R,U,F){
 }
 function drawRider(u){
   if(!u.alive||!u.cr||!riderOf(u)||(u.cloak&&u.alive)) return;
-  const R=riderOf(u), rs=R.rs, d=riderPose(u), chaos=R.kind==='chaos', team=u.team, tm=TEAM[team]||TEAM[0];
+  const R=riderOf(u), rs=R.rs, d=riderPose(u), chaos=R.kind==='chaos', team=u.team, tm=TEAM[team]||TEAM[0]; (u.rdW||(u.rdW=new V3())).copy(d);
   if(R.kind==='hades'){ hxDrawRider(u,R,d); armDraw(u,RJ,rs,_kvF,_kvR,false); return; }   // the lord of the underworld (27g)
   const elf=!chaos&&facOf(team)==='wild';
   drawFigure(RJ,rs,chaos?RC.cbody:elf?WILD_BODY[0]:tm.body,1,_kvF,null,false,false);
-  if(elf) elfDress(RJ,rs,u.id||0,'rider',_kvF,_kvR); else drawRiderArmor(RJ,rs,R.kind,team,_kvR,_kvU,_kvF);   // a Woodland Wyvern Rider is an elf (36c)
+  if(elf){ ELF_ARM.helm=armHas(u,'helm'); ELF_ARM.cape=armHas(u,'cape'); elfDress(RJ,rs,u.id||0,'rider',_kvF,_kvR); ELF_ARM.helm=ELF_ARM.cape=false; } else drawRiderArmor(RJ,rs,R.kind,team,_kvR,_kvU,_kvF);   // a Woodland Wyvern Rider is an elf (36c)
   // lance
   _kvA.copy(RJ.hR).addScaledVector(d,-.8*rs); _kvB.copy(RJ.hR).addScaledVector(d,2.25*rs);
   cyl(_kvA,_kvB,.026*rs,chaos?RC.clance:RC.wood,limbIM);
@@ -154,7 +152,7 @@ function drawRider(u){
     _kvM.makeBasis(_kvR,d,_kvT.crossVectors(_kvR,d).normalize()); _kvQ.setFromRotationMatrix(_kvM);
     _kvP.copy(_kvB).addScaledVector(d,-.28*rs).addScaledVector(_kvU,.07*rs); blob(_kvP,_kvQ,.008*rs,.17*rs,.07*rs,tm.acc.color); }
   // the Order knight's kite shield on his left forearm
-  if(!chaos){ _kvM.makeBasis(_kvR,_kvU,_kvF); _kvQ.setFromRotationMatrix(_kvM);
+  if(!chaos&&!armHas(u,'offhand')){ _kvM.makeBasis(_kvR,_kvU,_kvF); _kvQ.setFromRotationMatrix(_kvM);
     _kvP.copy(RJ.eL).lerp(RJ.hL,.45).addScaledVector(_kvR,-.08*rs).addScaledVector(_kvU,-.02*rs);
     blob(_kvP,_kvQ,.022*rs,.2*rs,.15*rs,tm.acc.color); _kvT.copy(_kvP).addScaledVector(_kvU,-.16*rs); blob(_kvT,_kvQ,.02*rs,.12*rs,.075*rs,tm.acc.color);
     _kvT.copy(_kvP).addScaledVector(_kvR,-.022*rs); sph(_kvT,.035*rs,RC.steel,jointIM); }

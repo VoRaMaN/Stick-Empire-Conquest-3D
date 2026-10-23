@@ -693,3 +693,22 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .armory .arm-items small{font-size:11px;opacity:.8}
 
 .sfx-cats h4{margin:10px 0 4px;font-size:13px;opacity:.8}.sfx-cats .row{display:flex;align-items:center;gap:10px;margin:4px 0}.sfx-cats .row span{min-width:84px;font-size:13px}.sfx-cats input{flex:1}
+
+/* formation editor (41c) */
+.forms-ov{z-index:60}
+.forms-card{max-width:560px;width:calc(100% - 32px);max-height:calc(100vh - 40px);overflow-y:auto}
+.fm-row{display:flex;align-items:center;gap:10px;margin:8px 0;flex-wrap:wrap}
+.fm-row>label,.fm-row>span:first-child{min-width:84px;opacity:.85}
+.fm-row select{flex:1;min-width:0;padding:6px 8px;border-radius:8px;background:#2a2016;color:#f5ecd9;border:1px solid rgba(245,236,217,.25);font:inherit}
+.fm-prev{width:100%;height:170px;border-radius:10px;display:block;margin:8px 0}
+.fm-types{display:grid;gap:6px;margin:8px 0}
+.fm-t{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.fm-t b{font-weight:600;font-size:.92em}
+.pills.sm button{padding:4px 9px;font-size:.82em}
+.pills button[aria-pressed="true"]{background:#e2ae35;color:#1e160e}
+.pills button[disabled]{opacity:.45}
+.fm-act{margin-top:10px}
+.arm-trade{border-top:1px solid rgba(245,236,217,.15);margin-top:8px;padding-top:6px}
+.arm-trade .arm-row span{opacity:.8;min-width:70px}
+.arm-trade select{flex:1;min-width:0;padding:5px 8px;border-radius:8px;background:#2a2016;color:#f5ecd9;border:1px solid rgba(245,236,217,.25);font:inherit}
+.forms-card .pills button[aria-selected="true"]{background:#e2ae35;color:#1e160e}

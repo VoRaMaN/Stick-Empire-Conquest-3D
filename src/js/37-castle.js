@@ -368,7 +368,7 @@ function openDoor(b,hold){ const D=b.door; if(!D) return; if(D.goal<1){ D.goal=1
 function exitPath(b,team,u){
   const P=[], add=(lx,z,y)=>P.push(new V3(cwx(team,lx),y||0,z));
   const fz=clamp(GATE_Z+rand(-1.6,1.6),3.6,8.4);
-  if(b.id==='aerie'){ add(b.bx+1.5,-8.5,1); add(-8,-2,1); add(2,fz-4,1); add(6,rand(-6,6),1); return P; }
+  if(b.id==='aerie'&&u&&u.fl){ add(b.bx+1.5,-8.5,1); add(-8,-2,1); add(2,fz-4,1); add(6,rand(-6,6),1); return P; }   // flyers leave by the roof hatch (a Hawk Archer by the door)
   if(b.row===0){ add(b.bx,4.7); add(-3.6,GATE_Z+rand(-1,1)); }
   else { const al=b.bx>-12?ALLEYS[0]:b.bx>-19?ALLEYS[1]:ALLEYS[2]; add(b.bx,-4.6); add(al,-4.6); add(al,4.8); add(-3.6,GATE_Z+rand(-1,1)); }
   add(1.4,fz); add(4.6,clamp(fz+rand(-3,3),-12,12));
@@ -377,16 +377,17 @@ function exitPath(b,team,u){
 function emerge(b,type){
   const team=b.team, C=CASTLES[team];
   let lx=b.bx, z=(b.door&&b.door.z!==undefined?b.door.z:(b.row?-6:3))-(type==='giant'?1.5:.45), gy;
-  if(b.id==='aerie'){ z=-10; gy=CGY[team]+b.roofY-1.1; }
+  const roof=b.id==='aerie'&&!!TYPES[type].flyer;
+  if(roof){ z=-10; gy=CGY[team]+b.roofY-1.1; }
   const opt={}; if(gy!==undefined) opt.gy=gy;
   const s=researchScale(team,type); if(s!==1) opt.s=TYPES[type].s*s;
   const u=makeUnit(type,team,cwx(team,lx),z,opt); u.isUnit=true; u.inCastle=true; units.push(u); assignRegiment(u);
   researchApplyUnit(u);
   if(team===myTeam()&&!game.classicMix&&({knight:1,giant:1,cerberus:1,hades:1})[type]) alertPush(tName(type,team)+' ready','good',u.pos.x,u.pos.z,'tr'+u.id);
-  u.face=u.faceGoal=b.id==='aerie'?(team?-Math.PI/2:Math.PI/2):0;
+  u.face=u.faceGoal=roof?(team?-Math.PI/2:Math.PI/2):0;
   const pts=exitPath(b,team,u), sp=u.T.speed*(type==='giant'?1.15:.92); u.bornT=game.time;
   u.script={pts,i:0,speed:sp,then:leaveCastle};
-  if(b.id==='aerie'){ u.fl.takeT=.15; u.fl.mode='ground'; }
+  if(roof&&u.fl){ u.fl.takeT=.15; u.fl.mode='ground'; }
   if(game.stance) assignSlots(team);
   if(team===myTeam()){ if(type==='giant') narrate('giantUnleashed',25); }
   if(NET.host||NET.rec) netCapNew(u,1,b);
