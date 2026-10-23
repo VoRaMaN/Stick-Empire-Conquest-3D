@@ -579,6 +579,82 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .cwl.sel{background:rgba(255,211,107,.9);color:#1c140c;text-shadow:none}
 .cw-tip{position:fixed;left:0;top:0;z-index:6;pointer-events:none;background:rgba(14,10,6,.9);border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-size:12px;display:flex;flex-direction:column;gap:1px}
 .cw-tip em{color:#ffd36b;font-style:normal}
+
+/* ---------- command HUD (41b): abilities, groups, alerts, the queue, tooltips, pings, radial menu ---------- */
+:root{--uiS:1}
+.dock,#hudBattle,.abbar,.grpbar,.qpanel,.alerts,.bpanel,.pingb{zoom:var(--uiS)}
+.big-text .dock,.big-text #hudBattle,.big-text .abbar,.big-text .grpbar,.big-text .qpanel,.big-text .alerts,.big-text .bpanel,.big-text .utip,.big-text .results .card{font-size:118%}
+.big-text .chip .s,.big-text .rgname span,.big-text .hint{font-size:13.5px}
+.in-menu .abbar,.in-menu .grpbar,.in-menu .qpanel,.in-menu .alerts,.in-menu .pingb,.in-menu .utip,.in-menu .radial,
+.cw-on .abbar,.cw-on .grpbar,.cw-on .qpanel,.cw-on .alerts,.cw-on .pingb,.cw-on .utip,.cw-on .radial{display:none!important}
+.abbar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--dockH,120px) + 8px);display:flex;gap:6px;align-items:stretch;z-index:4;pointer-events:auto}
+.ab-hero{display:flex;align-items:center;gap:7px;background:var(--panel-hi);border:1px solid var(--gold);border-radius:12px;padding:5px 9px 5px 5px;cursor:pointer;min-width:150px}
+.ab-por{width:38px;height:38px;border-radius:9px;background:rgba(0,0,0,.35) center/contain no-repeat;flex:none;box-shadow:inset 0 0 0 1px var(--line)}
+.ab-ht{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.ab-ht b{font-family:var(--display);font-weight:500;font-size:18px;line-height:1;letter-spacing:.05em;color:var(--gold);text-transform:uppercase;white-space:nowrap}
+.ab-hp,.ab-xp{display:block;height:5px;border-radius:3px;background:rgba(0,0,0,.45);overflow:hidden}
+.ab-hp i{display:block;height:100%;background:#58d05a;border-radius:3px}.ab-xp{height:3px}.ab-xp i{display:block;height:100%;background:var(--gold)}
+.ab-ht small{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.ab{position:relative;width:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:5px 4px;overflow:hidden}
+.ab.hero{border-color:rgba(228,178,58,.55)}
+.ab .ico{font-size:21px;line-height:1}.ab .nm{font-size:10.5px;line-height:1.1;text-align:center;color:var(--ink);font-weight:600}
+.ab kbd{position:absolute;top:2px;right:4px;font:600 9px var(--body);color:var(--muted)}
+.ab .cd{position:absolute;inset:0;background:conic-gradient(rgba(10,7,4,.72) calc(var(--cd,0)*360deg),transparent 0);pointer-events:none}
+.ab .cdt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:24px;color:#fff;text-shadow:0 1px 2px #000;pointer-events:none}
+.ab.ready{box-shadow:inset 0 0 0 1px var(--gold),0 0 10px rgba(228,178,58,.35)}
+.ab:disabled{opacity:.45}
+.grpbar{position:absolute;left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(var(--dockH,120px) + 8px);display:flex;gap:5px;z-index:4;pointer-events:auto}
+.grp{display:flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:3px 7px 3px 4px;font-size:12px;font-variant-numeric:tabular-nums}
+.grp kbd{font:700 12px var(--body);color:var(--gold);min-width:9px}
+.grp .gi{width:22px;height:22px;background:center/contain no-repeat}
+.grp.on{border-color:var(--gold);background:var(--panel-hi)}
+.grp.add{font-size:17px;padding:2px 10px;color:var(--gold)}
+.alerts{position:absolute;right:calc(env(safe-area-inset-right,0px) + 12px);top:calc(var(--hudBottom,120px) + 4px);display:flex;flex-direction:column;align-items:flex-end;gap:5px;z-index:5;pointer-events:none;max-width:min(320px,70vw)}
+.alert{pointer-events:auto;display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel-hi);border-radius:10px;padding:6px 9px;font-size:12.5px;text-align:left;animation:alertIn .25s ease-out}
+.alert i{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.alert em{font-style:normal;font-size:10.5px;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-left:2px}
+.alert:disabled{cursor:default;opacity:.92}
+.alert.k-danger{border-color:rgba(232,86,106,.7)}.alert.k-danger i{background:#ff5a4f}
+.alert.k-good i{background:#58d05a}.alert.k-hero{border-color:rgba(228,178,58,.7)}.alert.k-hero i{background:var(--gold)}
+.alert.k-ping{border-color:#7fe0ff}.alert.k-ping i{background:#7fe0ff}
+@keyframes alertIn{from{opacity:0;transform:translateX(16px)}}
+.calm .alert{animation:none}
+.qpanel{position:absolute;right:calc(env(safe-area-inset-right,0px) + 12px);bottom:calc(var(--dockH,120px) + 8px);width:210px;display:flex;flex-direction:column;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:7px 8px;z-index:4;pointer-events:auto}
+.qpanel h4{margin:0 0 1px;font:600 10.5px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.qrow{display:grid;grid-template-columns:26px 1fr auto;grid-template-rows:auto 4px;column-gap:6px;align-items:center;border:0;background:transparent;padding:2px 0;text-align:left}
+.qi{grid-row:1/3;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,.3) center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:14px}
+.qn{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:4px;align-items:baseline}
+.qn b{color:var(--gold);font-weight:700}.qn small{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.qt{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.qb{grid-column:2/4;height:4px;border-radius:2px;background:rgba(0,0,0,.45);overflow:hidden}.qb i{display:block;height:100%;background:var(--gold)}
+.qrow.res .qb i{background:#8fb8ff}
+.pingb{position:absolute;right:calc(env(safe-area-inset-right,0px) + 12px);top:calc(var(--hudBottom,120px) - 34px);border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 10px;font-size:12px;z-index:5;pointer-events:auto}
+.pingb[aria-pressed="true"]{border-color:#7fe0ff;color:#7fe0ff}
+.ping-arm #c{cursor:crosshair}
+.utip{position:fixed;z-index:9;pointer-events:none;max-width:260px;background:var(--panel-hi);border:1px solid var(--gold);border-radius:10px;padding:7px 10px;display:flex;flex-direction:column;gap:3px;font-size:12px;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+.utip b{font-family:var(--display);font-weight:500;font-size:20px;line-height:1;letter-spacing:.05em;color:var(--gold);text-transform:uppercase}
+.utip em{font-style:normal;font-size:11px;color:var(--muted)}
+.utip .tside{font-size:11px;color:var(--muted)}.utip .tside.own{color:#9fe09a}.utip .tside.foe{color:#ff9a9a}.utip .tside.neu{color:#d8c08a}
+.utip .thp{display:block;height:5px;border-radius:3px;background:rgba(0,0,0,.45);overflow:hidden}.utip .thp i{display:block;height:100%;background:#58d05a}
+.utip .tst{color:#ffcf7a;font-size:11px}
+.radial{position:fixed;width:0;height:0;z-index:10}
+.radial button{position:absolute;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;border:1px solid var(--gold);background:var(--panel-hi);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;box-shadow:0 3px 12px rgba(0,0,0,.45)}
+.radial button span{font-size:19px;line-height:1}.radial button small{font-size:9px;line-height:1.05;max-width:52px;text-align:center}
+.radial .rc{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px rgba(0,0,0,.35)}
+.rcharts{display:flex;flex-direction:column;gap:6px;margin:4px 0 10px;position:relative}
+.rcharts figure{margin:0}.rcharts figcaption{font-size:11px;color:var(--muted);margin-bottom:2px}
+.rcharts canvas{width:100%;height:120px;display:block}
+.rc-x{margin:0;font-size:12.5px;line-height:1.45;color:var(--ink)}.rc-x b{color:var(--gold)}
+.rc-legend{display:flex;gap:14px;font-size:12px;color:var(--ink)}.rc-legend i{display:inline-block;width:16px;height:2px;vertical-align:middle;margin-right:5px}
+.rc-legend i.dash{background:none;border-top:2px dashed;height:0}
+.rc-tip{position:absolute;pointer-events:none;background:var(--panel-hi);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:11px;display:flex;flex-direction:column;gap:1px;z-index:2}
+.rc-tip b{font-size:12px}
+.ui-mobile .grpbar{bottom:auto;top:calc(var(--hudBottom,120px) + 4px)}
+.ui-mobile .qpanel{display:none}
+.ui-mobile .abbar{bottom:calc(var(--dockH,110px) + 4px)}
+.ui-mobile .ab{width:54px}.ui-mobile .ab .nm{font-size:9.5px}.ui-mobile .ab kbd{display:none}
+.ui-mobile .ab-hero{min-width:0}.ui-mobile .ab-ht small{display:none}
+@media (max-width:560px){ .ab-hero .ab-ht{display:none} .ab-hero{padding:4px} }
 </style>
 </head>
 <body>
@@ -637,6 +713,14 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
   </div>
 
   <div id="selBox" hidden></div>
+  <!-- command HUD (41b): alerts, the build queue, control groups, the ability bar, tooltips, the phone's radial menu -->
+  <div id="alerts" class="alerts" hidden aria-live="polite"></div>
+  <div id="qPanel" class="qpanel" hidden aria-label="Training and research"></div>
+  <div id="grpBar" class="grpbar" hidden aria-label="Control groups"></div>
+  <div id="abBar" class="abbar" hidden aria-label="Abilities"></div>
+  <button id="pingB" class="pingb" hidden aria-pressed="false" title="Ping the map for your team (P)">◉ Ping</button>
+  <div id="utip" class="utip" hidden role="tooltip"></div>
+  <div id="radial" class="radial" hidden></div>
   <footer class="dock" id="dock">
     <div class="hint" id="hint">Drag to move the camera · pinch to zoom · twist two fingers to turn · tap your soldiers to command them</div>
     <div class="chips" id="chips"></div>
@@ -801,6 +885,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
       <h2 id="resH" class="card-h big">Victory</h2>
       <p class="card-sub" id="resSub"></p>
       <dl class="stats" id="resStats"></dl>
+      <div class="rcharts" id="resCharts" hidden></div>
       <div class="stack">
         <button id="rAgain" class="mm primary"><span>Play again</span></button>
         <button id="rMenu" class="mm small">Main menu</button>
@@ -820,6 +905,10 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
       </div>
       <small class="opt-note">PC: full-size panels for a mouse and a big screen. Mobile: a compact layout for touch screens that keeps the battlefield clear, in portrait and landscape.</small>
       <label class="tg tg-n" for="sRts"><span>RTS controls<small>PC: drag a box to select regiments, right-click to order, WASD or the screen edges to scroll, Ctrl/Shift+1–9 for groups. Phones: Box and All buttons.</small></span><input id="sRts" type="checkbox" checked></label>
+      <div class="sl"><label for="sUiScale">Interface size</label><output id="oUiScale">100%</output><input id="sUiScale" type="range" min="0.8" max="1.5" step="0.05" value="1"><small>Scales the battle panels, the dock and the command bars.</small></div>
+      <label class="tg" for="sBigText">Larger text <input id="sBigText" type="checkbox"></label>
+      <label class="tg tg-n" for="sCblind"><span>Colour-blind colours<small>Blue against orange for the two armies on the map, the health bars, the zones and the battle report.</small></span><input id="sCblind" type="checkbox"></label>
+      <label class="tg tg-n" for="sCalm"><span>Calm mode<small>No screen shake, no flashes and no freeze-frames on heavy blows.</small></span><input id="sCalm" type="checkbox"></label>
     </section>
     <section class="set-sec">
       <h3>Graphics</h3>
@@ -861,6 +950,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
         </div>
       </div>
       <label class="tg" for="sAuto">Auto-spawn soldiers for my army <input id="sAuto" type="checkbox" checked></label>
+      <label class="tg tg-n" for="sHeroes"><span>Generals<small>Each army fields a hero who levels up, inspires the troops around him and has two abilities (T and Y).</small></span><input id="sHeroes" type="checkbox" checked></label>
     </section>
     <section class="set-sec">
       <h3>More</h3>
@@ -897,8 +987,13 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
         <li><b>Cleric</b> heals the wounded and cures poison and fire. Keep him behind the line.</li>
         <li><b>Wizard</b> throws exploding blasts, calls lightning, raises an Electric Wall and sprays poison. Fragile up close.</li>
         <li><b>Wing Archer</b> flies over the battle on mechanical wings and shoots crossbow bolts, some of them burning. Swords and spears can't reach him; only archers, wizards and other wing archers can.</li>
+        <li><b>Knight</b> rides a barded warhorse with a couched lance. The fastest Order unit: runs down archers and casters, but Spartans stop his charge cold.</li>
         <li><b>Giant</b> smashes whole groups. Slow and expensive.</li>
       </ul>
+      <h3>Your general</h3>
+      <p>Each army takes the field with a hero: the Order <b>General</b> or the Chaos <b>Warlord</b>. Kills level him up to level 5. Soldiers near him hit harder and keep their nerve. His two abilities sit in the bar above the dock (keys T and Y): Rally Cry heals and rallies the troops around him, Shield Wall cuts the damage they take, the Warlord's Meteor smashes the thickest enemy crowd. If he falls he is back 90 seconds later.</p>
+      <h3>Commands</h3>
+      <p>Shift + right-click queues waypoints: a dotted path shows the march on the ground and on the map. U and I use the selected regiments' specials (Rage, Vanish, Mass Heal, Spur). Ctrl + 1–9 makes a control group; the group bar at the bottom left picks them. Alerts on the right show what happened where: click one (or press L) to look. P pings the map for a 2v2 teammate. Hover over a soldier to see his health, armour and what he is strong and weak against. On a phone, hold a finger on the field for a radial menu of orders.</p>
       <h3>Orders</h3>
       <p><b>Defend</b> forms ranks by your statue. <b>Hold line</b> forms them where the army stands. <b>Charge</b> sends everyone at the enemy; soldiers who sprint in hit harder.</p>
       <p>Tap one of your soldiers to command his whole regiment: tap the ground to march there, tap an enemy to attack, or use the buttons that appear.</p>
@@ -925,6 +1020,6 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 <script src="online-config.js"></script>
 <script src="vendor/supabase.46a3cc6618.js"></script>
 <script src="vendor/three.min.js"></script>
-<script src="game.1e389025c9.js"></script>
+<script src="game.3c90c36d3e.js"></script>
 </body>
 </html>
