@@ -155,14 +155,14 @@ Object.assign(CMW,{straw:new THREE.MeshLambertMaterial({color:'#7a8a3a'}),gold:n
   cloth:['#2e5a1e','#4a5a12'].map(c=>new THREE.MeshLambertMaterial({color:c,side:THREE.DoubleSide})),trim:['#8ab84a','#b8a83a'].map(c=>new THREE.MeshLambertMaterial({color:c}))}); return CMW; }
 const KEEP_W={id:'castle',name:'Elder Hall',emb:8,desc:'Rangers on the walls, income and the statue'};
 const BUILDINGS_WILD=[
-  {id:'barracks',name:'Warden Hall',emb:1,x:-6.5,row:0,w:5.6,d:6,trains:['sword'],desc:'Thorn Wardens, quick blades of the clans'},
-  {id:'range',name:'Ranger Lodge',emb:3,x:-13.5,row:0,w:5.6,d:6,trains:['archer'],desc:'Sylvan Rangers: fast archers who shoot quicker'},
-  {id:'dojo',name:'Shade Grove',emb:2,x:-20.5,row:0,w:5.6,d:6,trains:['ninja'],desc:'Shade Stalkers'},
-  {id:'prison',name:'Heartwood Hollow',emb:7,x:-28,row:0,w:7,d:6,trains:['giant'],desc:'Ancient Treants, woken from the old wood'},
-  {id:'mine',name:'Forager Lodge',emb:0,x:-6.5,row:1,w:5.6,d:8,trains:['miner'],desc:'Foragers who bring in gold'},
-  {id:'mage',deco:true,x:-13.5,row:1,w:5.6,d:8},
-  {id:'temple',name:'Sacred Grove',emb:6,x:-20.5,row:1,w:5.6,d:8,trains:['cleric'],desc:'Grove Druids who heal and, with Call of the Forest, summon Treants'},
-  {id:'aerie',deco:true,x:-28,row:1,w:7,d:8},
+  {id:'barracks',name:'Sentinel Hall',emb:1,x:-6.5,row:0,w:5.6,d:6,trains:['sword','spear','knight'],desc:'Veteran Sentinels, Spear Hunters and Woodland Wyvern Riders'},
+  {id:'range',name:'Ranger Lodge',emb:3,x:-13.5,row:0,w:5.6,d:6,trains:['archer'],desc:'Elf Archers: fast, and they shoot quicker'},
+  {id:'dojo',name:'Shade Grove',emb:2,x:-20.5,row:0,w:5.6,d:6,trains:['ninja'],desc:'Twin-Blade Assassins'},
+  {id:'prison',name:'Heartwood Hollow',emb:7,x:-28,row:0,w:7,d:6,trains:['giant'],desc:'Ancient Guardians, woken from the old wood'},
+  {id:'mine',name:'Forager Lodge',emb:0,x:-6.5,row:1,w:5.6,d:8,trains:['miner'],desc:'Elf Foragers who bring in gold'},
+  {id:'mage',name:'Moonwell',emb:5,x:-13.5,row:1,w:5.6,d:8,trains:['wizard'],desc:'Nature Mages'},
+  {id:'temple',name:'Sacred Grove',emb:6,x:-20.5,row:1,w:5.6,d:8,trains:['cleric'],desc:'Druids who heal and, with Call of the Forest, summon Treants'},
+  {id:'aerie',name:'Eagle Eyrie',emb:4,x:-28,row:1,w:7,d:8,trains:['wing'],desc:'Eagle Scouts, launched from the roof'},
 ];
 BUILDINGS_OF.wild=BUILDINGS_WILD;
 

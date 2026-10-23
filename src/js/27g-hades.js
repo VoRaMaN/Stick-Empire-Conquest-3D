@@ -9,7 +9,7 @@ const HX_VAR=[
   {id:'toxic',name:'Toxic',fire:'#8aff3a',hot:'#eaff9a',fur:'#28361c',body:'#1a2412'},
   {id:'shadow',name:'Shadow',fire:'#b06aff',hot:'#ead8ff',fur:'#141018',body:'#120c18'}];
 const HX_FUR={}, HX_COL={};
-function hxVar(u){ if(u.hxV!==undefined) return HX_VAR[u.hxV]; const pref=settings.hadesVar; u.hxV=pref!==undefined&&pref>=0&&pref<4?pref:((u.id||0)*3+u.team)%4; return HX_VAR[u.hxV]; }
+function hxVar(u){ if(u.hxV!==undefined) return HX_VAR[u.hxV]; const pref=settings.hadesVar; u.hxV=pref!==undefined&&pref>=0&&pref<4?pref:Math.abs((u.id||0)*3+u.team)%4; return HX_VAR[u.hxV]; }
 // the mount in the variant's coat: the Cerberus parts with their fur swapped
 function hxCoat(u){ const V=hxVar(u); if(!V.fur||!u.G||u.hxCoated) return; u.hxCoated=true;
   const M=HX_FUR[V.id]||(HX_FUR[V.id]=new THREE.MeshPhongMaterial({color:V.fur,specular:'#2a2a2a',shininess:10}));

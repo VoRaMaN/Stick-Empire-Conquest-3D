@@ -10,7 +10,7 @@ function updateUnit(u,dt){
   else { u.desired.set(0,0,0); if(u.atkTarget&&u.atkTarget.isUnit&&u.atkTarget.alive&&!u.fin) u.faceGoal=Math.atan2(u.atkTarget.pos.x-u.pos.x,u.atkTarget.pos.z-u.pos.z); }
   if(!u.action&&u.state==='ok'&&!u.routing&&!u.defQ&&!u.script&&!u.fin&&u.spd<.15&&Math.hypot(u.desired.x,u.desired.z)<.1&&u.isUnit){
     u.idleT=(u.idleT===undefined?rand(1.5,6):u.idleT)-dt;
-    if(u.idleT<=0){ u.idleT=rand(4,10); if(!nearestEnemy(u,9)&&!(game.mode==='duel'&&game.duel&&game.duel.q)){ const L=IDLES[u.type]; play(u,L[Math.floor(Math.random()*L.length)]); u.fwdScale=0; } }
+    if(u.idleT<=0){ u.idleT=rand(4,10); if(!nearestEnemy(u,9)&&!(game.mode==='duel'&&game.duel&&game.duel.q)){ const L=(u.T.wild&&IDLES_WILD[u.type])||IDLES[u.type]; play(u,L[Math.floor(Math.random()*L.length)]); u.fwdScale=0; } }
   }
   if(u.type==='sword'&&!game.classicMix&&game.mode==='battle'&&!NET.guest) rageTick(u,dt);
   if(u.rootT>game.time) u.desired.set(0,0,0); else if(u.spurT>game.time) u.desired.multiplyScalar(1.4); else if(u.rallyT>game.time) u.desired.multiplyScalar(1.12);

@@ -23,7 +23,7 @@ const RESEARCH={
     {id:'poison',name:'Poison Spray',lv:1,cost:[[400,200]],t:[20],desc:'Wizards spray poison over packed enemies'},
   ],
   temple:[{id:'cure',name:'Cure',lv:1,cost:[[300,150]],t:[16],desc:'Clerics cleanse poison and burning'},
-    {id:'grove',name:'Call of the Forest',lv:1,cost:[[450,150]],t:[24],desc:'Grove Druids can summon Treants out of the ground (ability bar, I): two in a forest, for 40 s',fac:'wild'}],
+    {id:'grove',name:'Call of the Forest',lv:1,cost:[[450,150]],t:[24],desc:'Druids can summon Treants out of the ground (ability bar, I): two in a forest, for 40 s',fac:'wild'}],
   aerie:[{id:'blazing',name:'Blazing Bolts',lv:1,cost:[[500,200]],t:[22],desc:'Wing Archers loose burning bolts'}],
   prison:[{id:'growth',name:'Giant Growth',lv:2,cost:[[600,200],[900,300]],t:[24,32],desc:'Giants grow 12% bigger and 30% tougher'}],
   // Chaos (prices in souls)

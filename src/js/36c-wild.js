@@ -3,19 +3,23 @@
    sticks, leaf crowns) and their own strengths, kept in a per-unit copy of the unit sheet (u.T inherits TYPES[type]):
      Forager (worker) · Thorn Warden (fast blades) · Sylvan Ranger (fast archers that shoot quicker) ·
      Shade Stalker (ninja) · Grove Druid (healer; with Call of the Forest she summons Treants) · Ancient Treant.
-   Wildlands soldiers regrow wounds out of the fight (faster in a forest), and their general, the Warden-Chief, calls
+   Wildlands soldiers regrow wounds out of the fight (faster in a forest), and their general, the Elven Captain, calls
    Bloom (a wave of healing) and Grasping Roots (an enemy crowd is held fast). Their castle is the Order's plan in
    mossy stone with green roofs (37c). The economy runs on gold, like the Order's. */
-const WILD=['miner','sword','archer','ninja','cleric','giant'];
+const WILD=['miner','sword','spear','archer','ninja','cleric','wizard','wing','knight','giant'];
 const WILD_BODY=[new THREE.Color('#1c3a1c'),new THREE.Color('#2e3814')];
 const BARK=new THREE.Color('#4a3622');
 const WILD_DEF={
-  miner:{name:'Forager',pl:'Foragers'},
-  sword:{name:'Thorn Warden',pl:'Thorn Wardens',hp:125,speed:4.8,cost:130},
-  archer:{name:'Sylvan Ranger',pl:'Sylvan Rangers',speed:4.3,cd:1.4,hp:80,cost:260},
-  ninja:{name:'Shade Stalker',pl:'Shade Stalkers'},
-  cleric:{name:'Grove Druid',pl:'Grove Druids',hp:115,cost:380},
-  giant:{name:'Ancient Treant',pl:'Ancient Treants',hp:1250,speed:1.35,cost:1150,bark:1},
+  miner:{name:'Elf Forager',pl:'Elf Foragers'},
+  sword:{name:'Veteran Sentinel',pl:'Veteran Sentinels',hp:125,speed:4.8,cost:130},
+  spear:{name:'Spear Hunter',pl:'Spear Hunters',hp:220,speed:3,armor:.25,cost:340},
+  archer:{name:'Elf Archer',pl:'Elf Archers',speed:4.3,cd:1.4,hp:80,cost:260},
+  ninja:{name:'Twin-Blade Assassin',pl:'Twin-Blade Assassins',dmg:24},
+  cleric:{name:'Druid',pl:'Druids',hp:115,cost:380},
+  wizard:{name:'Nature Mage',pl:'Nature Mages'},
+  wing:{name:'Eagle Scout',pl:'Eagle Scouts',speed:4},
+  knight:{name:'Woodland Wyvern Rider',pl:'Woodland Wyvern Riders'},
+  giant:{name:'Ancient Guardian',pl:'Ancient Guardians',hp:1250,speed:1.35,cost:1150,bark:1},
 };
 const WILD_T={};
 for(const t in WILD_DEF){ const D=WILD_DEF[t], T=Object.create(TYPES[t]); for(const k in D) if(k!=='pl'&&k!=='bark') T[k]=D[k];
@@ -25,14 +29,14 @@ WILD_T.sapling=Object.assign(Object.create(TYPES.giant),{name:'Treant',hp:460,dm
 FACTIONS.wild={id:'wild',name:'Wildlands Confederacy',roster:WILD,worker:'miner',garrison:'archer',garrisonAtk:'shoot',statue:'sword',money:'gold',
   team:['Verdant Host','Thornwood Clans'],cap:['Elderwood','Thornwood'],
   start:['miner','miner','sword','sword','archer','archer','archer','cleric'],
-  mix:['sword','archer','sword','archer','ninja','cleric','sword','archer','archer','sword','cleric','ninja','giant','archer','sword','archer','cleric','sword','ninja','archer']};
+  mix:['sword','archer','sword','archer','ninja','cleric','spear','archer','archer','sword','wizard','cleric','ninja','giant','archer','sword','wing','archer','cleric','sword','ninja','archer','spear','knight']};
 ECON.wild=1;
 // the unit sheet a soldier of this army fights with, and the names the HUD shows
 function unitT(type,team){ return team!==undefined&&team<2&&WILD_DEF[type]&&facOf(team)==='wild'?WILD_T[type]:TYPES[type]; }
 const tName=(t,team)=>unitT(t,team===undefined?myTeam():team).name;
 const tPl=(t,team)=>facOf(team===undefined?myTeam():team)==='wild'&&WILD_DEF[t]?WILD_DEF[t].pl:(TYPE_PL[t]||TYPES[t].name+'s');
 // the general's shopping list
-function wildPick(){ const r=Math.random(); return r<.27?'sword':r<.58?'archer':r<.7?'ninja':r<.86?'cleric':r<.94?'sword':'giant'; }
+function wildPick(){ const r=Math.random(); return r<.22?'sword':r<.48?'archer':r<.57?'ninja':r<.68?'cleric':r<.76?'spear':r<.83?'wizard':r<.88?'wing':r<.94?'knight':'giant'; }
 
 /* ---------- regrowth: out of the fight a Wildlands soldier heals (twice as fast in a forest) ---------- */
 function wildTick(dt){
@@ -57,9 +61,30 @@ function summonTreants(team,x,z,n){
   return out;
 }
 
-/* ---------- the look: a crown of leaves; the Treant grows branches and moss ---------- */
+/* ---------- the look: elves. Natural skin, long hair, pointed ears, green hoods and cloaks; the Guardian grows branches and moss ---------- */
 const LEAF=[new THREE.Color('#4f8a2a'),new THREE.Color('#6aa83a'),new THREE.Color('#3a6a22')], MOSS=new THREE.Color('#5a7a2a');
-const _wl1=new V3(),_wl2=new V3(),_wl3=new V3();
+const ELF_SKIN=['#efcfab','#ddb08a','#bf8e66','#93633f'].map(c=>new THREE.Color(c)), ELF_HAIR=['#e8dfc4','#c9a25a','#6a4022','#2a1a10','#b8c4c8'].map(c=>new THREE.Color(c));
+const ELF_HOOD=[new THREE.Color('#2f5a2a'),new THREE.Color('#3e4a1e'),new THREE.Color('#24402e')], ELF_CLOAK=new THREE.Color('#2a4422'), ELF_STEEL=new THREE.Color('#c8ced6'), ELF_GOLD=new THREE.Color('#d8b04a');
+const ELF_ROLE={miner:'plain',sword:'sentinel',spear:'hunter',archer:'hood',ninja:'assassin',cleric:'druid',wizard:'mage',wing:'hood',rider:'rider'};
+const _wl1=new V3(),_wl2=new V3(),_wl3=new V3(),_wl4=new V3(),_wlq=new THREE.Quaternion(),_wlm=new THREE.Matrix4();
+// drawn over a stick figure's head and hands: j = its joints, F/R its forward and right
+function elfDress(j,s,id,role,F,R){
+  id=Math.abs(id|0); const U=_wl2.subVectors(j.head,j.neck).normalize(), skin=ELF_SKIN[(id*7)%4], hair=ELF_HAIR[(id*3+1)%5];
+  sph(j.head,.2*s,skin,sphIM);
+  sph(_wl1.copy(j.head).addScaledVector(F,-.055*s).addScaledVector(U,.035*s),.2*s,hair,sphIM);   // hair over the crown and back
+  if(role!=='assassin'&&role!=='rider'){ _wl3.copy(j.neck).addScaledVector(F,-.13*s).addScaledVector(U,-.12*s); cyl(_wl1.copy(j.head).addScaledVector(F,-.12*s),_wl3,.085*s,hair,limbIM); }
+  for(const sd of [-1,1]){ _wl1.copy(j.head).addScaledVector(R,sd*.175*s).addScaledVector(F,-.01*s); _wl3.copy(_wl1).addScaledVector(R,sd*.12*s).addScaledVector(U,.14*s).addScaledVector(F,-.07*s);
+    cyl(_wl1,_wl3,.026*s,skin,limbIM); sph(_wl1,.034*s,skin,jointIM); }
+  sph(j.hL,.068*s,skin,jointIM); sph(j.hR,.068*s,skin,jointIM);
+  const hood=ELF_HOOD[id%3];
+  if(role==='hood'||role==='assassin'||role==='hunter'){ sph(_wl1.copy(j.head).addScaledVector(F,-.07*s).addScaledVector(U,.03*s),.218*s,hood,sphIM); }
+  if(role==='sentinel'||role==='hunter'||role==='rider'){ for(const sh of [j.sL,j.sR]){ sph(_wl1.copy(sh).addScaledVector(U,.03*s),.1*s,LEAF[2],jointIM); } }
+  if(role==='sentinel'||role==='rider'||role==='mage'||role==='druid'){ _wl1.copy(j.head).addScaledVector(F,.17*s).addScaledVector(U,.09*s); glowAt(_wl1,.025*s,role==='mage'?'#9aff9a':'#ffe08a');
+    for(const sd of [-1,1]){ _wl3.copy(j.head).addScaledVector(R,sd*.15*s).addScaledVector(U,.1*s); cyl(_wl1,_wl3,.012*s,ELF_GOLD,limbIM); } }
+  if(role==='hood'||role==='druid'||role==='mage'||role==='sentinel'||role==='assassin'){   // the cloak
+    _wl1.copy(j.neck).lerp(j.pelvis,.55).addScaledVector(F,-.15*s); _wl3.subVectors(j.neck,j.pelvis).normalize(); _wl4.crossVectors(_wl3,R).normalize();
+    _wlm.makeBasis(R,_wl3,_wl4); _wlq.setFromRotationMatrix(_wlm); blob(_wl1,_wlq,.19*s,.4*s,.025*s,role==='druid'||role==='mage'?LEAF[0]:ELF_CLOAK); }
+}
 function drawWildFx(u){
   const j=u.j, s=u.s; _wl2.subVectors(j.head,j.neck).normalize();
   if(u.type==='giant'){
@@ -69,5 +94,8 @@ function drawWildFx(u){
       sph(_wl3.copy(sh).addScaledVector(_wl2,.06*s),.1*s,MOSS,jointIM); }
     for(let k=0;k<5;k++){ const a=k/5*TAU; _wl1.copy(j.head).addScaledVector(_wl2,.14*s); _wl1.x+=Math.cos(a)*.11*s; _wl1.z+=Math.sin(a)*.11*s; sph(_wl1,.06*s,LEAF[k%3],jointIM); }
     return; }
-  for(let k=0;k<5;k++){ const a=k/5*TAU+u.id; _wl1.copy(j.head).addScaledVector(_wl2,.12*s); _wl1.x+=Math.cos(a)*.15*s; _wl1.z+=Math.sin(a)*.15*s; _s.set(.06*s,.025*s,.09*s); _m.compose(_wl1,_qi,_s); put(jointIM,LEAF[k%3]); }
+  if(!u.elfDone){ u.elfDone=1; if(u.G&&u.G.h){ dropRoot(u.G.h); u.G.h=null; } }   // no helmets, hats or beards on an elf
+  const role=ELF_ROLE[u.type]||'plain';
+  elfDress(j,s,u.id||0,role,u.fwdW,u.rightW);
+  if(role==='assassin'&&u.alive){ _wl1.copy(j.hL).addScaledVector(u.wLw,.58*s); cyl(j.hL,_wl1,.014*s,ELF_STEEL,limbIM); }   // the second blade
 }

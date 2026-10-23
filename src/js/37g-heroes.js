@@ -10,7 +10,7 @@
    ALERTS and PINGS feed the HUD (41b): what happened and where, one click to look; a ping marks a spot for your
    2v2 teammate. The BATTLE RECORD samples both armies every 5 s for the end-of-battle report.
    Nothing here runs in the classic regression battle. */
-const HERO_DEF={order:{type:'sword',name:'General',ab:['rally','wall'],col:'#ffd36a'},chaos:{type:'dread',name:'Warlord',ab:['howl','meteor'],col:'#ff6a2a'},wild:{type:'sword',name:'Warden-Chief',ab:['bloom','roots'],col:'#9aff6a'}};
+const HERO_DEF={order:{type:'sword',name:'General',ab:['rally','wall'],col:'#ffd36a'},chaos:{type:'dread',name:'Warlord',ab:['howl','meteor'],col:'#ff6a2a'},wild:{type:'sword',name:'Elven Captain',ab:['bloom','roots'],col:'#9aff6a'}};
 const HERO_AB={
   rally:{name:'Rally Cry',cd:45,key:'T',ico:'⚑',desc:'Allies within 14 m heal 20%, rally if they were running and fight 25% harder and faster for 8 s'},
   wall:{name:'Shield Wall',cd:50,key:'Y',ico:'⛨',desc:'Allies within 12 m take 40% less damage for 8 s'},

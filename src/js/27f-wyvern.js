@@ -72,7 +72,7 @@ function wyPart(name,s,k,u,coat){
   g.scale.setScalar(s*(k||1)); freezeGear(g); return g; }
 const WY_NTRI=10;
 function buildWyvern(u,G){
-  wyInit(); const s=u.s, coat=WY_COATS[(u.id*5+2)%WY_COATS.length], P=(n,k)=>wyPart(n,s,k,u,coat);
+  wyInit(); const s=u.s, coat=facOf(u.team)==='wild'?WY_COATS[4]:WY_COATS[Math.abs(u.id*5+2)%WY_COATS.length], P=(n,k)=>wyPart(n,s,k,u,coat);
   G.c_pel=P('wypel'); G.c_abd=P('wyabd'); G.c_tor=P('wytor'); G.c_nek=P('wynek'); G.c_skl=P('wyskl',1.15); G.c_jaw=P('wyjaw',1.15);
   for(let i=0;i<3;i++) G['c_wn'+i]=P('wyneck');
   for(const sd of ['L','R']){ G['c_ua'+sd]=P('wyua'); G['c_fa'+sd]=P('wyfa'); G['c_hd'+sd]=P('wyhd'); G['c_th'+sd]=P('wyth'); G['c_sh'+sd]=P('wysh'); G['c_mt'+sd]=P('wymt'); G['c_ft'+sd]=P('wyft');
