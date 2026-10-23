@@ -170,6 +170,9 @@ function soulHit(S,o){
   damage(o,S.dmg,S.src,dir,S.big?2.4:.9,S.big?1:.3,false,o.j.chest.clone());
   if(S.rend) curse(o,S.src);
   soulBurst(S.p,S.big?1.3:.7); crSfx('soulHit','zap',S.p,.75);
+  if(!S.col){ // the Harvester's soul shatters: a crimson flash and its ghost streams up out of the victim
+    flashes.push({p:S.p.clone(),r0:.1,r1:S.big?.8:.5,t:0,life:.25,col:'#a0204a'}); ring(o.pos,S.big?1:.6,'#8a4ac0');
+    puffDir(o.j.chest,UP,S.big?7:4,1.6,.35,'#b88ae0',.05,1); puffDir(o.j.chest,UP,2,1,.5,'#3a1048',.12,1.1); }
   if(S.big) for(const q of units){ if(q===o||!q.alive||q.team===S.team) continue; if(q.j.chest.distanceTo(S.p)<1.4) damage(q,S.dmg*.4,S.src,null,1.2); }
 }
 function castWail(u,e){
@@ -257,7 +260,7 @@ Object.assign(PREY,{harvester:3,thrall:1.4});
 function updateChaos(dt){
   for(let i=souls.length-1;i>=0;i--){ const S=souls[i]; S.age+=dt;
     if(S.t&&(S.t.alive||S.t.isStatue)){ const P=aimPoint(S.t,_ch3); if(P){ const sp=S.v.length(); _ch2.subVectors(P,S.p).normalize().multiplyScalar(sp); S.v.lerp(_ch2,Math.min(1,dt*5)); } }
-    S.p.addScaledVector(S.v,dt); if(Math.random()<dt*28) puff(S.p,1,.07,.25,Math.random()<.5?'#9a5cff':'#ff3a6a');
+    S.p.addScaledVector(S.v,dt); if(S.col&&Math.random()<dt*28) puff(S.p,1,.07,.25,'#5dffc8');   // the Harvester's soul sheds its own smoke (26c)
     let hit=null, gone=S.age>(RL.on?5:2.4)||S.p.y<H(S.p.x,S.p.z)+.08;
     if(!gone) for(const o of units){ if(!o.alive||o.team===S.team) continue; if(o.j.chest.distanceTo(S.p)<.45*o.s){ hit=o; break; } }
     if(hit){ soulHit(S,hit); souls.splice(i,1); continue; }

@@ -265,7 +265,7 @@ function endCloak(u){ if(!u.cloak) return; u.cloak=null; setGearVis(u,true); puf
 /* ---------- spells ---------- */
 const orbs=[], flashes=[], walls=[], clouds=[], zaps=[], beams=[];
 const glowMat=new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false});
-const glowIM=new THREE.InstancedMesh(new THREE.SphereGeometry(1,12,8),glowMat,900);
+const glowIM=new THREE.InstancedMesh(new THREE.SphereGeometry(1,12,8),glowMat,3000);   // room for many spell trails at once
 const boltIM=new THREE.InstancedMesh(new THREE.CylinderGeometry(1,1,1,5,1,true),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}),2400);
 const ghostMat=new THREE.MeshPhongMaterial({color:'#ffffff',specular:'#4a4540',shininess:38,transparent:true,opacity:.2,depthWrite:false});
 const GHOST={limb:new THREE.InstancedMesh(limbIM.geometry,ghostMat,600),torso:new THREE.InstancedMesh(torsoIM.geometry,ghostMat,150),sph:new THREE.InstancedMesh(sphIM.geometry,ghostMat,150),joint:new THREE.InstancedMesh(jointIM.geometry,ghostMat,900)};

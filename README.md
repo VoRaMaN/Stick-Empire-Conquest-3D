@@ -109,7 +109,8 @@ castle, in packs of up to three.
   pairs players who picked the same map. The online screens show **who is online right now** (browsing, in a
   lobby, in battle) and how many open quick-match rooms each map has.
 - Spell shots look like their caster: the Wizard's arcane orb (white core, circling motes, comet tail), his
-  meteor (fire and smoke), the Soul Harvester's flickering crimson soul, the Oracle's twin teal spirit lights in a
+  meteor (fire and smoke), the Soul Harvester's wailing soul (a pale skull-face with burning red eyes and a gaping mouth, a cage of
+  lights and a twisting violet-to-crimson ghost tail), the Oracle's twin teal spirit lights in a
   helix, and the Bomber's fizzing bomb with sparks and smoke.
 - Fog of war also hides glows, sparks, smoke, fire, blood, arrows and spells where you can't see.
 - Long arrow shots arc high like a real volley: past ~18 m the archer aims up and the arrow climbs (about 20–25 m
