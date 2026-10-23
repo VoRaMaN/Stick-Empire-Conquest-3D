@@ -79,7 +79,7 @@ const lanceK=u=>u.lanceT>0?Math.sin(Math.PI*clamp(1-u.lanceT/LANCE_T,0,1)):0;
 function riderOf(u){ return u.T.horse?RIDER.knight:u.rider?RIDER[u.type]||RIDER.cerberus:null; }
 // pose the rider on the mount's back (world space, into RJ); returns the lance direction in _kvD
 function riderPose(u){
-  const R=riderOf(u), cr=u.cr, j=u.j, s=u.s, rs=R.rs, k=lanceK(u), RM=u.T.wyvern?wyRiderMode(u):null, rw=RM?RM.w:0;
+  const R=riderOf(u), cr=u.cr, j=u.j, s=u.s, rs=R.rs, k=lanceK(u), RM=u.T.wyvern?wyRiderMode(u):u.T.hadesRider?hxRiderMode(u):null, rw=RM?RM.w:0;
   _kvF.subVectors(j.chest,j.pelvis); if(_kvF.lengthSq()<1e-6) _kvF.copy(u.fwdW); _kvF.normalize();
   _kvR.crossVectors(_kvF,cr.n).normalize(); _kvU.crossVectors(_kvR,_kvF).normalize();
   const lean=.08+.22*k+(RM&&RM.m==='charge'?.32*rw:RM&&RM.m==='stand'?.5*rw:RM&&RM.m==='raise'?-.12*rw:0);
@@ -93,6 +93,7 @@ function riderPose(u){
   _kvT.copy(RJ.chest).addScaledVector(_kvR,.13*rs).addScaledVector(_kvS,-.2*rs+.07*k*rs).addScaledVector(_kvF,(.14+.36*k)*rs);
   _kvP.copy(RJ.sR).addScaledVector(_kvS,-1*rs).addScaledVector(_kvR,.5*rs).addScaledVector(_kvF,-.4*rs);
   if(RM&&RM.m==='raise') _kvT.lerp(_kvA.copy(RJ.head).addScaledVector(_kvS,.34*rs).addScaledVector(_kvF,.06*rs).addScaledVector(_kvR,.1*rs),rw);   // the lance high, point down
+  if(RM&&RM.m==='sweep'){ const th=lerp(-.2,2.4,RM.ph); _kvT.lerp(_kvA.copy(RJ.chest).addScaledVector(_kvR,Math.cos(th)*.42*rs).addScaledVector(_kvF,Math.sin(th)*.42*rs+.08*rs).addScaledVector(_kvS,-.05*rs),rw); }   // a bident sweep (27g)
   ik2(RJ.sR,_kvT,.32*rs,.32*rs,_kvP,RJ.eR,RJ.hR);
   _kvT.copy(RJ.chest).addScaledVector(_kvR,-.05*rs).addScaledVector(_kvS,-.3*rs).addScaledVector(_kvF,.3*rs);
   _kvP.copy(RJ.sL).addScaledVector(_kvS,-1*rs).addScaledVector(_kvR,-.5*rs).addScaledVector(_kvF,-.2*rs);
@@ -108,11 +109,12 @@ function riderPose(u){
   const t=u.lanceTgt&&u.lanceTgt.alive&&k>0?u.lanceTgt:null;
   if(t){ _kvT.subVectors(t.j.chest,RJ.hR); const l=_kvT.length(); if(l>.3){ _kvT.multiplyScalar(1/l); if(_kvT.dot(_kvF)>.3) _kvD.lerp(_kvT,k).normalize(); } }
   if(RM&&RM.m==='raise'){ _kvA.copy(_kvF).setY(0); if(_kvA.lengthSq()<1e-4) _kvA.copy(u.fwdW); _kvA.normalize().multiplyScalar(.5).addScaledVector(UP,-.86).normalize(); _kvD.lerp(_kvA,rw).normalize(); }
+  if(RM&&RM.m==='sweep'){ const th=lerp(-.2,2.4,RM.ph); _kvA.set(0,0,0).addScaledVector(_kvR,Math.cos(th)).addScaledVector(_kvF,Math.sin(th)); _kvA.y=-.15; _kvA.normalize(); _kvD.lerp(_kvA,rw).normalize(); }
   return _kvD;
 }
 // helmet, plate and the trappings (also drawn on a thrown rider's corpse: directionless pieces only)
 function drawRiderArmor(J,rs,kind,team,R,U,F){
-  const chaos=kind==='chaos', A=chaos?PL_IRON:RC.steel, B=chaos?PL_DARK:RC.steelD, rt=.068*rs*1.45;
+  const chaos=kind==='chaos'||kind==='hades', A=chaos?PL_IRON:RC.steel, B=chaos?PL_DARK:RC.steelD, rt=.068*rs*1.45;
   cyl(_kvA.copy(J.pelvis).lerp(J.chest,.2),_kvB.copy(J.chest).lerp(J.neck,.3),rt*1.28,A,torsoIM);
   for(const sh of [J.sL,J.sR]){ sph(sh,.085*rs,B,jointIM); }
   for(const [el,ha] of [[J.eL,J.hL],[J.eR,J.hR]]) cyl(_kvA.copy(el).lerp(ha,.15),_kvB.copy(el).lerp(ha,.75),.075*rs,A,limbIM);
@@ -137,6 +139,7 @@ function drawRiderArmor(J,rs,kind,team,R,U,F){
 function drawRider(u){
   if(!u.alive||!u.cr||!riderOf(u)||(u.cloak&&u.alive)) return;
   const R=riderOf(u), rs=R.rs, d=riderPose(u), chaos=R.kind==='chaos', team=u.team, tm=TEAM[team]||TEAM[0];
+  if(R.kind==='hades'){ hxDrawRider(u,R,d); return; }   // the lord of the underworld (27g)
   drawFigure(RJ,rs,chaos?RC.cbody:tm.body,1,_kvF,null,false,false);
   drawRiderArmor(RJ,rs,R.kind,team,_kvR,_kvU,_kvF);
   // lance

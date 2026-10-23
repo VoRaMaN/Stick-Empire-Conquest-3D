@@ -254,9 +254,6 @@ function drawChaos2(){
     else if(u.type==='oracle'){ oracleTip(u,_ch1); const pul=.5+.5*Math.sin(tt*3+u.id); glowAt(_ch1,(.08+.03*pul+.1*(u.soulGlow||0))*s,'#5dffc8');
       _ch1.copy(j.head).addScaledVector(fw,.17*s).addScaledVector(sp,.08*s); glowAt(_ch1,.03*s,'#7dffd6'); }
     else if(u.type==='reaper'){ for(const sd of [-1,1]){ _ch1.copy(j.head).addScaledVector(fw,.14*s).addScaledVector(rw,sd*.06*s).addScaledVector(sp,-.01*s); glowAt(_ch1,.024*s,'#ff2a1a'); } }
-    else if(u.type==='hades'){ for(const sd of [-1,1]){ _ch1.copy(j.head).addScaledVector(fw,.18*s).addScaledVector(rw,sd*.07*s); glowAt(_ch1,.026*s,'#ffcf4a'); }
-      _ch1.copy(j.head).addScaledVector(sp,.25*s); glowAt(_ch1,(.16+.03*Math.sin(tt*9+u.id))*s,'#ff7a1a');
-      if(u.G&&u.G.w&&!u.G.w.dropped){ _ch1.copy(j.hR).addScaledVector(u.wRw,1.75*s); glowAt(_ch1,(.12+.03*Math.sin(tt*14))*s,'#ff8a2a'); if(Math.random()<.25) puff(_ch1,1,.06*s,.8,'#ff9a3a'); }
-      if(Math.random()<.2){ _ch1.copy(u.pos); _ch1.x+=rand(-1.4,1.4); _ch1.z+=rand(-1.4,1.4); _ch1.y=H(_ch1.x,_ch1.z)+.1; puff(_ch1,1,.12,.9,Math.random()<.5?'#ff7a1a':'#3a2a22'); } }
+    else if(u.type==='hades') hxFx(u);   // Hades rides Cerberus now (27g)
   }
 }

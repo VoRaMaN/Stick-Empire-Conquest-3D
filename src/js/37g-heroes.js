@@ -166,6 +166,12 @@ const UNIT_AB={
   dive:{name:'Talon Dive',key:'⇧K',ico:'⤓',types:{knight:1},cd:20,desc:'Climbs, then drops talons-first onto the thickest crowd: heavy damage, knocks them flat'},
   storm:{name:'Wingstorm',key:'⇧N',ico:'≋',types:{knight:1},cd:18,desc:'Three great wingbeats hurl everyone near away and break their attacks'},
   screech:{name:"Predator's Screech",key:'⇧M',ico:'!',types:{knight:1},cd:26,desc:'Shakes the nerve of enemies near (morale, 35% slower for 4 s) and spurs allies on'},
+  // Hades on Cerberus (27g)
+  infernal:{name:'Infernal Strike',key:'J',ico:'☄',types:{hades:1},cd:16,desc:'Cerberus leaps into the crowd and Hades drives the bident down: a blast of fire, 2.2× damage, knocked flat'},
+  rage:{name:'Cerberus Rage',key:'K',ico:'✹',types:{hades:1},cd:28,desc:'For 8 s: 30% faster, attacks 35% quicker and 25% harder, the heads spit fire'},
+  drain:{name:'Soul Drain',key:'N',ico:'❂',types:{hades:1},cd:24,desc:'Hades draws the souls out of everyone within 7 m for 2.5 s and heals by half of it'},
+  shadow:{name:'Shadow Step',key:'M',ico:'◑',types:{hades:1},cd:18,desc:'Steps through the shadows behind the most valuable enemy within 16 m; the next blow strikes double'},
+  apocalypse:{name:'Apocalypse',key:'B',ico:'☠',types:{hades:1},cd:60,desc:'The bident raised to the sky: nine pillars of fire fall on the thickest crowd'},
   assault:{name:'Aerial Assault',key:'⇧B',ico:'✈',types:{knight:1},cd:35,desc:'A strafing run low over the enemy line, burning and raking everything beneath'},
 };
 function regAbilities(r){ const out=[]; if(!r) return out; for(const id in UNIT_AB){ const A=UNIT_AB[id]; if(!A.types[r.type]) continue; if(A.res&&!hasRes(r.team,A.res)) continue; if(A.fac&&facOf(r.team)!==A.fac) continue; out.push(id); } return out; }
@@ -180,7 +186,8 @@ function regAbility(team,r,ab){
     else if(ab==='vanish'){ if(!u.cloak&&!u.action){ play(u,'shinobi'); u.fwdScale=0; u.cdShin=24; n++; } }
     else if(ab==='heal'){ if(!u.action){ u.healT=u; u.massCd=game.time+15; play(u,'massHeal'); u.fwdScale=0; u.healCd=1.1; n++; } }
     else if(ab==='spur'){ u.spurT=game.time+5; n++; }
-    else if(WY_AB[ab]){ if(u.T.wyvern&&wyCast(u,ab)) n++; } }
+    else if(WY_AB[ab]){ if(u.T.wyvern&&wyCast(u,ab)) n++; }
+    else if(HX_AB[ab]){ if(u.T.hadesRider&&hxCast(u,ab)) n++; } }
   if(ab==='summon'){ const c=regCenter(r), forest=RL.on&&typeof inForest==='function'&&inForest(c.x,c.z); summonTreants(r.team,c.x+DIRX[r.team]*2,c.z,forest?2:1); n++; }
   const b=regAlive(r)[0]; if(b) callout(b,A.name+'!','#ffd36a');
   if(NET.host||NET.rec) netCapEvent(['ab',r.id,ab]);

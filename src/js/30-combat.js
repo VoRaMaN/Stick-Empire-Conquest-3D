@@ -38,7 +38,7 @@ function damage(t,amt,src,dirW,kb,up,blocked,at){
   if(t.invuln||NET.guest) return;   // online guest: health only ever comes from the host
   if(amt>0) t.hurtAt=game.time;   // Chaos regeneration waits for the wounds to stop
   if(src&&src.team!==undefined&&src.team<2){ t.lastHitTeam=src.team; t.lastHitBy=src; }
-  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)*vetDealt(src)*vetTaken(t)*formTaken(t,src))*(RL.on?rlDmgMul(src)*rlSysMul(t,src):1)*(game.classicMix?1:heroMul(t,src)*wyMul(t,src)); if(game.mode==='battle'&&!game.classicMix){ alertHit(t,src); fightMark(t); if(src&&src.team<2&&game.stats&&game.stats.dmg) game.stats.dmg[src.team]+=amt; } if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
+  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)*vetDealt(src)*vetTaken(t)*formTaken(t,src))*(RL.on?rlDmgMul(src)*rlSysMul(t,src):1)*(game.classicMix?1:heroMul(t,src)*wyMul(t,src)*hxMul(t,src)); if(game.mode==='battle'&&!game.classicMix){ alertHit(t,src); fightMark(t); if(src&&src.team<2&&game.stats&&game.stats.dmg) game.stats.dmg[src.team]+=amt; } if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
   if(t.hp<=0){ kill(t,dirW.clone().multiplyScalar(2.5*(kb||1)).add(new V3(0,1.8+(kb||1)*.6+(up||0),0)),{}); }
 }
 function kill(t,impWorld,opt){

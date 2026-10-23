@@ -451,6 +451,7 @@ function crawlerTick(u,dt){
     if(k>=1){ delete u.gy; u.emerge=null; u.emerging=false; for(const l of crLimbs(u)){ l.pos.y=groundAt(u,l.pos.x,l.pos.z); l.t=-1; }
       if(u.script) u.script.speed=u.T.speed*.85; } }
   if(u.T.wyvern) wyTick(u,dt);   // flight and abilities (27f)
+  if(u.T.hadesRider) hadesTick(u,dt);   // Hades on Cerberus (27g)
   if(u.T.horse||u.rider){ riderTick(u,dt); if(u.T.horse) return; }
   u.hissT=(u.hissT===undefined?rand(4,14):u.hissT)-dt;
   if(u.hissT<=0){ u.hissT=rand(6,16); if(u.target&&Math.random()<.6) crSfx(Math.random()<.5?'crHiss':'crScreech',null,u.j.head,.45); }
