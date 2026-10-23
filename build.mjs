@@ -156,7 +156,7 @@ const walk = d => { for (const e of fs.readdirSync(d, { withFileTypes: true })) 
   if (e.isDirectory()) walk(p); else files.push(path.relative(WEB, p).split(path.sep).join('/')); } };
 walk(WEB);
 const version = hash(files.sort().map(f => f + fs.readFileSync(path.join(WEB, f)).length + hash(fs.readFileSync(path.join(WEB, f)))).join('|'));
-const sw = read('sw.js').replace('__VERSION__', version).replace('__FILES__', JSON.stringify(['./', ...files.filter(f => f !== 'index.html')]));
+const sw = read('sw.js').replace('__VERSION__', version).replace('__FILES__', JSON.stringify(['./', ...files.filter(f => f !== 'index.html' && !f.startsWith('music/'))]));
 fs.writeFileSync(path.join(WEB, 'sw.js'), sw);
 fs.writeFileSync(path.join(WEB, 'version.json'), JSON.stringify({ version: pkg.version, build: version }));
 

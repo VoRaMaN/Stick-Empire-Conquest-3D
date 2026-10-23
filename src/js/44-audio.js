@@ -255,6 +255,8 @@ const semi=s=>Math.pow(2,s/12);
 function deg(dg){ const o=Math.floor(dg/7), i=((dg%7)+7)%7; return SCALE[i]+12*o; }
 function scheduleMusic(){
   const c=audio.ctx; if(!c||c.state!=='running') { if(c) MUS.next=c.currentTime+.1; return; }
+  if(THEME.on){ MUS.next=c.currentTime+.1; if(audio.mus) audio.mus.dg.gain.setTargetAtTime(0,c.currentTime,.6); return; }   // the recorded score is playing (44b)
+  if(audio.mus&&audio.mus.dg.gain.value<.3) audio.mus.dg.gain.setTargetAtTime(.32,c.currentTime,1.5);
   MUS.intensity+=(MUS.target-MUS.intensity)*.04;
   const I=MUS.intensity, s8=60/MUS.bpm/2;            // eighth notes
   const now=c.currentTime; if(MUS.next<now-.5) MUS.next=now+.05;
@@ -278,6 +280,7 @@ function musicStinger(win){ if(!audio.ready) return; audio.duck=.25; applyVolume
 // per-frame: ambience level and music intensity from the state of the battle
 function updateAudio(){
   if(!audio.ready) return;
+  themeTick();
   audio.frameN=0;
   let near=0, fighting=0;
   if(game.mode==='battle') for(const u of units){ if(!u.alive||!u.isUnit) continue; if(u.action&&!u.action.c.idle){ fighting++; if(Math.hypot(u.pos.x-cam.target.x,u.pos.z-cam.target.z)<10+cam.dist*.5) near++; } }

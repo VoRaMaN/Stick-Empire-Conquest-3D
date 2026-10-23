@@ -250,7 +250,7 @@ function mapSteer(u,dt){
 // wading: the river slows everyone on foot, and splashes
 function mapWade(u){ if(u.type==='ninja'&&dnNight()>.5){ u.desired.x*=1.15; u.desired.z*=1.15; }   // ninjas run freely in the dark
   if(u.fl) return; const dep=RL.WL-H(u.pos.x,u.pos.z); if(dep<.05) return;
-  u.wadeT=game.time+.3; const k=Math.min(.5,1-Math.min(.5,dep*.65));   // wading a ford: half speed and exposed (37f) u.desired.x*=k; u.desired.z*=k;
+  u.wadeT=game.time+.3; const k=Math.min(.5,1-Math.min(.5,dep*.65)); u.desired.x*=k; u.desired.z*=k;   // wading a ford: half speed and exposed (37f)
   if(u.spd>.8&&Math.random()<.06) puff(new V3(u.pos.x,RL.WL+.05,u.pos.z),1,.18,.6,'#d6e6e8'); }
 
 /* ---------- capture zones ---------- */

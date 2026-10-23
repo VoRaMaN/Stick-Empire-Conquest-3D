@@ -11,7 +11,8 @@ function clearAll(){
 }
 function resetBattle(opt){
   opt=opt||{};
-  clearAll(); game.over=0; game.winner=undefined; game.mana=[150,150]; game.mission=null;   // a story mission sets itself up again after this (40c)
+  clearAll(); game.paused=false; game.over=0; game.winner=undefined;   // a new battle never starts frozen (a stale pause from the campaign map stuck the Riverlands)
+  game.mana=[150,150]; game.mission=null;   // a story mission sets itself up again after this (40c)
   ensureCastles(); syncTeamNames();
   const BS=BATTLE_SIZES[game.size], n=BS.start, g0=opt.gold||[BS.gold,BS.gold];
   game.gold=[g0[0]*econ(0),g0[1]*econ(1)];   // a Chaos treasury counts in souls (see ECON)

@@ -44,7 +44,8 @@ function cleanRegs(){
     if(o.kind==='move'){ const a=regAlive(r); if(a.every(u=>{const s=regSlot(r,u); return Math.hypot(s.x-u.pos.x,s.z-u.pos.z)<1.3;})) o.kind='hold'; }
   }
 }
-function regSlot(r,u){
+function regSlot(r,u){ const p=regSlot0(r,u); return RL.on?rlDry(p):p; }   // Riverlands: a place in the river moves to the bank (37e)
+function regSlot0(r,u){
   const a=regAlive(r).sort((p,q)=>p.id-q.id), i=Math.max(0,a.indexOf(u)), n=a.length, o=r.order;
   if(r.form&&r.form!=='line') return formSlot(r,u,a,i,n,FORM[r.type]||{cols:5,gap:1.4,depth:1.4},o);   // wedge, shield wall, loose order, square (37f)
   const F=FORM[r.type], cols=Math.min(n,F.cols), gap=F.gap, row=Math.floor(i/cols), col=i%cols, inRow=Math.min(cols,n-row*cols);
@@ -75,7 +76,7 @@ function regBrain(u,o){
 // quiet: an order given on another screen (online) moves the soldiers without flashing a marker on this one
 function orderMove(r,p,quiet){
   const c=regCenter(r); let a=Math.atan2(p.x-c.x,p.z-c.z); if(Math.hypot(p.x-c.x,p.z-c.z)<2.5) a=r.team?-Math.PI/2:Math.PI/2;
-  r.order={kind:'move',x:clamp(p.x,MAP.fx0+2,MAP.fx1-2),z:clamp(p.z,MAP.fz0+1,MAP.fz1-1),a}; if(!quiet) marker.at(r.order.x,r.order.z,'#ffd36b');
+  r.order={kind:'move',x:clamp(p.x,MAP.fx0+2,MAP.fx1-2),z:clamp(p.z,MAP.fz0+1,MAP.fz1-1),a}; if(RL.on) rlDry(r.order); if(!quiet) marker.at(r.order.x,r.order.z,'#ffd36b');
 }
 function orderAttack(r,tr,unit,quiet){ r.order={kind:'attack',target:tr||null,unit:tr?null:unit}; const c=tr?regCenter(tr):unit.pos; if(!quiet) marker.at(c.x,c.z,'#ff5a4f'); }
 function orderHold(r,quiet){ const c=regCenter(r); r.order={kind:'hold',x:c.x,z:c.z,a:r.team?-Math.PI/2:Math.PI/2}; if(!quiet) marker.at(c.x,c.z,'#ffd36b'); }

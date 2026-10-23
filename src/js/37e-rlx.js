@@ -19,33 +19,58 @@ function rlRoute(u,dt){
   const d=u.desired, sp=Math.hypot(d.x,d.z), px=u.pos.x, pz=u.pos.z, rx=rlRiverX(pz), side=px<rx?-1:1;
   let X=u.rlX;
   if(sp<.15) return;
+  if(u.rlNo>game.time) return;   // just gave up on a crossing: walk straight for a moment
   const G=rlGoal(u); if(!G){ u.rlX=null; return; }
   const gside=G.x<rlRiverX(G.z)?-1:1;                               // which bank he is really going to
   if(!X){
     if(rlDeck(px,pz)>-1e8||gside===side) return;                     // on a bridge already, or no need to cross
     const gx=G.x, gz=G.z;
     let best=0, bc=1e9;
-    rlCrossings().forEach((B,i)=>{ const A=side<0?B.w:B.e, E=side<0?B.e:B.w, c=(Math.hypot(A[0]-px,A[1]-pz)+Math.hypot(gx-E[0],gz-E[1]))*(B.ford?1.5:1); if(c<bc){ bc=c; best=i; } });   // a ford is slow: only worth it when much shorter
-    X=u.rlX={b:best,side,ph:0,t:0};
+    const bad=u.rlBad&&u.rlBad.t>game.time?u.rlBad.set:null;
+    rlCrossings().forEach((B,i)=>{ if(bad&&bad.has(i)) return; const A=side<0?B.w:B.e, E=side<0?B.e:B.w, c=(Math.hypot(A[0]-px,A[1]-pz)+Math.hypot(gx-E[0],gz-E[1]))*(B.ford?1.5:1); if(c<bc){ bc=c; best=i; } });   // a ford is slow: only worth it when much shorter
+    X=u.rlX={b:best,side,ph:0,t:0,best:1e9,bt:0};
   }
-  X.t+=dt; if(X.t>45){ u.rlX=null; return; }
+  X.t+=dt; if(X.t>60){ u.rlX=null; u.rlNo=game.time+3; return; }
   const B=rlCrossings()[X.b], s=X.side, A0x=(s<0?B.w[0]:B.e[0])+B.ax*s*2.5, A0z=(s<0?B.w[1]:B.e[1])+B.az*s*2.5,
     A1x=(s<0?B.e[0]:B.w[0])-B.ax*s*2.5, A1z=(s<0?B.e[1]:B.w[1])-B.az*s*2.5;
   if(X.ph===0){
     if(gside===s){ u.rlX=null; return; }                             // changed his mind: his goal is on this bank now
-    if(Math.hypot(A0x-px,A0z-pz)<1.8) X.ph=1;
+    // at the bridgehead: close to the approach point, or already in the bridge's lane near its end (a crowd can't all stand on one spot)
+    const ex=s<0?B.w[0]:B.e[0], ez=s<0?B.w[1]:B.e[1], al=(px-ex)*B.ax+(pz-ez)*B.az, lat=-(px-ex)*B.az+(pz-ez)*B.ax;
+    if(Math.hypot(A0x-px,A0z-pz)<3.2||rlDeck(px,pz)>-1e8||(Math.abs(al)<4.5&&Math.abs(lat)<(B.wid||6)/2+1.2)){ X.ph=1; X.best=1e9; X.bt=0; }
   }
+  // no headway for 5 s: step onto the bridge if he is at it, else try another crossing (twice at most), else walk on
+  { const wx0=X.ph?A1x:A0x, wz0=X.ph?A1z:A0z, dw=Math.hypot(wx0-px,wz0-pz);
+    if(dw<X.best-.5){ X.best=dw; X.bt=0; } else X.bt+=dt;
+    if(X.bt>5){ X.bt=0; X.best=1e9;
+      if(X.ph===0&&dw<8){ X.ph=1; }
+      else { const RB=u.rlBad&&u.rlBad.t>game.time?u.rlBad:(u.rlBad={set:new Set(),t:0}); RB.set.add(X.b); RB.t=game.time+30; u.rlX=null;
+        if(RB.set.size>2){ RB.set.clear(); u.rlNo=game.time+4; } return; } } }
   const wx=X.ph?A1x:A0x, wz=X.ph?A1z:A0z, dx=wx-px, dz=wz-pz, dd=Math.hypot(dx,dz)||1;
   if(X.ph&&(dd<1.8||(side!==s&&rlDeck(px,pz)<-1e8&&Math.abs(px-rx)>rlRiverW(pz)+1.5))){ u.rlX=null; return; }
-  const v=Math.max(sp,u.T.speed*.75); d.x=dx/dd*v; d.z=dz/dd*v; if(!u.action) u.faceGoal=Math.atan2(dx,dz);
+  const v=Math.max(sp,u.T.speed*.75); let nx=dx/dd, nz=dz/dd;
+  if(X.ph&&B.wid){ // on the way over: keep to the middle of the deck so the crowd files across instead of jamming at the rails
+    const lat=-(px-B.x)*B.az+(pz-B.z)*B.ax, lim=B.wid*.22; if(Math.abs(lat)>lim){ const c=clamp((Math.abs(lat)-lim)*.6,0,.8)*-Math.sign(lat); nx+=-B.az*c; nz+=B.ax*c; const n=Math.hypot(nx,nz)||1; nx/=n; nz/=n; } }
+  d.x=nx*v; d.z=nz*v; if(!u.action) u.faceGoal=Math.atan2(dx,dz);
 }
+// a point in the river (not on a bridge or a ford) moved to the nearer bank: orders and formation places stay walkable
+function rlDry(p){
+  if(!RL.on||!p) return p; const rx=rlRiverX(p.z), W=rlRiverW(p.z)*1.04+.9, dx=p.x-rx;
+  if(Math.abs(dx)>=W||rlDeck(p.x,p.z)>-1e8||rlFordK(p.z)>.45) return p;
+  p.x=rx+(Math.sign(dx)||1)*W; return p; }
+// pushed sideways off a bridge deck: back onto the deck's edge (not to where he stood, which pins a crowd in place)
+function rlDeckClamp(u){
+  for(const B of RL_BRIDGES){ const dx=u.pos.x-B.x, dz=u.pos.z-B.z, s=dx*B.ax+dz*B.az; if(Math.abs(s)>=B.len/2) continue;
+    const q=-dx*B.az+dz*B.ax, lim=B.wid/2-.18; if(Math.abs(q)>B.wid/2+2) continue;
+    const qc=clamp(q,-lim,lim); u.pos.x=B.x+B.ax*s-B.az*qc; u.pos.z=B.z+B.az*s+B.ax*qc; return true; }
+  return false; }
 // where a soldier is really going: his regiment's place, the enemy he is after, his place in the army, or the enemy statue
 function rlGoal(u){
   const ro=u.reg&&game.mode==='battle'?u.reg.order:null;
   if(ro&&(ro.kind==='move'||ro.kind==='hold')) return regSlot(u.reg,u);
+  if(u.T.worker) return u.target&&u.target.alive&&u.target.pos&&Math.hypot(u.target.pos.x-u.pos.x,u.target.pos.z-u.pos.z)<4.5?u.target.pos:null;   // a miner walks to his own mine: an enemy across the river is no reason to head for a bridge
   if(u.target&&u.target.alive&&u.target.pos) return u.target.pos;
   if(ro&&ro.kind==='attack'){ const t=ro.unit&&ro.unit.alive?ro.unit:(ro.target?regAlive(ro.target)[0]:null); if(t) return t.pos; }
-  if(u.T.worker) return null;
   if(u.slot&&typeof u.slot==='object'&&game.stance[u.team]!=='charge') return u.slot;
   const st=statues[1-u.team]; return st&&st.pos?st.pos:null;
 }
@@ -54,7 +79,7 @@ function rlRiverCollide(u){
   if(u.fl&&u.fl.air) return;
   const rx=rlRiverX(u.pos.z), W=rlRiverW(u.pos.z)*1.04, dx=u.pos.x-rx;
   if(Math.abs(dx)>=W||rlDeck(u.pos.x,u.pos.z)>-1e8||rlFordK(u.pos.z)>.45) return;   // bridges and fords
-  if(u.last&&rlDeck(u.last.x,u.last.z)>-1e8){ u.pos.x=u.last.x; u.pos.z=u.last.z; return; }
+  if(u.last&&rlDeck(u.last.x,u.last.z)>-1e8){ if(!rlDeckClamp(u)){ u.pos.x=u.last.x; u.pos.z=u.last.z; } return; }
   const s=u.last?(Math.sign(u.last.x-rlRiverX(u.last.z))||Math.sign(dx)||1):(Math.sign(dx)||1);
   u.pos.x=rx+s*W; rlTouch(u,s,0);
 }

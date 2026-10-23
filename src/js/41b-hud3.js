@@ -249,8 +249,8 @@ function applyAccess(){
 function accessUI(){
   const sc=$('#sUiScale'), so=$('#oUiScale'); if(sc){ sc.value=settings.uiScale||1; if(so) so.textContent=Math.round((settings.uiScale||1)*100)+'%';
     sc.oninput=()=>{ settings.uiScale=+sc.value; if(so) so.textContent=Math.round(settings.uiScale*100)+'%'; applyAccess(); saveSettings(); }; }
-  for(const [id,key] of [['#sBigText','bigText'],['#sCblind','cblind'],['#sCalm','calm'],['#sHeroes','heroes']]){ const el=$(id); if(!el) continue;
-    el.checked=key==='heroes'?settings.heroes!==false:!!settings[key]; el.onchange=()=>{ settings[key]=el.checked; saveSettings(); applyAccess(); }; }
+  for(const [id,key] of [['#sBigText','bigText'],['#sCblind','cblind'],['#sCalm','calm'],['#sHeroes','heroes'],['#sTheme','themeMusic']]){ const el=$(id); if(!el) continue;
+    el.checked=key==='heroes'||key==='themeMusic'?settings[key]!==false:!!settings[key]; el.onchange=()=>{ settings[key]=el.checked; saveSettings(); applyAccess(); }; }
 }
 
 /* ---------- the end-of-battle report: two charts over time and the regiment of the battle ---------- */
@@ -294,6 +294,9 @@ function chartLine(cv,ser,get,me,fmt){
 function hud3Tick(rdt){
   HUD3.t-=rdt; tipTick(rdt);
   if(HUD3.t>0) return; HUD3.t=.1;
+  // a pause nobody can see (no pause screen, no campaign map, no paused replay) is a stale flag: lift it
+  if(game.paused&&game.mode==='battle'&&!CW3.on){ const vis=s=>{ const e=$(s); return e&&!e.hidden; };
+    if(!vis('#pause')&&!vis('#camp')&&!vis('#settings')&&!vis('#help')&&!vis('#tune')&&!vis('#menu')&&!(RPL.play&&RPL.play.paused)&&!vis('#results')){ HUD3.stale=(HUD3.stale||0)+1; if(HUD3.stale>=5){ game.paused=false; HUD3.stale=0; } } else HUD3.stale=0; }
   HUD3.lay=(HUD3.lay||0)+1; if(HUD3.lay%5===0&&hud3On()&&typeof layoutTop==='function') layoutTop();   // the dock grows and shrinks with the regiment bar
   abRender(); grpRender(); qRender(); const al=$('#alerts'); if(ALERTS.length||al&&!al.hidden) alertsRender();
   const pb=$('#pingB'); if(pb) pb.hidden=!hud3On();
