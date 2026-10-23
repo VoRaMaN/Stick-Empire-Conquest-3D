@@ -698,6 +698,17 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .r4-m{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:6px}
 .r4-m span{display:flex;flex-direction:column;gap:1px;font-size:13px}.r4-m small{color:var(--muted);font-size:11.5px}
 .r4-m button{border:1px solid var(--gold);background:var(--panel-hi);border-radius:9px;padding:6px 12px;font-weight:600;color:var(--gold)}
+
+/* the Armory (40d) */
+.armory{max-height:calc(100vh - 150px);overflow:auto}
+.armory.wild{border-top-color:#6aa83a}.armory.wild .vw-fac{color:#9ad86a}
+.armory .arm-row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.armory button{font:inherit;font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--ink);cursor:pointer}
+.armory button[aria-pressed="true"]{background:var(--gold,#e2ae35);color:#1a1408;border-color:transparent}
+.armory button:disabled{opacity:.45;cursor:not-allowed}
+.armory .arm-items{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.armory .arm-items button{text-align:left;display:flex;flex-direction:column;gap:2px}
+.armory .arm-items small{font-size:11px;opacity:.8}
 </style>
 </head>
 <body>
@@ -844,6 +855,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
       <button id="mmCampaign" class="mm"><span>Campaign</span><small id="mmCampaignSub">Conquer the war table: 49 regions</small></button>
       <button id="mmTraining" class="mm"><span>Training</span><small>Learn to command in two minutes</small></button>
       <button id="mmLab" class="mm"><span>Finisher Lab</span><small>140 finishers, 130 charges, every move</small></button>
+      <button id="mmArmory" class="mm"><span>Armory</span><small>Kit out your army: thirteen kinds of gear in your faction's own armoury</small></button>
       <button id="mmViewer" class="mm"><span>Unit Viewer</span><small>Every unit up close, with its story, stats and abilities</small></button>
       <div class="mm-row">
         <button id="mmSettings" class="mm small">Settings</button>
@@ -1080,6 +1092,6 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 <script src="online-config.js"></script>
 <script src="vendor/supabase.46a3cc6618.js"></script>
 <script src="vendor/three.min.js"></script>
-<script src="game.8f70af484b.js"></script>
+<script src="game.35bce69a1d.js"></script>
 </body>
 </html>
