@@ -156,8 +156,16 @@ function aimTarget(u,v,by,at,out){
   return out;
 }
 const _wT=new V3(),_wP=new V3(),_wR=new V3();
-// pick the live aim for this frame: weight ramps in over the blow, holds at contact and eases out
+// pick the live aim for this frame: weight ramps in over the blow, holds at contact and eases out.
+// v0.34: when a blow is cut off (a parry's recoil, a flinch, a new swing on top of the last) the aim used to vanish on
+// that frame and the weapon hand jumped back to its authored spot — up to 90 cm. The last aim now fades out over ~70 ms
+// unless the new clip's own aim is already stronger.
 function updateFinAim(u,dt){
+  const pa=u.aim; updateFinAim0(u,dt);
+  if(pa&&u.alive&&pa.w>.03){ const fw=pa.w*Math.exp(-dt*14);
+    if(!u.aim||(u.aim.e!==pa.e&&u.aim.w<fw)) u.aim={by:pa.by,T:pa.T,w:fw,e:pa.e,fade:true}; }
+}
+function updateFinAim0(u,dt){
   if(u.residX||u.residZ){ u.pos.x+=u.residX||0; u.pos.z+=u.residZ||0; u.residX=u.residZ=0; }
   const a=u.action, f=u.fin; u.aim=null;
   const fin=!!(a&&f&&a.c.name===f.def.clip&&f.victim), at=a&&!fin&&a.c.atk&&u.atkTarget&&u.atkTarget.isUnit&&u.atkTarget.alive?u.atkTarget:null;
@@ -203,6 +211,7 @@ function updateFinAim(u,dt){
 }
 // last few centimetres the look-ahead missed: lean the step in toward a target the limb can't quite reach
 function residualStep(u,dir,frac,w,dt){
+  if(u.aim&&u.aim.fade) return;   // a fading aim never drags the soldier along
   if(w<.4||dir.x*u.fwdW.x+dir.z*u.fwdW.z<=0) return;
   const k=Math.min(1,dt*16)*frac*w; u.residX=(u.residX||0)+dir.x*k; u.residZ=(u.residZ||0)+dir.z*k; }
 // called inside buildSkel once the pose's hand targets and weapon direction are known

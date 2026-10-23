@@ -60,10 +60,14 @@ function stepRag(rg,dt){
 function mapRagJoints(rg){
   const P=rg.p, u=rg.u, j=u.j;
   RIDX.forEach((nm,i)=>j[nm].copy(P[i]));
-  j.sL.copy(j.chest); j.sR.copy(j.chest); j.hipL.copy(j.pelvis); j.hipR.copy(j.pelvis);
   u.wRw.subVectors(j.hR,j.eR).normalize(); u.spine.subVectors(j.neck,j.pelvis).normalize();
   u.wLw.copy(u.fwdW); u.fwdW.addScaledVector(u.spine,-u.fwdW.dot(u.spine)); if(u.fwdW.lengthSq()<1e-4)u.fwdW.set(1,0,0); u.fwdW.normalize();
   u.rightW.crossVectors(u.spine,u.fwdW).normalize();
+  // shoulders and hips keep their width across the body (v0.34: they used to collapse onto the spine the frame a soldier
+  // died — a 7 cm snap on a swordsman, 16 cm on a giant)
+  const shw=((u.T&&u.T.shW)||.07)*rg.s, hw=.05*rg.s;
+  j.sL.copy(j.chest).addScaledVector(u.rightW,-shw); j.sR.copy(j.chest).addScaledVector(u.rightW,shw);
+  j.hipL.copy(j.pelvis).addScaledVector(u.rightW,-hw); j.hipR.copy(j.pelvis).addScaledVector(u.rightW,hw);
 }
 function pinRag(rg,i,getter){rg.pin={i,get:getter}; wakeRag(rg);}
 function releaseRag(rg,impWorld){ if(!rg||!rg.pin) return; wakeRag(rg); const i=rg.pin.i; rg.pin=null; for(const v of rg.v){ v.multiplyScalar(.3).add(impWorld); v.x+=rand(-.6,.6); v.z+=rand(-.6,.6);} rg.v[i].add(impWorld.clone().multiplyScalar(.2)); }

@@ -53,6 +53,7 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('gesturestart',e=>e.preventDefault()); document.addEventListener('gesturechange',e=>e.preventDefault());
 document.addEventListener('touchmove',e=>{ if(e.target===canvas) e.preventDefault(); },{passive:false});
 document.addEventListener('dblclick',e=>e.preventDefault());
+window.addEventListener('keydown',e=>{ if(e.key==='F9'&&DEV_MODE){ e.preventDefault(); setAnimDebug(!tune.dbg); return; } });   // animation debug view (development mode, 35b)
 window.addEventListener('keydown',e=>{ const k=e.key.toLowerCase(), s=cam.dist*.03;
   if(CW3.on||e.target&&(e.target.tagName==='INPUT')) return;
   if(k==='w'||k==='arrowup') pan(0,-60*s); if(k==='s'||k==='arrowdown') pan(0,60*s); if(k==='a'||k==='arrowleft') pan(60*s,0); if(k==='d'||k==='arrowright') pan(-60*s,0);

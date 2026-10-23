@@ -216,6 +216,8 @@ the table's edge, each with its own flickering light, and one warm key light cas
 
 **v0.33.** The Armory is rebuilt: every piece is a real model fitted to the soldier's own bones every frame. Lathed great helms with visor slits and gold cross ridges, open helms with nasal and cheek guards and feathered wings, horned and skull-masked helms, crowns of spikes, layered pauldrons that turn with the arm, front and back plates with trim and tassets riding the thighs, flared bracers, greaves with knee cops, curved kite shields strapped across the forearm, banners, quivers with a strap, and capes of real cloth that hang and swing (a rider's is a stiff mantle). Beasts and mounts take barding sized to their own bodies; a Full set button kits a soldier in one go. Sets and profiles: several players can keep their own kit and formations on one device, trade a soldier's set or a whole army's kit between profiles, and copy a set as a share code. The Elven Host fights with its own arms and armour (leaf-bladed swords, glaives, tall recurve bows, crescent twin blades, branch staffs with a glowing seed, crystal staffs, hawk-feather wings, silverleaf plate with gold trim, antler crowns) instead of the Order's. Hades is rebuilt from his sheet: dark spiked plate traced with glowing lines in his variant's fire, a crowned, spiked great helm, a cape and a hell scythe; Cerberus is dark and bound in chains; new combos Slash Combo, Claw Swipe, Tail Sweep and Head Bite, and the Hellfire Execution finisher. Riders move their arms: eleven rider animations (rest, couch, thrust, overhead slam, forehand and backhand sweeps, raise, guard, command, whirl, two-handed execution) on two-bone IK, timed onto the mount's own blows. Wyverns: their abilities are researched at the Aerie (Knight's Arts, Wyvern Mastery) and used by the knights on their own (Settings); a wyvern taking off or landing is exposed (more damage, double from arrows and bolts). New soldiers: the Ballista (Order), the Acid Spitter and the Devil Bat (Chaos) and the Elf Hawk Archer (Wildlands). A formation editor with built-in and saved formations per army. The enemy general's difficulty (Easy, Normal, Hard, Brutal) now changes how he thinks, and he has a personality (Balanced, Rusher, Turtle, Raider). The battle report charts damage by unit type. Fixes: a wizard's blast no longer uses the Bomber's explosion by mistake (it could hurt its own side); an electric wall or poison cloud no longer stops the game when a wyvern flies through it.
 
+**v0.34 — animation and IK.** An audit of the procedural animation (a new diagnostics test that drives every stick soldier through every kind of movement and blow and measures what the eye catches) found the causes of the snaps and fixes them without changing the art: elbows and knees no longer flip sides (the IK's bend plane falls back on a second hint when its pole lines up with the limb, turns no faster than a joint could, and a knee may never fold backward); a clip that interrupts or follows another starts from the pose on screen instead of jumping to the walking pose (a parried swing's hand no longer flies a metre, a leap cut short no longer drops the body 30 cm, a cut-off spin no longer snaps round 170°); the hips no longer jolt as feet plant (the planted-foot height limit is part of the hips' glide and looks ahead to where the stepping foot will land); steps leave and meet the ground at zero speed; a landing foot finishes its fall instead of snapping down; the off hand stays on a two-handed weapon while the blow is aimed; a cut-off blow's aim fades out instead of letting go of the hand in one frame; shoulders and hips keep their width when a soldier dies. Also fixed: a soldier standing exactly on a waypoint of a scripted walk got a NaN velocity that spread to his position, to anyone facing him and to the sounds at his feet. A development-only debug view draws skeletons, IK targets, foot contacts, grips, bend directions and limits, aims and each soldier's clip. The project now carries Playwright and Context7 for development (see Development tools).
+
 **v0.32.** Fleeing soldiers on the big maps head home over the nearest crossing (they used to aim at their old goal across the river and run back and forth on a bridge); a soldier on a scripted walk follows its own path; a soldier who has just crossed does not cross straight back because his formation place flickered; a soldier whose goal moves back behind him turns round on the deck; a jam on a bridge is edged round instead of abandoned mid-deck. Soldiers fight an enemy within reach instead of running past it to a far target, and look for enemies across the whole Frontier. The Wyvern Knight is twice the size (regiments of 2, 1,200 gold and 80 mana, longer training, cruising higher). Hades wears a horned great helm with a crown of spikes and a burning visor, spiked pauldrons, a skull breastplate, tassets, gauntlets and spiked greaves in his variant's metal. Eight new recorded sounds (SFX Engine): smoke bomb, shuriken volley, katana swish, soul fire, bone rattle, armour fitting, forge hammer, elven chime. The Armory's rooms are larger and softer-lit.
 
 **Animation architecture** (v0.31). Clips are data (pose-channel keys plus timed events) compiled once by `normClip` into `CLIPS[type]`; `play` runs them, events drive hits, sounds and effects, the pose blends the clip over locomotion with eased weights and springs, and procedural layers (flight cycles, rider stances, side heads, tails, gaits, IK) ride on top. Only clip names travel online and in replays. `14b-animreg.js` sorts every clip by role (attack, idle, finisher, charge, ability, flight, reaction), shows the counts in the Unit Viewer and checks every clip at start. Balance: the Wyvern Knight costs 550 gold and 40 mana, Hades 700 souls and 100 mana; both train more slowly. The full report of this expansion is in `docs/EXPANSION_REPORT.md`.
@@ -470,6 +472,35 @@ Host `dist/web` on any static host (GitHub Pages, Netlify, itch.io). Then:
 The installed game opens full screen and works offline. A new version is picked up on the next launch, and the
 game offers a restart when one is ready.
 
+## Animation, IK and the debug view
+
+Every stick soldier is posed procedurally each frame (`21-skeleton.js`): a pose — chest-local hand targets, weapon
+directions and body values (lean, crouch, twist, jump, spin…) — comes from the locomotion poses blended by speed, or from
+the playing clip (`10`–`13`, `normClip`/`evalClip` in `14-aim.js`); springs add lean and head lag; a foot planner steps
+the feet (`updateFeet`); the hips ride at a height the planted feet can reach; two-bone IK places elbows and knees; the
+blow-aiming layer (`14-aim.js`) steers the soldier and the weapon hand so a blow lands on its body part; gear is fitted
+to the joints (`updateGear`); a death hands the joints to a position-based ragdoll (`22-ragdoll.js`).
+
+What keeps it clean (v0.34):
+
+| Where | What it does |
+| --- | --- |
+| `ik2` | Bend plane from the pole; below a 40% hold it leans on a second hint (arms: back and out; legs: up), turns at most ~13 rad/s (elbows) or ~39 rad/s (knees), and a knee may not fold behind the body's front |
+| `filterPose` | On any clip change, the difference between the pose on screen and the new clip's pose is carried and eased out over 0.22 s (hand targets, body values, jump height and spin included) |
+| `buildSkel` | Hip height: the planted-foot limit is part of the glide target and anticipates a stepping foot's landing; a leg may over-stretch by at most ~1 cm |
+| `updateFeet` | The step arc leaves and meets the ground at zero speed; a foot landing from a leap finishes its fall as half a step |
+| `twoHandGrip` | An empty off hand authored on the handle stays on it, turning with the weapon, while the blow is aimed |
+| `updateFinAim` | A cut-off blow's aim fades out over ~70 ms instead of releasing the hand in one frame (the aim itself is unchanged, so blows land where they did) |
+| `mapRagJoints` | The ragdoll keeps shoulder and hip width |
+
+**Debug view (development only).** Open the game with `?dev` (or `?animdebug`, or set `localStorage['se3d.dev']='1'`),
+then press **F9** or use Settings → Animation debug. Over every soldier near the camera it draws the skeleton (white),
+hand IK targets (cyan, a red line when out of reach), foot contacts (planted green, steps amber, an unreachable plant red),
+the weapon grip and axis (yellow) and a two-handed hold (magenta), elbow and knee bend directions (green; amber while
+turning toward a new pole; red at the knee's limit or beyond reach), the blow's target (red), the hips' height limit
+(blue bar), ragdolls of the last three seconds (violet), and a label with the clip and its time, the aim, the grip and
+any transition blend. Without `?dev` the switch is hidden and nothing is drawn.
+
 ## Project layout
 
 | Path | What it is |
@@ -480,7 +511,8 @@ game offers a restart when one is ready.
 | `public/` | Icons copied into the web build |
 | `tools/` | Icon source and renderer, a local static server |
 | `assets/` | ElevenLabs sound effects (`sfx/`) and voice lines (`vox/`), Artlist textures and emblem atlas (`tex/`) |
-| `tests/` | Simulation regression tests run headless in Node |
+| `tests/` | Simulation regression tests run headless in Node; `tests/animaudit.js` animation diagnostics; `tests/browser/` the Playwright browser test |
+| `.mcp.json`, `tools/mcp/` | Playwright and Context7 MCP servers for development; a tiny stdio client to call them from scripts |
 | `build.mjs` | The build |
 
 Main source files:
@@ -490,7 +522,7 @@ Main source files:
 | `00-settings` | Saved settings (quality, sound, controls, battle options) |
 | `01`–`03` | Terrain, renderer and scene, instanced stick bodies |
 | `10`–`14` | Unit types, attacks, finishers, charges, blow aiming (`13a`/`13b`: the Ninja, Cleric, Wizard and Wing Archer) |
-| `20`–`26` | Skeleton and IK, ragdolls, blood, arrows, dropped gear, capes; `23b`: glowing fire particles; `26`: the new units' gear, wing-flight model, spells, status effects and brains |
+| `20`–`26` | Skeleton and IK (`35b`: the animation debug view), ragdolls, blood, arrows, dropped gear, capes; `23b`: glowing fire particles; `26`: the new units' gear, wing-flight model, spells, status effects and brains |
 | `30`–`36` | Combat, armies and formations, regiments and tactics, campaign, AI, per-unit update and drawing; `36`: the new units' regiments and formation places |
 | `40`–`42` | Game modes, battle UI, camera and touch input; `40b`: the Unit Viewer (descriptions, stats card, turntable) |
 | `43` | Graphics quality and the Auto frame-rate ladder, FPS counter, settings screen; `43b`: presets, post-processing chain (SSAO, bloom, sun shafts, depth of field, motion blur, tone mapping, grading, FXAA/SMAA/MSAA) and the Advanced Graphics panel |
@@ -518,12 +550,29 @@ orders, the campaign from start to victory, effects, finisher aim accuracy, char
 Hellcrawler (every attack, finisher and charge lands, the gait keeps its feet on the ground, crawlers climb out of
 the Hellpit in a battle), the Chaos Empire (Order against Chaos castle battles both ways, every Thrall, Dreadguard
 and Harvester clip, finisher aim), a seeded
-fingerprint proving the original five units still behave exactly as before, the online protocol (`nettest`: a host
+fingerprint proving the original five units still behave exactly as before (re-baselined in v0.34: the IK fixes move
+hands and weapons, so blows land a few frames differently), the online protocol (`nettest`: a host
 and guests in separate processes exchanging the real snapshots and commands: replication, command validation, remote
 recruitment, deaths, victory, 2v2 shared armies, disconnection), Riverlands (`rivertest`: a five-minute battle on the big map in
 which zones change hands and pay out, banners rise and fall, miners work both corner mines, nobody leaves the field
 or stands inside a tree, house, tent or wall; a zone taken, contested and lost step by step; the classic field
 restored afterwards), cavalry and generals (`cavtest`: castle battles with Knights, Hell Riders and both generals: lance thrusts land, riders are thrown, generals level up and use their abilities, the Warlord's meteor falls; every Knight finisher, move, idle and charge in the Lab), the Wildlands (`wildtest`: castle battles against the Chaos Empire both ways with Treant summons and regrowth, then each story mission started, run and won) and a simulation cost report.
+
+Animation diagnostics (also part of `npm test`, as `animaudit`) — every stick soldier through idle, walk, run, sprint,
+turning, every attack, combinations, interrupted blows, charges, finishers, hit reactions, deaths and a one-minute
+battle, measuring foot slide, unreached feet and hands, backward knees, elbow and knee flips, joint pops, broken
+two-handed grips and the death hand-over:
+
+```bash
+npm run build && node tests/animaudit.js dist/artifact.html [--types sword,giant] [--json out.json]
+```
+
+The same scenarios in a real browser (Playwright, Chromium): the game in development mode, the real render loop, an
+in-page probe, console and page errors collected, screenshots with the debug view in `tests/browser/out/`:
+
+```bash
+npm run build && npm run test:browser          # or: node tests/browser/animation.mjs --quick --types sword,giant
+```
 
 Two more test sets need network access to the Supabase project and are run by hand:
 
@@ -545,6 +594,20 @@ saved and kept across presets and reloads, and moving the haze, far plane, River
 ```bash
 npm run serve &  python3 tests/distance_check.py http://localhost:8080/
 ```
+
+## Development tools (MCP)
+
+`.mcp.json` registers two MCP servers for Claude Code in this repository; both are dev dependencies, so `npm install`
+is all they need:
+
+- **Playwright** (`@playwright/mcp`): drives a real Chromium on the running game (`npm run serve`, then
+  `http://localhost:8080/?dev`). It runs headless; drop `--headless` in `.mcp.json` to watch the window. The scripted
+  browser tests use the `playwright` package directly (`npx playwright install chromium` once on a new machine).
+- **Context7** (`@upstash/context7-mcp`): current library documentation (three.js — the game is pinned to r128, so
+  check that what it returns applies to that version). Without a key it shares a small anonymous monthly quota; create a
+  free key at context7.com/dashboard and set `CONTEXT7_API_KEY` in your environment (never commit it).
+
+On native Windows, Claude Code may need the servers launched through `cmd /c npx …`.
 
 ## PC or Mobile layout
 

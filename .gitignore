@@ -5,3 +5,4 @@ dist/
 tests/online/.sessions.json
 .env
 .env.*
+tests/browser/out/

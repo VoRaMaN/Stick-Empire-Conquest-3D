@@ -27,7 +27,10 @@ function brain(u,dt){
   u.desired.set(0,0,0);
   if(u.script){ const sc=u.script, w=sc.pts[sc.i]; const dx=w.x-u.pos.x,dz=w.z-u.pos.z,d=Math.hypot(dx,dz);
     if(d<.6){ sc.i++; if(sc.i>=sc.pts.length){ u.script=null; if(sc.then) sc.then(u); return; } }
-    u.desired.set(dx/d*sc.speed,0,dz/d*sc.speed); u.faceGoal=sc.face&&sc.face.alive?Math.atan2(sc.face.pos.x-u.pos.x,sc.face.pos.z-u.pos.z):Math.atan2(dx,dz); return; }
+    // v0.34: standing exactly on a waypoint (d = 0) used to give a NaN velocity that spread to the soldier's position,
+    // facing, everyone told to face him, and the sounds at his feet
+    const k=d>1e-6?sc.speed/d:0; u.desired.set(dx*k,0,dz*k);
+    if(sc.face&&sc.face.alive&&isFinite(sc.face.pos.x+sc.face.pos.z)) u.faceGoal=Math.atan2(sc.face.pos.x-u.pos.x,sc.face.pos.z-u.pos.z); else if(d>1e-6) u.faceGoal=Math.atan2(dx,dz); return; }
   if(!u.ai) return;
   if(u.state==='stunned') return;
   if(u.camp&&rlCampBrain(u,dt)) return;   // neutral camp guards (37f)

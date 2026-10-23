@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["playwright-mcp", "--browser", "chromium", "--headless"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["context7-mcp"],
+      "env": { "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}" }
+    }
+  }
+}

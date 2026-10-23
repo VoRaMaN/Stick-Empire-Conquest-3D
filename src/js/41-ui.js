@@ -46,7 +46,8 @@ $('#mDuel').onclick=()=>{ game.spent=false; closeCampaign(); if(game.mode!=='due
 for(const [id,key] of [['Step','step'],['Bob','bob'],['Lean','lean'],['Spring','spring'],['Speed','speed']]){
   const el=$('#s'+id), out=$('#o'+id); el.addEventListener('input',()=>{ tune[key]=+el.value; out.textContent=(+el.value).toFixed(2)+'×'; });
 }
-$('#sDbg').addEventListener('change',e=>{tune.dbg=e.target.checked;});
+$('#sDbg').addEventListener('change',e=>{ setAnimDebug(DEV_MODE&&e.target.checked); });   // development mode only (35b)
+if(DEV_MODE){ const r=$('#sDbgRow'); if(r) r.hidden=false; }
 $('#sBlood').addEventListener('change',e=>{tune.blood=e.target.checked; settings.blood=tune.blood; saveSettings(); if(!tune.blood){ drops.length=0; splats.length=0; }});
 $('#unfollow').onclick=()=>{cam.follow=null; updateFollowUI();};
 function updateFollowUI(){ const f=cam.follow; $('#follow').hidden=!f||game.mode!=='battle'||!!selReg; if(f) $('#followT').textContent='Following '+teamName(f.team).split(' ')[0]+' '+f.T.name; }

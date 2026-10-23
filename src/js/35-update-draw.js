@@ -102,10 +102,5 @@ function drawBar(u){
     _s.set(mw,.035,1); _m.compose(_bp,camera.quaternion,_s); put(barIM,MORALE_C); }
 }
 const ROUT_C=new THREE.Color('#f2f2f2'), MORALE_C=new THREE.Color('#e9b949');
-function drawDebug(u){
-  const s=u.s;
-  for(const ft of u.feet){ sph(ft.t>=0?ft.to:ft.pos,.06*s,ft.t>=0?DBG.step:DBG.plant,dbgIM); }
-  sph(u.hand.R,.05*s,DBG.hand,dbgIM); sph(u.hand.L,.05*s,DBG.hand,dbgIM);
-  sph(u.j.kL,.035*s,DBG.pole,dbgIM); sph(u.j.kR,.035*s,DBG.pole,dbgIM);
-}
+// drawDebug: the animation / IK debug view lives in 35b-animdebug.js (development mode only)
 

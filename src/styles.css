@@ -712,3 +712,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .arm-trade .arm-row span{opacity:.8;min-width:70px}
 .arm-trade select{flex:1;min-width:0;padding:5px 8px;border-radius:8px;background:#2a2016;color:#f5ecd9;border:1px solid rgba(245,236,217,.25);font:inherit}
 .forms-card .pills button[aria-selected="true"]{background:#e2ae35;color:#1e160e}
+
+/* animation debug view (development mode only, 35b-animdebug.js) */
+#animDbg{position:fixed;inset:0;pointer-events:none;z-index:40;font:600 11px/1.25 ui-monospace,Menlo,Consolas,monospace}
+#animDbg .adbg-l{position:absolute;left:0;top:0;white-space:nowrap;color:#f4f4f4;background:rgba(10,12,16,.72);padding:2px 5px;border-radius:3px;border:1px solid rgba(255,255,255,.18)}
+#animDbg .adbg-key{position:absolute;left:8px;bottom:8px;max-width:min(560px,calc(100vw - 16px));color:#e8e8e8;background:rgba(10,12,16,.78);padding:6px 8px;border-radius:4px;white-space:normal}

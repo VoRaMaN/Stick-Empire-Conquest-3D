@@ -68,9 +68,11 @@ function draw(){
   drawGear();
   _cr.set(1,0,0).applyQuaternion(camera.quaternion); _cb.set(0,0,1).applyQuaternion(camera.quaternion);
   for(const st of statues){ const f=st.fig; if(!f.rag){ drawFigure(f.j,f.s,f.col,f.thick,f.fwdW); if(f.T.plateLimbs) drawPlateLimbs(f,f.col,f.col); } }
+  if(tune.dbg) animDbgBegin();
   for(const u of units) if(u.alive){ if(u.fowH) continue; drawUnit(u); if(tune.dbg) drawDebug(u);
     if(u.isUnit&&(u.hp<u.maxHp||u.morale<99||cam.follow===u)&&!u.invuln) drawBar(u); }
-  for(const u of corpses) if(!u.fowH) drawUnit(u);
+  for(const u of corpses) if(!u.fowH){ drawUnit(u); if(tune.dbg) drawRagDebug(u); }
+  if(tune.dbg) animDbgEnd();
   for(const C of CASTLES) for(const g of C.garrison) if(!u_fowOut(g)) drawUnit(g);
   castleFx(); if(MAP.id!=='classic') rlDrawFx();
   for(const list of [units,corpses,CASTLES[0].garrison,CASTLES[1].garrison]) for(const u of list){ if(u.fowH||u_fowOut(u)) continue; const st=u.G&&u.G.str; if(st&&st.vis&&!u.G.o.dropped){ cyl(st.a,st.m,.006*u.s,WHITE,strIM); cyl(st.m,st.b,.006*u.s,WHITE,strIM); } }
@@ -109,7 +111,7 @@ function frame(now){
   if(!window.SE3D_NO_DRAW) draw();   // automated multi-browser tests switch rendering off to share a small CPU
 }
 // debug and test hooks (used by tests/ and the browser checks)
-window.__SE3D={THREE,get RL_BRIDGES(){ return RL_BRIDGES; },ANIM,animSummary,ARM,ARM_ITEMS,armOpen,armSet,armWhy,armClose,armFullSet,armKit,ARB,profNew,profSwitch,profStore,armSend,armTake,armCode,armFromCode,formOpen,formPreset,formResolve,AIM,aiMindLabel,RPL,replayPlay,replayExit,NET,RL_NCAMPS,regAbility,STORY,startStory,storyEnd,getMission:()=>MS,WILD_T,unitT,tName,summonTreants,regAbilities,regAbReady,VW,resetViewer,issue,setSelection,regAlive,HEROS,heroCast,heroOn,mountRider,ALERTS,alertPush,abEntries,abUse,regAbility,PINGS,pingSend,METEORS,RTS,FIGHT,resultsReport,applyAccess,CASTLES,startResearch,riderPose,RJ,throwRider,RIDE_ANIMS,raStart,sun,setDistance,applyDistances,closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
+window.__SE3D={THREE,damage,kill,setAnimDebug,ADBG,get DEV_MODE(){ return DEV_MODE; },get RL_BRIDGES(){ return RL_BRIDGES; },ANIM,animSummary,ARM,ARM_ITEMS,armOpen,armSet,armWhy,armClose,armFullSet,armKit,ARB,profNew,profSwitch,profStore,armSend,armTake,armCode,armFromCode,formOpen,formPreset,formResolve,AIM,aiMindLabel,RPL,replayPlay,replayExit,NET,RL_NCAMPS,regAbility,STORY,startStory,storyEnd,getMission:()=>MS,WILD_T,unitT,tName,summonTreants,regAbilities,regAbReady,VW,resetViewer,issue,setSelection,regAlive,HEROS,heroCast,heroOn,mountRider,ALERTS,alertPush,abEntries,abUse,regAbility,PINGS,pingSend,METEORS,RTS,FIGHT,resultsReport,applyAccess,CASTLES,startResearch,riderPose,RJ,throwRider,RIDE_ANIMS,raStart,sun,setDistance,applyDistances,closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
   renderer,sceneRef:scene,sunScreen,applyQuality,GFX_PRESETS,GFX_DEF,post,GFX:()=>GFX,CASTLES,recruit,buyUnit,startResearch,resLvl,hasRes,openPanel,closePanel,pickBuilding,setHover,queued,ICONS,makeUnitIcons,VOX,narrate,loadAssets,BUILDINGS,
   NET,applyCmd,buyFor,netSnapshot,netApplyTick,netBeforeStep,netAfterStep,hitStatue,netTest:()=>NETT,uiMode,setUiMode,uiSuggest,layoutTop,selectReg,
   RLD:()=>({rlRiverD,RL_FORESTS,rlInCastle,rlInCamp,RL_MINE,RL_VIL,RL_TOWERS,RL_RUINS,rlRoadD}),setTerrain,startSkirmish,CW3,CW,CW_REGIONS,openCampaign,closeCampaign,getCamp:()=>camp,campCanAttack,renderCampaign,campSelect,RL,MAP,BASE_X,setFactions,rlCaptureTarget,regAlive,regCenter,issue};
