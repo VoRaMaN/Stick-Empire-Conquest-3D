@@ -709,6 +709,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .armory .arm-items{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
 .armory .arm-items button{text-align:left;display:flex;flex-direction:column;gap:2px}
 .armory .arm-items small{font-size:11px;opacity:.8}
+
+.sfx-cats h4{margin:10px 0 4px;font-size:13px;opacity:.8}.sfx-cats .row{display:flex;align-items:center;gap:10px;margin:4px 0}.sfx-cats .row span{min-width:84px;font-size:13px}.sfx-cats input{flex:1}
 </style>
 </head>
 <body>
@@ -998,6 +1000,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
       <div class="sl"><label for="sMaster">Master volume</label><output id="oMaster">80%</output><input id="sMaster" type="range" min="0" max="1" step="0.01" value="0.8"></div>
       <div class="sl"><label for="sMusic">Music</label><output id="oMusic">50%</output><input id="sMusic" type="range" min="0" max="1" step="0.01" value="0.5"></div>
       <label class="tg tg-n" for="sTheme"><span>Recorded soundtrack<small>The game's own score: March of the Noble Order, March Toward the Horizon, Martyr of War. Off plays the generated battle music.</small></span><input id="sTheme" type="checkbox" checked></label>
+      <div id="sfxCats" class="sfx-cats"></div>
       <div class="sl"><label for="sSfx">Battle sounds</label><output id="oSfx">90%</output><input id="sSfx" type="range" min="0" max="1" step="0.01" value="0.9"></div>
       <label class="tg" for="sVoice">Narrator and unit voices <input id="sVoice" type="checkbox" checked></label>
       <small class="opt-note">On iPhone, sound follows the silent switch on the side of the phone.</small>
@@ -1092,6 +1095,6 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 <script src="online-config.js"></script>
 <script src="vendor/supabase.46a3cc6618.js"></script>
 <script src="vendor/three.min.js"></script>
-<script src="game.35bce69a1d.js"></script>
+<script src="game.5c665ad21b.js"></script>
 </body>
 </html>
