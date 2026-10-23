@@ -8,7 +8,7 @@ const RMIN=[[0,3,.62],[0,9,.42],[0,11,.42],[1,5,.24],[1,7,.24],[8,10,.12],[9,11,
 function wakeRag(rg){ if(rg){ rg.sleep=false; rg.still=0; } }
 function toRagdoll(u,impWorld,opt){
   opt=opt||{};
-  if(NET.host&&u.alive) netCapDeath(u,impWorld,opt);   // every death goes out to the guests with its impulse
+  if((NET.host||NET.rec)&&u.alive) netCapDeath(u,impWorld,opt);   // every death goes out to the guests with its impulse
   const P=RIDX.map(n=>u.j[n].clone());
   const rg={u,s:u.s,p:P,q:P.map(v=>v.clone()),v:P.map(()=>u.av.clone().multiplyScalar(.8).add(impWorld||new V3())),w:P.map(()=>1),c:[],pin:null,age:0,still:0,rad:P.map((_,i)=>i===3?.15*u.s:.05*u.s)};
   for(const c of RCON){ if(opt.decap&&(c[0]===3||c[1]===3)) continue; rg.c.push([c[0],c[1],P[c[0]].distanceTo(P[c[1]]),c[2],false]); }

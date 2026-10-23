@@ -46,11 +46,12 @@ function applyCastleTextures(A){
   for(const k in CTEX){ const b=A.tex[k]; if(!b) continue;
     const t=L.load('data:image/jpeg;base64,'+b); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=an;
     const m=CM[k]; m.map=t; m.bumpMap=t; m.bumpScale=BUMP[k]||.2; m.color.set(CTINT[k]); m.needsUpdate=true;
-    const mc=CMC[k]; if(mc){ mc.map=t; mc.bumpMap=t; mc.bumpScale=BUMP[k]||.2; mc.color.set(CTINT_C[k]); mc.needsUpdate=true; } }
+    const mc=CMC[k]; if(mc){ mc.map=t; mc.bumpMap=t; mc.bumpScale=BUMP[k]||.2; mc.color.set(CTINT_C[k]); mc.needsUpdate=true; }
+    CASTLE_TEX[k]=t; const mw=CMW&&CMW[k]; if(mw){ mw.map=t; mw.bumpMap=t; mw.bumpScale=BUMP[k]||.2; mw.color.set(CTINT_W[k]); mw.needsUpdate=true; } }
   if(A.tex.emblems){ const t=L.load('data:image/jpeg;base64,'+A.tex.emblems); t.anisotropy=an; CM.emblem.map=t; CM.emblem.color.set('#ffffff'); CM.emblem.needsUpdate=true;
     EMBLEM_URL='data:image/jpeg;base64,'+A.tex.emblems; if(typeof refreshEmblemCss==='function') refreshEmblemCss(); }
 }
-let EMBLEM_URL='';
+let EMBLEM_URL=''; const CASTLE_TEX={};
 
 /* ---------- geometry helpers: UVs in world metres so every texture keeps its real scale ---------- */
 function uvMul(g,su,sv){ const uv=g.attributes.uv; if(uv) for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getX(i)*su,uv.getY(i)*sv); return g; }
@@ -297,7 +298,7 @@ function buildCastle(t){
   const fac=facOf(t), chaos=fac==='chaos';
   const C={team:t,fac,group:new THREE.Group(),kit:new Kit(),flags:[],dyn:[],B:{},list:[],torches:[],garrison:[],q:[],res:{},resBusy:{},research:null};
   C.group.position.set(t?MAP.cf:-MAP.cf,CGY[t],0); if(t) C.group.scale.x=-1;
-  Kit.mats=chaos?CMC:CM;
+  Kit.mats=chaos?CMC:fac==='wild'?wildMats():CM;
   buildWalls(C);
   for(const D of BUILDINGS_OF[fac]){ const b=Object.assign({},D,{team:t,fac,bx:D.x,hullL:[],q:[],train:null,exitQ:[],glowL:[]}); const glow=[];
     BUILD_FN[D.id](C,b,glow);
@@ -309,7 +310,7 @@ function buildCastle(t){
     b.hull=hull; b.box=bb.clone(); b.hullL=null; b.wbox=new THREE.Box3();
     C.B[D.id]=b; C.list.push(b); }
   // the keep's pick box covers the gatehouse
-  C.keep=Object.assign({},chaos?KEEP_C:KEEP,{team:t,fac,box:new THREE.Box3(new V3(-4,0,.5),new V3(1,TOWER_H+1,11.5)),wbox:new THREE.Box3(),bx:-1.5});
+  C.keep=Object.assign({},chaos?KEEP_C:fac==='wild'?KEEP_W:KEEP,{team:t,fac,box:new THREE.Box3(new V3(-4,0,.5),new V3(1,TOWER_H+1,11.5)),wbox:new THREE.Box3(),bx:-1.5});
   C.kit.build(C.group,t);
   for(const m of C.dyn) C.group.add(m);
   Kit.mats=null;
@@ -381,14 +382,14 @@ function emerge(b,type){
   const s=researchScale(team,type); if(s!==1) opt.s=TYPES[type].s*s;
   const u=makeUnit(type,team,cwx(team,lx),z,opt); u.isUnit=true; u.inCastle=true; units.push(u); assignRegiment(u);
   researchApplyUnit(u);
-  if(team===myTeam()&&!game.classicMix&&({knight:1,giant:1,cerberus:1,hades:1})[type]) alertPush(TYPES[type].name+' ready','good',u.pos.x,u.pos.z,'tr'+u.id);
+  if(team===myTeam()&&!game.classicMix&&({knight:1,giant:1,cerberus:1,hades:1})[type]) alertPush(tName(type,team)+' ready','good',u.pos.x,u.pos.z,'tr'+u.id);
   u.face=u.faceGoal=b.id==='aerie'?(team?-Math.PI/2:Math.PI/2):0;
   const pts=exitPath(b,team,u), sp=u.T.speed*(type==='giant'?1.15:.92); u.bornT=game.time;
   u.script={pts,i:0,speed:sp,then:leaveCastle};
   if(b.id==='aerie'){ u.fl.takeT=.15; u.fl.mode='ground'; }
   if(game.stance) assignSlots(team);
   if(team===myTeam()){ if(type==='giant') narrate('giantUnleashed',25); }
-  if(NET.host) netCapNew(u,1,b);
+  if(NET.host||NET.rec) netCapNew(u,1,b);
   return u;
 }
 function leaveCastle(u){

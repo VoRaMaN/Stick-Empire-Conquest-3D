@@ -450,9 +450,10 @@ function drawUnit(u){
     if(S.healF>0){ tc.copy(col).lerp(scol('#fff3a8'),Math.min(1,S.healF*2)); col=tc; } }
   drawFigure(u.j,u.s,col,u.thick,u.fwdW,u.cloak&&u.alive?GHOST:null,!!u.T.robe,!!u.T.skel);
   if(u.T.plateLimbs) drawPlateLimbs(u);
+  if(u.T.wild&&!(u.cloak&&u.alive)) drawWildFx(u);
   if(u.riderK) drawRiderArmor(u.j,u.s,u.riderK,u.team,null,null,null);
   if(u.hero&&u.alive&&!u.cloak) drawHeroFx(u);
-  if((u.wallT>game.time||u.rallyT>game.time)&&u.alive&&!u.cloak) drawBuffFx(u);
+  if((u.wallT>game.time||u.rallyT>game.time||u.rootT>game.time||u.bloomT>game.time)&&u.alive&&!u.cloak) drawBuffFx(u);
 }
 
 /* ---------- brains ---------- */

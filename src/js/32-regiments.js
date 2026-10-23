@@ -20,9 +20,10 @@ function makeBanner(r){
   const g=new THREE.Group(); gearRoots.add(g); const pole=mesh(GEO_POLE,M.wood,0,.75,0);
   let mat=new THREE.MeshLambertMaterial({color:r.team?'#7d2a8a':'#e2ae35',side:THREE.DoubleSide});
   const c=document.createElement('canvas'), ctx=c.getContext&&c.getContext('2d');
-  if(ctx){ c.width=96; c.height=64; ctx.fillStyle=r.team?'#5a1c66':'#c9971f'; ctx.fillRect(0,0,96,64);
-    ctx.fillStyle=r.team?'#e8473f':'#8f1016'; ctx.fillRect(0,0,96,8); ctx.fillRect(0,56,96,8);
-    ctx.fillStyle='#fff6e0'; ctx.font='bold 34px Georgia, serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(r.hero?'★':ROMAN(r.num),48,34);
+  const BC=typeof bannerColours==='function'?bannerColours(r):null;   // a ranked season's banner colour (49e)
+  if(ctx){ c.width=96; c.height=64; ctx.fillStyle=BC?BC.col:r.team?'#5a1c66':'#c9971f'; ctx.fillRect(0,0,96,64);
+    ctx.fillStyle=BC?BC.ink:r.team?'#e8473f':'#8f1016'; ctx.fillRect(0,0,96,8); ctx.fillRect(0,56,96,8);
+    ctx.fillStyle=BC?BC.ink:'#fff6e0'; ctx.font='bold 34px Georgia, serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(r.hero?'★':ROMAN(r.num),48,34);
     mat=new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(c),side:THREE.DoubleSide}); }
   const flag=new THREE.Mesh(GEO_FLAG,mat); flag.position.set(-.27,1.3,0); flag.castShadow=true;
   g.add(pole,flag); r.banner=g; r.flag=flag;
@@ -107,9 +108,9 @@ function updateRegbar(){
   if(!selReg) return; const n=regAlive(selReg).length, o=selReg.order.kind;
   const ST={army:'following army orders',move:'marching',hold:'holding',attack:'attacking',charge:'charging'};
   if(selRegs.length>1){ const k={}; let tot=0; for(const r of selRegs){ const m=regAlive(r).length; tot+=m; k[r.type]=(k[r.type]||0)+m; }
-    $('#rgTitle').textContent=selRegs.length+' regiments'; $('#rgSub').textContent=tot+' soldiers · '+Object.keys(k).map(t=>k[t]+' '+(TYPE_PL[t]||t)).join(', '); }
+    $('#rgTitle').textContent=selRegs.length+' regiments'; $('#rgSub').textContent=tot+' soldiers · '+Object.keys(k).map(t=>k[t]+' '+tPl(t,selReg.team)).join(', '); }
   else if(selReg.hero){ const h=regAlive(selReg)[0]; $('#rgTitle').textContent=heroDef(selReg.team).name+' · level '+(h&&h.heroLv||1); $('#rgSub').textContent=(h?Math.ceil(h.hp)+' / '+h.maxHp+' health · ':'')+ST[o]; }
-  else { $('#rgTitle').textContent='Regiment '+ROMAN(selReg.num)+(selReg.rank?' '+'★'.repeat(selReg.rank):''); $('#rgSub').textContent=n+' '+TYPE_PL[selReg.type]+' · '+ST[o]+(regAlive(selReg).some(u=>u.noSupply)?' · out of supply':''); }
+  else { $('#rgTitle').textContent='Regiment '+ROMAN(selReg.num)+(selReg.rank?' '+'★'.repeat(selReg.rank):''); $('#rgSub').textContent=n+' '+tPl(selReg.type,selReg.team)+' · '+ST[o]+(regAlive(selReg).some(u=>u.noSupply)?' · out of supply':''); }
   const fb=$('#rgForm'); if(fb) fb.textContent=FORM_NAME[selReg.form||'line'];
   const cb=$('#rgCapture'); if(cb){ const Z=MAP.id==='classic'?null:rlCaptureTarget(selReg); cb.hidden=!Z; if(Z) cb.textContent='Capture '+Z.id; }
 }

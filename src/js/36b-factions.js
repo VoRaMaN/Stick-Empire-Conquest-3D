@@ -20,10 +20,10 @@ const FAC=t=>FACTIONS[facOf(t)];
 const econ=t=>ECON[facOf(t)];
 const teamName=t=>FAC(t).team[t];
 const money=t=>FAC(t).money;
-const otherSide=f=>f==='chaos'?'order':'chaos';
+const otherSide=f=>f==='chaos'?'order':'chaos';   // (the Wildlands fight the Chaos Empire by default)
 // your side from the title screen; the enemy is the other faction
-function setFactions(f0,f1){ game.fac=[f0||'order',f1||otherSide(f0||'order')]; }
-setFactions(settings.side==='chaos'?'chaos':'order');
+function setFactions(f0,f1){ f0=FACTIONS[f0]?f0:'order'; f1=FACTIONS[f1]?f1:(settings.foe&&FACTIONS[settings.foe]&&f1===undefined&&!game.campFight?settings.foe:otherSide(f0)); game.fac=[f0,f1]; }
+setFactions(settings.side==='chaos'||settings.side==='wild'?settings.side:'order');
 // a starting army: the faction's opening eight (Normal) or its pattern, with a few more Chaos soldiers in the
 // big battles (they are cheaper; the extra numbers make up for an army with no giants yet)
 function factionStart(t,n){
@@ -34,12 +34,13 @@ function factionStart(t,n){
 function factionPick(t){
   const F=FAC(t);
   if(F.id==='chaos'){ const r=Math.random(); return r<.22?'crawler':r<.33?'hound':r<.47?'dread':r<.57?'harvester':r<.67?'boner':r<.75?'bomber':r<.82?'oracle':r<.89?'reaper':r<.96?'cerberus':'hades'; }
+  if(F.id==='wild') return wildPick();
   const r=Math.random(); return r<.3?'sword':r<.48?'archer':r<.62?'spear':r<.72?'ninja':r<.8?'wizard':r<.87?'cleric':r<.92?'wing':r<.96?'knight':'giant';
 }
 function syncTeamNames(){
   for(const [id,t] of [['#nA',0],['#nB',1]]){ const el=$(id); if(el) el.textContent=teamName(t); }
   for(const [id,t] of [['#cuA',0],['#cuB',1]]){ const el=$(id); if(el) el.textContent=money(t); }
-  const tl=$('#tagline'); if(tl) tl.textContent=facOf(0)==='chaos'?'Lead the Infernal Dominion. Burn the Order.':'Command the Gold Legion. Break the Chaos Empire.';
+  const tl=$('#tagline'); if(tl) tl.textContent=facOf(0)==='wild'?'Lead the Verdant Host. Drive the invaders from the old wood.':facOf(0)==='chaos'?'Lead the Infernal Dominion. Burn the Order.':'Command the Gold Legion. Break the Chaos Empire.';
 }
 
 /* ---------- Chaos regiments, formations and weapon contact points ---------- */

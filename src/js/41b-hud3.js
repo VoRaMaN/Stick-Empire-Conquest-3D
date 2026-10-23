@@ -103,8 +103,8 @@ function qRender(){
   const box=$('#qPanel'); if(!box) return;
   const C=hud3On()&&castleOn()?CASTLES[myTeam()]:null, rows=[];
   if(C) for(const B of [...C.list,C.keep]){ if(!B) continue;
-    if(B.train){ const T=TYPES[B.train.type]; rows.push({B,key:B.id+'t',ty:B.train.type,name:T?T.name:B.train.type,k:1-clamp(B.train.t/Math.max(.01,B.train.tot),0,1),left:B.train.t,more:(B.q||[]).length}); }
-    else if(B.q&&B.q.length) rows.push({B,key:B.id+'q',ty:B.q[0],name:TYPES[B.q[0]]?TYPES[B.q[0]].name:B.q[0],k:0,left:0,more:B.q.length-1,wait:1});
+    if(B.train){ const T=TYPES[B.train.type]; rows.push({B,key:B.id+'t',ty:B.train.type,name:T?tName(B.train.type):B.train.type,k:1-clamp(B.train.t/Math.max(.01,B.train.tot),0,1),left:B.train.t,more:(B.q||[]).length}); }
+    else if(B.q&&B.q.length) rows.push({B,key:B.id+'q',ty:B.q[0],name:TYPES[B.q[0]]?tName(B.q[0]):B.q[0],k:0,left:0,more:B.q.length-1,wait:1});
     if(B.res){ const R=RES_BY_ID[B.res.id]; rows.push({B,key:B.id+'r',res:1,name:R?rName(R,myTeam())+(R.lv>1?' '+['I','II','III'][B.res.lvl-1]:''):B.res.id,k:1-clamp(B.res.t/Math.max(.01,B.res.tot),0,1),left:B.res.t,more:0}); } }
   box.hidden=!rows.length; if(box.hidden) return;
   const sig=rows.map(r=>r.key+r.ty+r.more).join(',');
@@ -126,7 +126,7 @@ function tipShow(html,anchor,x,y){
 function tipHide(){ const t=$('#utip'); if(t) t.hidden=true; HUD3.tip=null; }
 function unitTipHTML(u){
   const T=u.T, me=myTeam(), C=COUNTER[u.type]||['',''], own=u.team===me;
-  let name=T.name; if(u.hero) name=heroDef(u.team).name+' · level '+(u.heroLv||1); else if(u.rider) name='Cerberus · Hell Rider'; else if(u.camp) name=(u.type==='giant'?'Ogre':'Bandit')+' (neutral)';
+  let name=T.name; if(u.summonT) name='Treant (summoned)'; else if(u.hero) name=heroDef(u.team).name+' · level '+(u.heroLv||1); else if(u.rider) name='Cerberus · Hell Rider'; else if(u.camp) name=(u.type==='giant'?'Ogre':'Bandit')+' (neutral)';
   const side=u.team>1?'Neutral camp':own?'Your army':teamName(u.team);
   const st=[]; const S=u.st||{}; if(S.burn) st.push('burning'); if(S.poison) st.push('poisoned'); if(S.rend) st.push('cursed'); if(u.routing) st.push('routing'); if(u.noSupply) st.push('out of supply'); if(u.wallT>game.time) st.push('shield wall'); if(u.rallyT>game.time) st.push('rallied'); if(u.auraT>game.time&&!u.hero) st.push('inspired');
   const arm=Math.round(100*((T.armor||0)+(u.rider?.15:0))), stars=u.reg&&u.reg.rank?' '+'★'.repeat(u.reg.rank):'';
@@ -135,7 +135,7 @@ function unitTipHTML(u){
     +(st.length?'<span class="tst">'+st.join(' · ')+'</span>':'')+(C[0]?'<em>Strong against: '+esc3(C[0])+'</em><em>Weak against: '+esc3(C[1])+'</em>':'');
 }
 function typeTipHTML(t){
-  const T=TYPES[t], C=COUNTER[t]||['',''], mc=MANA_COST[t]||0;
+  const T=unitT(t,myTeam()), C=COUNTER[t]||['',''], mc=MANA_COST[t]||0;
   return '<b>'+esc3(T.name)+'</b><span>'+T.cost+' '+money(myTeam())+(mc?' · '+mc+' mana':'')+' · '+T.hp+' health · '+T.dmg+' damage · speed '+T.speed+(T.armor?' · armour '+Math.round(T.armor*100)+'%':'')+'</span>'
     +(C[0]?'<em>Strong against: '+esc3(C[0])+'</em><em>Weak against: '+esc3(C[1])+'</em>':'');
 }
@@ -175,7 +175,7 @@ window.addEventListener('keydown',e=>{
 const _op1=new V3(), _op2=new V3();
 function regPath(r){ const o=r.order; if(!o||o.kind!=='move') return null; const c=regCenter(r), P=[{x:c.x,z:c.z},{x:o.x,z:o.z}]; if(o.q) for(const w of o.q) P.push(w); return P; }
 function drawOrderPaths(){
-  if(game.mode!=='battle') return; let budget=520; const tt=game.time;
+  if(game.mode!=='battle') return; storyDraw(); let budget=520; const tt=game.time;
   for(const r of selRegs){ const P=regPath(r); if(!P) continue;
     for(let i=1;i<P.length&&budget>0;i++){ const a=P[i-1], b=P[i], L=Math.hypot(b.x-a.x,b.z-a.z), n=Math.floor(L/1.6);
       for(let k=1;k<n&&budget>0;k++){ const f=(k+((tt*1.5)%1))/n; if(f>=1) continue; _op1.set(a.x+(b.x-a.x)*f,0,a.z+(b.z-a.z)*f); _op1.y=H(_op1.x,_op1.z)+.1;
@@ -260,7 +260,7 @@ function resultsReport(me){
   // the regiment of the battle, and the damage each side dealt
   let mvp=null; for(const id in (S.regK||{})){ const e=S.regK[id]; if(e.team===me&&(!mvp||e.k>mvp.k)) mvp=e; }
   const extra=[]; if(S.dmg) extra.push('Damage dealt <b>'+Math.round(S.dmg[me]).toLocaleString()+'</b> · taken <b>'+Math.round(S.dmg[1-me]).toLocaleString()+'</b>');
-  if(mvp) extra.push('Regiment of the battle: <b>'+(mvp.hero?heroDef(me).name:'Regiment '+ROMAN(mvp.num)+' ('+(TYPE_PL[mvp.type]||mvp.type)+')')+'</b> · '+mvp.k+' kills');
+  if(mvp) extra.push('Regiment of the battle: <b>'+(mvp.hero?heroDef(me).name:'Regiment '+ROMAN(mvp.num)+' ('+tPl(mvp.type,me)+')')+'</b> · '+mvp.k+' kills');
   if(HEROS.lv[me]>1) extra.push('Your '+heroDef(me).name+' reached level <b>'+HEROS.lv[me]+'</b>');
   box.innerHTML=(extra.length?'<p class="rc-x">'+extra.join('<br>')+'</p>':'')+
     '<div class="rc-legend"><span><i style="background:'+PAL.chart[me]+'"></i>'+esc3(teamName(me))+' (you)</span><span><i class="dash" style="border-color:'+PAL.chart[1-me]+'"></i>'+esc3(teamName(1-me))+'</span></div>'+

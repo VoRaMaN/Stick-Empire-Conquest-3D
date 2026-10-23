@@ -144,5 +144,27 @@ Object.assign(BUILD_FN,{
     for(let i=0;i<6;i++){ const yy=y0+1.2+i*1.5, half=.7071*lerp(1.0,.55,(yy-y0)/H0); G.push([gBox(.3,.5,.03,1),TM(bx,yy,z0+half+.02)]); } },
 });
 
+/* ---------- the Wildlands hold: the Order's plan in mossy stone under green roofs, with its own halls ---------- */
+const CTINT_W={stone:'#c8d4b4',slate:'#8ab878',terracotta:'#7ab05a',wood:'#d8c8a8',iron:'#c8ccc4',sandstone:'#e2e6c8',cobble:'#c8ccb4',marble:'#eef2e2',basalt:'#b8bcae'};
+const CTEX_W={stone:'#7e866e',slate:'#3e5a34',terracotta:'#4e6a2e',wood:'#5e4630',iron:'#3f424a',sandstone:'#9aa07a',cobble:'#6e7460',marble:'#cfd6c0',basalt:'#34302e'};
+let CMW=null;   // made on first use: a material made while the game loads would shift the seeded random stream
+function wildMats(){ if(CMW) return CMW; CMW=Object.assign({},CM);
+for(const k in CTEX){ CMW[k]=CM[k].clone(); CMW[k].color.set(CTEX_W[k]); const t=CASTLE_TEX[k]; if(t){ CMW[k].map=t; CMW[k].bumpMap=t; CMW[k].bumpScale=BUMP[k]||.2; CMW[k].color.set(CTINT_W[k]); } }
+Object.assign(CMW,{straw:new THREE.MeshLambertMaterial({color:'#7a8a3a'}),gold:new THREE.MeshPhongMaterial({color:'#9ab04a',specular:'#e8ffb0',shininess:50}),
+  target:new THREE.MeshLambertMaterial({color:'#5a7a2a'}),paper:new THREE.MeshBasicMaterial({color:'#d8ff9a'}),orb:new THREE.MeshBasicMaterial({color:'#9aff8a'}),
+  cloth:['#2e5a1e','#4a5a12'].map(c=>new THREE.MeshLambertMaterial({color:c,side:THREE.DoubleSide})),trim:['#8ab84a','#b8a83a'].map(c=>new THREE.MeshLambertMaterial({color:c}))}); return CMW; }
+const KEEP_W={id:'castle',name:'Elder Hall',emb:8,desc:'Rangers on the walls, income and the statue'};
+const BUILDINGS_WILD=[
+  {id:'barracks',name:'Warden Hall',emb:1,x:-6.5,row:0,w:5.6,d:6,trains:['sword'],desc:'Thorn Wardens, quick blades of the clans'},
+  {id:'range',name:'Ranger Lodge',emb:3,x:-13.5,row:0,w:5.6,d:6,trains:['archer'],desc:'Sylvan Rangers: fast archers who shoot quicker'},
+  {id:'dojo',name:'Shade Grove',emb:2,x:-20.5,row:0,w:5.6,d:6,trains:['ninja'],desc:'Shade Stalkers'},
+  {id:'prison',name:'Heartwood Hollow',emb:7,x:-28,row:0,w:7,d:6,trains:['giant'],desc:'Ancient Treants, woken from the old wood'},
+  {id:'mine',name:'Forager Lodge',emb:0,x:-6.5,row:1,w:5.6,d:8,trains:['miner'],desc:'Foragers who bring in gold'},
+  {id:'mage',deco:true,x:-13.5,row:1,w:5.6,d:8},
+  {id:'temple',name:'Sacred Grove',emb:6,x:-20.5,row:1,w:5.6,d:8,trains:['cleric'],desc:'Grove Druids who heal and, with Call of the Forest, summon Treants'},
+  {id:'aerie',deco:true,x:-28,row:1,w:7,d:8},
+];
+BUILDINGS_OF.wild=BUILDINGS_WILD;
+
 // raise both castles for the sides chosen on the title screen
 buildCastle(0); buildCastle(1); castleReady=true;

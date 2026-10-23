@@ -76,7 +76,7 @@ function startCampFight(id,attacking){
   const owned=CAMP_DEF.filter(t=>camp.owner[t.id]===0).reduce((a,t)=>a+campTribute(t.id),0), str=attacking?(CAMP_STR[id]||1):Math.min(4,2+Math.floor(camp.turn/3));
   if(game.demo||!menuEl.hidden) closeMenu();
   game.campFight={id,attacking,str,foe:attacking?camp.owner[id]:(camp.pending&&camp.pending.by)||1}; game.spent=false; game.tutorial=null; endCoach();
-  closeCampaign(); setFactions(settings.side); if(game.mode!=='battle'){ game.mode='battle'; } syncModeUI();
+  closeCampaign(); setFactions(campSide(),game.campFight.foe===2?'wild':otherSide(campSide())); if(game.mode!=='battle'){ game.mode='battle'; } syncModeUI();
   setTerrain(campPreset(id));
   resetBattle({gold:[Math.min(4200,600+owned),500+520*str],enemyExtra:str,statueHp:[2600,1800+500*str]});
   showBanner(campName(id),(attacking?'Attack':'Defend')+' · '+campFoe(game.campFight.foe)+' · strength '+'●'.repeat(str),2.8);

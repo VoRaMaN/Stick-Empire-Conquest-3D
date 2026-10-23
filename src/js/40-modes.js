@@ -11,7 +11,7 @@ function clearAll(){
 }
 function resetBattle(opt){
   opt=opt||{};
-  clearAll(); game.over=0; game.winner=undefined; game.mana=[150,150];
+  clearAll(); game.over=0; game.winner=undefined; game.mana=[150,150]; game.mission=null;   // a story mission sets itself up again after this (40c)
   ensureCastles(); syncTeamNames();
   const BS=BATTLE_SIZES[game.size], n=BS.start, g0=opt.gold||[BS.gold,BS.gold];
   game.gold=[g0[0]*econ(0),g0[1]*econ(1)];   // a Chaos treasury counts in souls (see ECON)
@@ -25,6 +25,7 @@ function resetBattle(opt){
   game.stance=['defend','defend']; game.aiT=4; game.bt=0; setStance(0,'defend'); setStance(1,'defend');
   if(n>8) for(const u of units) if(u.slot&&u.isUnit&&!u.T.worker){ placeUnit(u,u.slot.x,u.slot.z,u.team?-Math.PI/2:Math.PI/2); }
   frameBattle();
+  replayStart();   // offline battles are recorded for "Watch replay" (49d)
   if(!game.demo&&!game.classicMix) setTimeout(()=>{ if(!game.demo&&game.mode==='battle'&&game.over<=0){ narrate('prepare'); if(!VOX.said.destroy){ VOX.said.destroy=1; setTimeout(()=>{ if(!game.demo&&game.mode==='battle') narrate('destroyStatue'); },3200); } } },700);
 }
 // open the battle on your own army, pulled back just far enough to take in all its ranks

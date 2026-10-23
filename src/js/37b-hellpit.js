@@ -54,7 +54,7 @@ function pitEmerge(b,type){
   if(game.stance) assignSlots(t);
   _tp.set(x,gy+.2,z); puff(_tp,6,.35,2.4,'#ff7a2a'); puff(_tp,4,.5,1.4,'#2a201c'); crSfx('pitRise','stone',_tp,.8);
   if(Math.random()<.35) crSfx('crScreech',null,_tp,.6);
-  if(NET.host) netCapNew(u,2,b);
+  if(NET.host||NET.rec) netCapNew(u,2,b);
   return u;
 }
 // the pool churns: bright seams drift, embers and smoke rise (cosmetic stream; only in a castle battle)

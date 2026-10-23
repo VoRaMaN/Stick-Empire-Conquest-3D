@@ -6,7 +6,7 @@ function renderChips(){
   const lab=game.mode==='duel'||game.mode==='viewer';
   for(const t of (lab?ORDER.concat(CHAOS):FAC(myTeam()).roster)){ const T=TYPES[t]; const b=document.createElement('button'); b.className='chip'+(T.chaos?' chaos':''); b.id='chip-'+t;
     const mc=game.mode==='battle'&&!game.classicMix?(MANA_COST[t]||0):0;
-    b.innerHTML='<span class="n">'+T.name+'</span><span class="s">'+(game.mode==='battle'?T.cost+' '+money(myTeam())+(mc?' · '+mc+' mana':''):game.mode==='viewer'?((UNIT_INFO[t]||{}).role||''):(FINS[t]?FINS[t].length:10)+' finishers · '+(CHG[t]?CHG[t].length:10)+' charges')+'</span><span class="qn"></span>';
+    b.innerHTML='<span class="n">'+(game.mode==='battle'?tName(t):T.name)+'</span><span class="s">'+(game.mode==='battle'?unitT(t,myTeam()).cost+' '+money(myTeam())+(mc?' · '+mc+' mana':''):game.mode==='viewer'?((UNIT_INFO[t]||{}).role||''):(FINS[t]?FINS[t].length:10)+' finishers · '+(CHG[t]?CHG[t].length:10)+' charges')+'</span><span class="qn"></span>';
     if(lab) b.setAttribute('aria-pressed',game.duelSel===t);
     b.addEventListener('click',()=>{
       if(game.mode==='battle'){ if(!buyUnit(t)){ b.classList.remove('no'); void b.offsetWidth; b.classList.add('no'); } }

@@ -220,6 +220,49 @@ the table's edge, each with its own flickering light, and one warm key light cas
 
 **Unit abilities.** A selected regiment can use its special now from the ability bar: Swordsmen **Rage** (with the research), Ninjas **Vanish** (with Shinobi), Clerics **Mass Heal**, mounts and beasts **Spur** (+40% speed for 5 s).
 
+## The Wildlands Confederacy (third faction)
+
+The free clans of the old forests, playable in Skirmish (pick **Wildlands** on the title screen; **Choose the enemy** sets who you fight) and present on the campaign's war table as the third power. They fight with the Order's bodies under their own names and colours, moss-green with leaf crowns:
+
+| Unit | Based on | What's different |
+| --- | --- | --- |
+| Forager | Miner | Digs gold |
+| Thorn Warden | Swordsman | Tougher and faster (125 health, speed 4.8) |
+| Sylvan Ranger | Archer | Fast archers who shoot quicker (speed 4.3, 1.4 s between shots) |
+| Shade Stalker | Ninja | |
+| Grove Druid | Cleric | Heals; with **Call of the Forest** (Sacred Grove research) summons Treants from the ability bar (I): one, or two in a forest, for 40 s |
+| Ancient Treant | Giant | Bark and branches, 1250 health |
+
+Wildlands soldiers regrow wounds out of the fight (1% a second, 2% in a forest). Their general, the **Warden-Chief**, calls **Bloom** (allies within 14 m regrow 40% over 8 s and shake off poison and fire) and **Grasping Roots** (the thickest enemy crowd within 30 m is held fast for 4 s). Their castle is the Order's plan in mossy stone under green roofs: Warden Hall, Ranger Lodge, Shade Grove, Heartwood Hollow, Forager Lodge and the Sacred Grove under the Elder Hall. Online, the Wildlands need the server update below.
+
+## Story: The River War
+
+Five missions on Riverlands (main menu → **Story**), unlocked one after another, played as your chosen side:
+
+1. **Hold the Stone Bridge**: hold the west bridgehead for five minutes against seven waves; it falls if the enemy holds it with none of yours there for 20 s.
+2. **Escort the Miners**: six miners walk the north road to Ashford (they set off after 20 s; your escort keeps beside them until you order it elsewhere). Four raider ambushes wait in the woods. Bring three home.
+3. **The Three Shrines**: hold shrine A, shrine D and market B together for a full minute within twelve minutes.
+4. **The Ogre Dens**: clear both ogre dens within eight minutes; the enemy army stays behind its walls.
+5. **Elderwood**: destroy the statue of the Wildlands (the Chaos Empire if you are the Wildlands).
+
+An objective panel under the HUD shows the goal and its progress, and the objective glows on the field. Pause → Restart, and Retry or Next mission on the results, restart the mission.
+
+## Replays
+
+Every offline battle (skirmish, campaign, story) is recorded in memory with the online host's own snapshots and events, five a second for up to 20 minutes. **Watch replay** on the results plays it back through the online guest's side of the netcode: every soldier, blow, finisher and death, without fog, at 1×, 2× or 4×, from any camera, with Pause, Restart and Exit.
+
+## Ranked, the leaderboard and watching live (needs the server update)
+
+`supabase/migrations/20261024000000_se3d_ranked_spectate_wildlands.sql` adds (and includes the presence and map-matching parts of `20261023010000_se3d_presence_quick_map.sql`):
+
+- **Ranked quick match**: pairs players who searched ranked on the same map; a decisive result moves every seated player's rating by an Elo step (K 32, team strength the average of its players). Seasons are quarters (Season 1 is October to December 2026).
+- **Leaderboard**: the season's top 50 and your place.
+- **Banner colours** unlocked by your best rating this season (Bronze for a ranked game, Silver 1100, Gold 1250, Diamond 1400), shown on your own regiments' flags.
+- **Watching live**: public matches being played, or any match by its code. Spectators receive the match channel but cannot send on it; they see the whole field without fog.
+- The **Wildlands** allowed in online rooms.
+
+The online screen asks the server whether it has the update; until it does, these stay hidden and online play works as before. As with every online result, the simulation host reports the outcome; the server cannot replay the battle to check it.
+
 ## Castles and research
 
 Behind each statue stands a castle: a crenellated curtain wall with a gatehouse and iron portcullis, corner
@@ -460,7 +503,7 @@ and guests in separate processes exchanging the real snapshots and commands: rep
 recruitment, deaths, victory, 2v2 shared armies, disconnection), Riverlands (`rivertest`: a five-minute battle on the big map in
 which zones change hands and pay out, banners rise and fall, miners work both corner mines, nobody leaves the field
 or stands inside a tree, house, tent or wall; a zone taken, contested and lost step by step; the classic field
-restored afterwards), cavalry and generals (`cavtest`: castle battles with Knights, Hell Riders and both generals: lance thrusts land, riders are thrown, generals level up and use their abilities, the Warlord's meteor falls; every Knight finisher, move, idle and charge in the Lab) and a simulation cost report.
+restored afterwards), cavalry and generals (`cavtest`: castle battles with Knights, Hell Riders and both generals: lance thrusts land, riders are thrown, generals level up and use their abilities, the Warlord's meteor falls; every Knight finisher, move, idle and charge in the Lab), the Wildlands (`wildtest`: castle battles against the Chaos Empire both ways with Treant summons and regrowth, then each story mission started, run and won) and a simulation cost report.
 
 Two more test sets need network access to the Supabase project and are run by hand:
 

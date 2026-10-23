@@ -10,11 +10,13 @@
    ALERTS and PINGS feed the HUD (41b): what happened and where, one click to look; a ping marks a spot for your
    2v2 teammate. The BATTLE RECORD samples both armies every 5 s for the end-of-battle report.
    Nothing here runs in the classic regression battle. */
-const HERO_DEF={order:{type:'sword',name:'General',ab:['rally','wall'],col:'#ffd36a'},chaos:{type:'dread',name:'Warlord',ab:['howl','meteor'],col:'#ff6a2a'}};
+const HERO_DEF={order:{type:'sword',name:'General',ab:['rally','wall'],col:'#ffd36a'},chaos:{type:'dread',name:'Warlord',ab:['howl','meteor'],col:'#ff6a2a'},wild:{type:'sword',name:'Warden-Chief',ab:['bloom','roots'],col:'#9aff6a'}};
 const HERO_AB={
   rally:{name:'Rally Cry',cd:45,key:'T',ico:'⚑',desc:'Allies within 14 m heal 20%, rally if they were running and fight 25% harder and faster for 8 s'},
   wall:{name:'Shield Wall',cd:50,key:'Y',ico:'⛨',desc:'Allies within 12 m take 40% less damage for 8 s'},
   howl:{name:'War Howl',cd:45,key:'T',ico:'⚑',desc:'Allies within 14 m heal 20%, rally if they were running and fight 25% harder and faster for 8 s'},
+  bloom:{name:'Bloom',cd:45,key:'T',ico:'❀',desc:'Allies within 14 m regrow 40% of their health over 8 s and shake off poison and fire'},
+  roots:{name:'Grasping Roots',cd:40,key:'Y',ico:'⌘',desc:'Roots burst up under the thickest enemy crowd within 30 m: held fast for 4 s, 30 damage'},
   meteor:{name:'Meteor',cd:45,key:'Y',ico:'☄',desc:'A meteor falls on the thickest enemy crowd within 30 m of the Warlord: up to 95 damage and fire'},
 };
 const HERO_XP=[0,5,12,22,36];   // kills to reach levels 2…5
@@ -23,7 +25,8 @@ const METEORS=[];
 const heroOn=()=>game.mode==='battle'&&!game.classicMix&&!game.demo&&!game.tutorial&&castleOn()&&settings.heroes!==false;
 const heroDef=t=>HERO_DEF[facOf(t)]||HERO_DEF.order;
 function heroReset(){
-  HEROS.u=[null,null]; HEROS.cd=[{rally:game.time+20,wall:game.time+20,howl:game.time+20,meteor:game.time+20},{rally:game.time+20,wall:game.time+20,howl:game.time+20,meteor:game.time+20}];   // nothing in the first 20 s HEROS.respawn=[0,0]; HEROS.lv=[1,1]; HEROS.xp=[0,0]; METEORS.length=0;
+  const lock=()=>{ const o={}; for(const k in HERO_AB) o[k]=game.time+20; return o; };
+  HEROS.u=[null,null]; HEROS.cd=[lock(),lock()];   // nothing in the first 20 s HEROS.respawn=[0,0]; HEROS.lv=[1,1]; HEROS.xp=[0,0]; METEORS.length=0;
   if(!heroOn()||NET.guest) return;
   for(let t=0;t<2;t++) spawnHero(t,true);
 }
@@ -67,13 +70,18 @@ function heroCast(t,ab){
   else if(ab==='wall'){
     gridEach(u.pos.x,u.pos.z,12,o=>{ if(o.alive&&o.team===t&&o.isUnit&&Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z)<=12) o.wallT=game.time+8; });
     callout(u,'Shield Wall!','#9fd8ff'); }
-  else if(ab==='meteor'){
+  else if(ab==='bloom'){
+    gridEach(u.pos.x,u.pos.z,14,o=>{ if(!o.alive||o.team!==t||!o.isUnit||Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z)>14) return; o.bloomT=game.time+8; if(o.st){ o.st.poison=null; o.st.burn=null; } o.morale=Math.min(100,o.morale+20); });
+    callout(u,'Bloom!','#9aff6a'); }
+  else if(ab==='meteor'||ab==='roots'){
     let best=null,bs=0;
     for(const e of units){ if(!e.alive||e.team===t||e.team>1||!e.isUnit||isAir(e)) continue; const d=Math.hypot(e.pos.x-u.pos.x,e.pos.z-u.pos.z); if(d>30) continue;
       let n=0; gridEach(e.pos.x,e.pos.z,4,o=>{ if(o.alive&&o.team!==t&&o.isUnit&&Math.hypot(o.pos.x-e.pos.x,o.pos.z-e.pos.z)<4) n++; }); const sc=n-d*.02; if(sc>bs){ bs=sc; best=e; } }
     if(!best){ HEROS.cd[t][ab]=game.time+2; return 'no_target'; }
-    x=best.pos.x; z=best.pos.z; callout(u,'Meteor!','#ff8a3a'); }
-  if(NET.host) netCapEvent(['hc',t,ab,Math.round(x*100),Math.round(z*100)]);
+    x=best.pos.x; z=best.pos.z; callout(u,ab==='roots'?'Grasping Roots!':'Meteor!',ab==='roots'?'#9aff6a':'#ff8a3a');
+    if(ab==='roots') for(const o of units){ if(!o.alive||o.team===t||o.team>1||!o.isUnit||isAir(o)) continue; const d=Math.hypot(o.pos.x-x,o.pos.z-z); if(d>5) continue;
+      o.rootT=game.time+4; damage(o,30,u,new V3(o.pos.x-x||1,0,o.pos.z-z).normalize(),.3,0); } }
+  if(NET.host||NET.rec) netCapEvent(['hc',t,ab,Math.round(x*100),Math.round(z*100)]);
   heroCastFx(t,ab,x,z,u);
   return true;
 }
@@ -83,9 +91,11 @@ function heroCastFx(t,ab,x,z,u){
   u=u||HEROS.u[t]; const c=new V3(x,H(x,z),z);
   if(ab==='rally'||ab==='howl'){ ring(c,14,heroDef(t).col); ring(c,8,'#fff3c8'); sfx('warcry',u?u.j.head:c,1); if(u) puff(u.j.chest,10,.25,2.4,heroDef(t).col); }
   else if(ab==='wall'){ ring(c,12,'#9fd8ff'); sfx('horn',c,.8); }
+  else if(ab==='bloom'){ ring(c,14,'#9aff6a'); sfx('research',c,.7); if(u) puff(u.j.chest,12,.25,2,'#9aff6a'); }
+  else if(ab==='roots'){ ring(c,5,'#7a5a2a'); ring(c,3,'#9aff6a'); puff(c,14,.5,2.4,'#6a4a2a'); sfx('stone',c,1); shakeAt(c,.25); }
   else if(ab==='meteor'){ METEORS.push({x,z,t:0,dur:1.25,team:t,src:u||null,from:new V3(x-DIRX[t]*14,H(x,z)+34,z+rand(-4,4))}); sfx('warcry',u?u.j.head:c,.8); }
   if(t!==myTeam()&&ab!=='meteor') return;
-  if(t!==myTeam()) alertPush('Meteor incoming!','danger',x,z);
+  if(t!==myTeam()) alertPush(ab==='roots'?'Roots hold your soldiers!':'Meteor incoming!','danger',x,z);
 }
 function meteorStep(dt){
   for(let i=METEORS.length-1;i>=0;i--){ const M=METEORS[i]; M.t+=dt; const k=clamp(M.t/M.dur,0,1), g=H(M.x,M.z);
@@ -106,7 +116,7 @@ function heroAI(t){
   let hurt=0, near=0; gridEach(u.pos.x,u.pos.z,12,o=>{ if(o.alive&&o.team===t&&o.isUnit){ near++; if(o.hp<o.maxHp*.6||o.routing) hurt++; } });
   if(heroReady(t,D.ab[0])&&(hurt>=4||foes>=6&&near>=4)) { heroCast(t,D.ab[0]); return; }
   if(D.ab[1]==='wall'&&heroReady(t,'wall')&&foes>=6&&near>=5){ heroCast(t,'wall'); return; }
-  if(D.ab[1]==='meteor'&&heroReady(t,'meteor')&&foes>=2){ let n=0; gridEach(u.pos.x,u.pos.z,26,o=>{ if(o.alive&&o.team!==t&&o.team<2&&o.isUnit) n++; }); if(n>=5) heroCast(t,'meteor'); }
+  if((D.ab[1]==='meteor'||D.ab[1]==='roots')&&heroReady(t,D.ab[1])&&foes>=2){ let n=0; gridEach(u.pos.x,u.pos.z,26,o=>{ if(o.alive&&o.team!==t&&o.team<2&&o.isUnit) n++; }); if(n>=5) heroCast(t,D.ab[1]); }
 }
 function heroStep(dt){
   for(let t=0;t<2;t++){ const u=HEROS.u[t];
@@ -114,6 +124,7 @@ function heroStep(dt){
       const D=heroDef(t); if(t===myTeam()) alertPush('Your '+D.name+' has fallen · back in 90 s','danger',u.pos.x,u.pos.z); else alertPush('The enemy '+D.name+' has fallen','good',u.pos.x,u.pos.z); }
     if(!NET.guest&&!HEROS.u[t]&&HEROS.respawn[t]&&game.time>=HEROS.respawn[t]&&game.over<=0){ HEROS.respawn[t]=0; spawnHero(t,false); } }
   game.heroT=(game.heroT||0)-dt; if(game.heroT>0) return; game.heroT=.5;
+  if(!NET.guest) for(const o of units) if(o.alive&&o.bloomT>game.time&&o.hp<o.maxHp) o.hp=Math.min(o.maxHp,o.hp+o.maxHp*.025);
   for(let t=0;t<2;t++){ const u=HEROS.u[t]; if(!u||!u.alive) continue; const R=heroAuraR(u.heroLv);
     gridEach(u.pos.x,u.pos.z,R,o=>{ if(o.alive&&o.team===t&&o.isUnit&&Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z)<=R){ o.auraT=game.time+.8; o.auraLv=u.heroLv; } });
     if(!NET.guest&&(t!==myTeam()&&!NET.on||game.auto[t]&&t===myTeam()&&!NET.on)) heroAI(t); }
@@ -132,6 +143,8 @@ function drawHeroFx(u){
 }
 // buffs on everyone: a glint at the chest while a Rally or Shield Wall lasts
 function drawBuffFx(u){ const tt=game.time;
+  if(u.rootT>tt){ for(let i=0;i<4;i++){ const a=i/4*TAU+u.id; _hx1.set(u.pos.x+Math.cos(a)*.25*u.s,u.pos.y+.15+.25*((tt*2+i*.3)%1)*u.s,u.pos.z+Math.sin(a)*.25*u.s); glowAt(_hx1,.06*u.s,'#7aaa3a'); } }
+  if(u.bloomT>tt&&((tt*3+u.id)%1)<.5){ _hx1.copy(u.j.chest).addScaledVector(UP,.1*u.s); glowAt(_hx1,.07*u.s,'#9aff6a'); }
   if(u.wallT>tt){ _hx1.copy(u.j.chest).addScaledVector(u.fwdW,.22*u.s); glowAt(_hx1,(.09+.02*Math.sin(tt*6+u.id))*u.s,'#9fd8ff'); }
   else if(u.rallyT>tt&&((tt*4+u.id)%1)<.5){ _hx1.copy(u.j.head).addScaledVector(UP,.3*u.s); glowAt(_hx1,.06*u.s,'#ffd36a'); } }
 
@@ -140,9 +153,10 @@ const UNIT_AB={
   rage:{name:'Rage',key:'U',ico:'✊',types:{sword:1},res:'rage',cd:20,desc:'Swordsmen fly into a Rage at once: faster, 30% more damage'},
   vanish:{name:'Vanish',key:'U',ico:'◐',types:{ninja:1},res:'shinobi',cd:24,desc:'Ninjas vanish into the shadows'},
   heal:{name:'Mass Heal',key:'U',ico:'✚',types:{cleric:1},cd:16,desc:'Clerics heal everyone around them at once'},
+  summon:{name:'Summon Treants',key:'I',ico:'♣',types:{cleric:1},res:'grove',fac:'wild',cd:50,desc:'The Druids call a Treant up out of the ground (two in a forest); it fights for 40 s'},
   spur:{name:'Spur',key:'I',ico:'»',types:{knight:1,hound:1,cerberus:1,crawler:1},cd:25,desc:'Mounts and beasts sprint 40% faster for 5 s'},
 };
-function regAbilities(r){ const out=[]; if(!r) return out; for(const id in UNIT_AB){ const A=UNIT_AB[id]; if(!A.types[r.type]) continue; if(A.res&&!hasRes(r.team,A.res)) continue; out.push(id); } return out; }
+function regAbilities(r){ const out=[]; if(!r) return out; for(const id in UNIT_AB){ const A=UNIT_AB[id]; if(!A.types[r.type]) continue; if(A.res&&!hasRes(r.team,A.res)) continue; if(A.fac&&facOf(r.team)!==A.fac) continue; out.push(id); } return out; }
 function regAbReady(r,ab){ return !r.abT||!(r.abT[ab]>game.time); }
 function regAbility(team,r,ab){
   const A=UNIT_AB[ab]; if(!A||!r||r.team!==team||!regAbilities(r).includes(ab)) return 'bad_payload';
@@ -154,8 +168,9 @@ function regAbility(team,r,ab){
     else if(ab==='vanish'){ if(!u.cloak&&!u.action){ play(u,'shinobi'); u.fwdScale=0; u.cdShin=24; n++; } }
     else if(ab==='heal'){ if(!u.action){ u.healT=u; u.massCd=game.time+15; play(u,'massHeal'); u.fwdScale=0; u.healCd=1.1; n++; } }
     else if(ab==='spur'){ u.spurT=game.time+5; n++; } }
+  if(ab==='summon'){ const c=regCenter(r), forest=RL.on&&typeof inForest==='function'&&inForest(c.x,c.z); summonTreants(r.team,c.x+DIRX[r.team]*2,c.z,forest?2:1); n++; }
   const b=regAlive(r)[0]; if(b) callout(b,A.name+'!','#ffd36a');
-  if(NET.host) netCapEvent(['ab',r.id,ab]);
+  if(NET.host||NET.rec) netCapEvent(['ab',r.id,ab]);
   return true;
 }
 
@@ -177,7 +192,7 @@ function alertHit(t,src){
   const cx=Math.floor(t.pos.x/30), cz=Math.floor(t.pos.z/30), key=cx+','+cz;
   if(ATK_CELL[key]&&now-ATK_CELL[key]<15000) return; ATK_CELL[key]=now;
   _proj.copy(t.pos).project(camera); if(_proj.z<1&&Math.abs(_proj.x)<.8&&Math.abs(_proj.y)<.8) return;   // you can see it already
-  alertPush('Your '+(TYPE_PL[t.type]||'soldiers')+' are under attack','danger',t.pos.x,t.pos.z,'atk'+key);
+  alertPush('Your '+tPl(t.type,t.team)+' are under attack','danger',t.pos.x,t.pos.z,'atk'+key);
 }
 
 /* ---------- fight pings on the map, and pings for a teammate ---------- */
@@ -208,5 +223,6 @@ function recordKill(t){ const S=game.stats, b=t.lastHitBy; if(!S||!b||!b.reg||b.
 /* ---------- once a frame in battle ---------- */
 function battleExtras(dt){
   if(game.classicMix||game.mode!=='battle') return;
-  heroStep(dt); meteorStep(dt); recordTick(dt);
+  if(game.fac&&(game.fac[0]==='wild'||game.fac[1]==='wild')) wildTick(dt);
+  heroStep(dt); meteorStep(dt); recordTick(dt); if(game.mission) storyTick(dt);
 }

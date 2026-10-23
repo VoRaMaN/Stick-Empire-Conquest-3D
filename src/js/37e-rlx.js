@@ -127,7 +127,7 @@ function fowUpdate(){
   FOW.tex.needsUpdate=true;
 }
 function fowStep(dt){
-  FOW.on=RL.on&&game.mode==='battle'&&!game.demo;
+  FOW.on=RL.on&&game.mode==='battle'&&!game.demo&&!game.replay;   // a replay shows the whole field
   FOW.reveal=!FOW.on||game.over>0;
   FOW.uOn.value=FOW.on&&!FOW.reveal?1:0;
   if(!FOW.on) return; fowInit();

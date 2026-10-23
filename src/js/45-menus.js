@@ -15,8 +15,9 @@ function statsTick(){ if(!game.stats||game.mode!=='battle') return; for(let t=0;
 /* ---------- title screen with a battle playing behind it ---------- */
 const menuEl=$('#menu');
 let menuSize=settings.size||0;
-function showPanel(id){ for(const p of ['menuMain','menuSkirmish','menuInstall','menuOnline']) { const el=$('#'+p); if(el) el.hidden=p!==id; } }
+function showPanel(id){ if(id==='menuStory') renderStory(); for(const p of ['menuMain','menuSkirmish','menuInstall','menuOnline','menuStory']) { const el=$('#'+p); if(el) el.hidden=p!==id; } }
 function openMenu(panel){
+  if(RPL.play) replayExit(true);
   closeOverlays(); closeCampaign(); selectReg(null);
   game.paused=false; game.tutorial=null; endCoach(); game.campFight=null; game.spent=false;
   menuEl.hidden=false; setBodyClass('in-menu',true); audio.inMenu=true;
@@ -28,7 +29,7 @@ function refreshMenu(){
   const sv=campLoad(), cont=sv&&!sv.over;
   $('#mmContinue').hidden=!cont;
   if(cont){ const owned=Object.values(sv.owner).filter(v=>v===0).length; $('#mmContinueSub').textContent='Turn '+sv.turn+' · '+owned+' of 8 territories'; }
-  const cb=$('#mmCampaign'); if(cb.dataset) delete cb.dataset.armed; $('#mmCampaignSub').textContent=cont?'Start a new conquest':'Conquer eight territories';
+  const cb=$('#mmCampaign'); if(cb.dataset) delete cb.dataset.armed; $('#mmCampaignSub').textContent=cont?'Start a new conquest':'Conquer the war table: 49 regions';
   $('#mmTraining').classList[settings.tutorialDone?'remove':'add']('pulse');
   $('#ver').textContent='Version '+BUILD.version+(BUILD.target==='web'?'':' · preview');
   updateInstallButton();
@@ -70,10 +71,15 @@ function startSkirmish(size){
 }
 function menuClick(id,fn){ const b=$('#'+id); if(b) b.onclick=()=>{ sfx('ui'); fn(); }; }
 menuClick('mmSkirmish',()=>showPanel('menuSkirmish'));
+menuClick('mmStory',()=>showPanel('menuStory'));
+menuClick('stBack',()=>showPanel('menuMain'));
 // your side: Order or Chaos (the enemy fields the other); the battle behind the title switches with it
 function syncSideUI(){ if(menuEl.querySelectorAll) menuEl.querySelectorAll('.side-pick').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.side===(settings.side||'order')))); }
 if(menuEl.querySelectorAll) menuEl.querySelectorAll('.side-pick').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); const sd=b.dataset.side; if(sd===(settings.side||'order')) return;
   settings.side=sd; saveSettings(); syncSideUI(); if(game.demo) startDemo(); }));
+// the skirmish enemy: Auto (the side's usual foe) or any of the three
+function syncFoeUI(){ const P=$('#foePills'); if(P&&P.querySelectorAll) P.querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.foe||'')===(settings.foe||'')))); }
+{ const P=$('#foePills'); if(P&&P.querySelectorAll) P.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); settings.foe=b.dataset.foe||''; saveSettings(); syncFoeUI(); })); syncFoeUI(); }
 syncSideUI();
 menuClick('skBack',()=>showPanel('menuMain'));
 menuClick('skStart',()=>startSkirmish(menuSize));
@@ -107,6 +113,7 @@ function resumeGame(){ $('#pause').hidden=true; for(const s of ['settings','help
 $('#bPause').onclick=()=>{ sfx('ui'); if(game.paused&&!$('#pause').hidden) resumeGame(); else pauseGame(); };
 menuClick('pResume',resumeGame);
 menuClick('pRestart',()=>{ resumeGame();
+  if(game.mode==='battle'&&game.mission){ startStory(game.mission.i); return; }
   if(game.mode==='duel') resetDuel();
   else if(game.mode==='viewer') resetViewer();
   else if(game.tutorial) startTutorial();
@@ -121,6 +128,7 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden&&menuEl.hi
 /* ---------- results ---------- */
 const fmtTime=s=>{ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 function battleEnded(){
+  if(RPL.play){ RPL.play.done=true; replayUI(); return; }   // the end of a replay: its own controls stay up
   if(game.demo){ startDemo(); return; }
   if(NET.on){ netShowResults(); return; }
   if(game.autoResults){ if(game.campFight) finishCampFight(game.winner); else resetBattle(); return; }   // used by the test suite
@@ -130,14 +138,16 @@ function showResults(){
   const win=game.winner===0, S=game.stats, tut=!!game.tutorial, f=game.campFight;
   if(tut) endCoach();
   const R=$('#results'); R.hidden=false; R.classList.remove('win','lose'); R.classList.add(win?'win':'lose');
-  $('#resH').textContent=tut?(win?'Trained':'Defeated'):(win?'Victory':'Defeat');
+  $('#resH').textContent=tut?(win?'Trained':'Defeated'):game.mission?(win?'Mission complete':'Mission failed'):(win?'Victory':'Defeat');
+  const M=game.mission; if(M&&!M.state){ M.state=win?'won':'lost'; M.why=win?'The enemy statue fell':'Your statue fell'; if(win){ const SS=settings.story||(settings.story={done:{}}); SS.done=SS.done||{}; SS.done[M.id]=1; } }
   const time=fmtTime(game.time-S.t0);
-  $('#resSub').textContent=tut?(win?'You can command an army. The field is yours.':'The training statue fell. Try again.'):
+  $('#resSub').textContent=M?M.D.name+' · '+M.why+' after '+time+'.'+(win&&STORY[M.i+1]?' Next: '+STORY[M.i+1].name+'.':win?' The River War is won!':''):tut?(win?'You can command an army. The field is yours.':'The training statue fell. Try again.'):
     f?campName(f.id)+(win?' is won':' is lost')+' after '+time+'.':(win?'The '+teamName(1)+' statue fell after '+time+'.':'Your statue fell after '+time+'.');
   const rows=[['Enemies slain',S.kills[0]],['Soldiers lost',S.losses[0]],['Finishers',S.fins[0]],['Arrows loosed',S.arrows[0]],['Gold mined',Math.round(S.gold[0])],['Largest army',S.peak[0]]];
   $('#resStats').innerHTML=rows.map(r=>'<dt>'+r[0]+'</dt><dd>'+Number(r[1]).toLocaleString()+'</dd>').join('');
   resultsReport(0);   // charts and the regiment of the battle (41b)
-  $('#rAgain').innerHTML='<span>'+(tut?'Play a skirmish':f?'Back to the map':'Play again')+'</span>';
+  replayStop(); const rr=$('#rReplay'); if(rr) rr.hidden=!replayHave();
+  $('#rAgain').innerHTML='<span>'+(M?(win&&STORY[M.i+1]?'Next mission':'Retry mission'):tut?'Play a skirmish':f?'Back to the map':'Play again')+'</span>';
   musicStinger(win); settings.played=(settings.played||0)+1;
   if(tut&&win){ settings.tutorialDone=true; } saveSettings();
 }
@@ -145,7 +155,9 @@ menuClick('rAgain',()=>{ $('#results').hidden=true;
   if(NET.on||NET.after){ netResultsAgain(); return; }
   if(game.tutorial){ game.tutorial=null; endCoach(); startSkirmish(settings.size||0); return; }
   if(game.campFight){ finishCampFight(game.winner); return; }
+  if(game.mission){ const M=game.mission, win=game.winner===0; startStory(win&&STORY[M.i+1]?M.i+1:M.i); return; }
   resetBattle(); });
+menuClick('rReplay',()=>{ $('#results').hidden=true; replayPlay(); });
 menuClick('rMenu',()=>{ if(NET.on||NET.after){ netResultsMenu(); return; } if(game.campFight){ finishCampFight(game.winner); closeCampaign(); } openMenu(); });
 
 /* ---------- install ---------- */

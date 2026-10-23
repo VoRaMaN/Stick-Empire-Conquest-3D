@@ -121,7 +121,7 @@ function startFinisher(u,v,forced){
   const list=FINS[u.type]; let name=forced;
   if(!name){ let g=0; do{ name=list[Math.floor(Math.random()*list.length)]; }while(name===u.lastFin&&++g<6); }
   u.lastFin=name;
-  if(NET.host) netCapFin(u,v,name);
+  if(NET.host||NET.rec) netCapFin(u,v,name);
   NET.noCap++; try{ startFinisher0(u,v,name,list); } finally { NET.noCap--; }
 }
 function startFinisher0(u,v,name,list){
@@ -138,7 +138,7 @@ function startFinisher0(u,v,name,list){
   u.cdT=u.T.cd;
   if(game.mode==='duel'||cam.follow===u||cam.follow===v){ showBanner(def.name,TYPES[u.type].name+' finisher · '+(list.indexOf(name)+1)+' of '+list.length); }
 }
-function play(u,name){ if(NET.guest&&!NET.allowPlay) return; const c=CLIPS[u.type][name]; if(!c) return; u.action={c,t:0,age:0,fired:0,prevFwd:0}; if(NET.host&&!NET.noCap) netCapPlay(u,name); }
+function play(u,name){ if(NET.guest&&!NET.allowPlay) return; const c=CLIPS[u.type][name]; if(!c) return; u.action={c,t:0,age:0,fired:0,prevFwd:0}; if((NET.host||NET.rec)&&!NET.noCap) netCapPlay(u,name); }
 
 function updateAction(u,dt){
   const a=u.action; if(!a) return;

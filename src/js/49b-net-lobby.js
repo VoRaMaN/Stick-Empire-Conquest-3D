@@ -5,7 +5,8 @@
    each team's faction, Ready / Switch team / Leave, and Start for the host once every seat is filled and ready.
    Every change is a database call; every other player sees it through the room's private channel. */
 const ON={mode:(settings.netMode==='2v2'?'2v2':'1v1'),map:(settings.netMap==='river'?'river':'classic'),busy:false,active:null,nameT:null,live:null,liveOn:false,liveErr:false};
-const netCfg=()=>({factions:[settings.side==='chaos'?'chaos':'order',settings.side==='chaos'?'order':'chaos'],size:0,map:ON.map});
+const netSide=()=>settings.side==='wild'&&R4.ok?'wild':settings.side==='chaos'?'chaos':'order';   // the Wildlands online need the server update (49e)
+const netCfg=()=>({factions:[netSide(),netSide()==='chaos'?'order':'chaos'],size:0,map:ON.map});
 
 /* ---------- who is online right now ---------- */
 // every 20 s while the online screens are open (and in a room or battle) this player checks in and gets back the
@@ -56,7 +57,7 @@ function openOnline(msg,isErr){
   renderOnlineHome(); onMsg(msg||'',isErr);
   const p=onlineProblem(); if(p){ onMsg(p,true); onlineConnUI(); return; }
   ON.liveOn=true;
-  onTry(async()=>{ await netSignIn(); ON.active=await netRpc('se3d_my_active_match'); renderOnlineHome(); }).then(()=>{ if(msg) onMsg(msg,isErr); livePing(); });
+  onTry(async()=>{ await netSignIn(); ON.active=await netRpc('se3d_my_active_match'); renderOnlineHome(); }).then(()=>{ if(msg) onMsg(msg,isErr); livePing(); r4Check(); });
 }
 function renderOnlineHome(){
   const off=!!onlineProblem(), A=ON.active;
@@ -74,6 +75,7 @@ function renderOnlineHome(){
     '<div class="on-seg on-map" role="radiogroup" aria-label="Map"><button data-map="classic" aria-pressed="'+(ON.map==='classic')+'">Classic</button><button data-map="river" aria-pressed="'+(ON.map==='river')+'">Riverlands</button></div>'+
     '<small class="opt-note">'+(ON.map==='river'?'Riverlands PvP: a 320 m valley, four capture zones with bonuses, bridges, fog of war and long-range bows.':'The classic field: one straight battle between the two castles.')+'</small>'+
     '<button class="mm primary" id="onQuick"'+(off?' disabled':'')+'><span>Quick match · '+(ON.map==='river'?'Riverlands':'Classic')+'</span><small>Play the next '+(ON.mode==='2v2'?'three players':'player')+' who search'+(ON.mode==='2v2'?'':'es')+' for this map · '+ON.mode+'</small></button>'+
+    r4HomeHTML(off)+
     '<button class="mm" id="onCreate"'+(off?' disabled':'')+'><span>Create private room</span><small>Get a code to share with '+(ON.mode==='2v2'?'three friends':'a friend')+'</small></button>'+
     '<div class="mm-row"><label class="on-field" style="flex:1 1 auto">Room code<input id="onCode" class="code" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC234"></label></div>'+
     '<button class="mm" id="onJoin"'+(off?' disabled':'')+'><span>Join room</span><small>Enter the code your friend shared</small></button>'+
@@ -89,6 +91,7 @@ function renderOnlineHome(){
   B.querySelector('#onJoin').onclick=()=>{ sfx('ui'); onJoinPressed(); };
   B.querySelector('#onBack').onclick=()=>{ sfx('ui'); liveStop(); showPanel('menuMain'); };
   const rj=B.querySelector('#onRejoin'); if(rj) rj.onclick=()=>{ sfx('ui'); onTry(async()=>{ const r=await netRpc('se3d_room_state',{p_match:A.id}); await enterRoom(r); }); };
+  r4Bind(B);
   const ab=B.querySelector('#onAbandon'); if(ab) ab.onclick=()=>{ onTry(async()=>{ await netRpc('se3d_leave_room',{p_match:A.id}); ON.active=null; renderOnlineHome(); },'The old battle was ended with no result.'); };
   onlineConnUI();
 }
@@ -128,7 +131,7 @@ function onRoomChanged(r,prev){
   }
 }
 function leaveLobbyLocal(){ netHeartbeat(false); netLeaveChannel(); NETC.room=null; NETC.me=null; NETC.phase='off'; }
-const facLabel=f=>f==='chaos'?'Chaos':'Order';
+const facLabel=f=>f==='chaos'?'Chaos':f==='wild'?'Wildlands':'Order';
 // the room's battle settings: the host picks the map and the finishers, everyone sees them
 function cfgUI(r,host){ const c=r.config||{}, map=c.map==='river'?'river':'classic', fin=c.finishers===0||c.finishers===2?c.finishers:1, dis=host?'':' disabled';
   return '<div class="on-cfg"><div class="opt"><span>Map</span><div class="pills" role="radiogroup" aria-label="Map">'+
@@ -149,7 +152,7 @@ function renderLobby(){
   else status=readyN+' of '+seats+' ready.';
   const team=t=>{ const mine=me&&me.team===t, F=fac[t];
     let h='<div class="on-team t'+t+(mine?' mine':'')+'"><h3>'+esc(FACTIONS[F].team[t])+'</h3><div class="on-fac" role="radiogroup" aria-label="Team '+(t+1)+' faction">';
-    for(const f of ['order','chaos']) h+='<button data-f="'+f+'" data-t="'+t+'" aria-pressed="'+(F===f)+'"'+(mine?'':' disabled')+'>'+facLabel(f)+'</button>';
+    for(const f of (R4.ok?['order','chaos','wild']:['order','chaos'])) h+='<button data-f="'+f+'" data-t="'+t+'" aria-pressed="'+(F===f)+'"'+(mine?'':' disabled')+'>'+facLabel(f)+'</button>';
     h+='</div>';
     for(let s=t;s<seats;s+=2){ const p=ps.find(x=>x.slot===s);
       if(!p){ h+='<div class="on-p empty"><i class="dot"></i><span class="nm">Open seat</span><span class="st"></span></div>'; continue; }
@@ -157,7 +160,7 @@ function renderLobby(){
       h+='<div class="on-p"><i class="dot'+(on?' on':'')+'" title="'+(on?'connected':'not connected')+'"></i><span class="nm">'+esc(p.name)+(p.user_id===r.host?' ♛':'')+(p.user_id===NETC.user.id?' (you)':'')+'</span><span class="st'+(p.ready?' ready':'')+'">'+(p.ready?'Ready':'Not ready')+'</span></div>'; }
     return h+'</div>'; };
   onBody().innerHTML=
-    '<div class="on-code"><div><small>Room code · '+esc(r.mode)+' · '+(r.is_private?'private':'quick match')+'</small><b id="onRoomCode">'+esc(r.code)+'</b></div><button id="onCopy">Copy code</button></div>'+
+    '<div class="on-code"><div><small>Room code · '+esc(r.mode)+' · '+(r.is_private?'private':r.config&&r.config.ranked?'ranked quick match':'quick match')+'</small><b id="onRoomCode">'+esc(r.code)+'</b></div><button id="onCopy">Copy code</button></div>'+
     liveHTML()+'<p class="on-status" id="onStatus">'+esc(status)+'</p>'+
     '<div class="on-teams">'+team(0)+team(1)+'</div>'+cfgUI(r,host)+
     '<label class="on-field">Your name<input id="onLName" maxlength="20" value="'+esc(me?me.name:myName())+'"></label>'+

@@ -3,6 +3,7 @@ function enemyCommander(dt){
   if(game.tutorial||NET.on) return;   // online, both armies are commanded by people
   game.aiT-=dt; if(game.aiT>0) return; game.aiT=2;
   aiResearch(1); if(game.demo) aiResearch(0);
+  if(game.mission&&game.mission.D.passive) return;   // a story mission's enemy that stays behind its walls (40c)
   const power=t=>units.filter(u=>u.alive&&u.team===t&&u.isUnit&&!u.T.worker&&!u.routing).reduce((a,u)=>a+u.T.cost/econ(t),0);
   const mine=power(1), theirs=power(0), st=game.stance[1];
   const threat=units.some(u=>u.alive&&u.team===0&&!u.T.worker&&u.pos.x>BASE_X[1]-20);

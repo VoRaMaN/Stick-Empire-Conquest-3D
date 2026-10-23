@@ -55,6 +55,8 @@
   <div id="selBox" hidden></div>
   <!-- command HUD (41b): alerts, the build queue, control groups, the ability bar, tooltips, the phone's radial menu -->
   <div id="alerts" class="alerts" hidden aria-live="polite"></div>
+  <div id="mission" class="mission" hidden aria-live="polite"></div>
+  <div id="rplBar" class="rplbar-w" hidden role="group" aria-label="Replay controls"></div>
   <div id="qPanel" class="qpanel" hidden aria-label="Training and research"></div>
   <div id="grpBar" class="grpbar" hidden aria-label="Control groups"></div>
   <div id="abBar" class="abbar" hidden aria-label="Abilities"></div>
@@ -130,11 +132,13 @@
       <div class="sides" role="radiogroup" aria-label="Your side">
         <button class="side-pick order" role="radio" data-side="order" aria-checked="true"><b>Order Empire</b><small>Discipline, steel and formations</small></button>
         <button class="side-pick chaos" role="radio" data-side="chaos" aria-checked="false"><b>Chaos Empire</b><small>Demons, souls and frenzy</small></button>
+        <button class="side-pick wild" role="radio" data-side="wild" aria-checked="false"><b>Wildlands</b><small>Fast bows, healing, the forest's Treants</small></button>
       </div>
       <button id="mmContinue" class="mm primary" hidden><span>Continue campaign</span><small id="mmContinueSub">Turn 1</small></button>
       <button id="mmSkirmish" class="mm"><span>Skirmish</span><small>One battle, your rules</small></button>
       <button id="mmOnline" class="mm"><span>Online Multiplayer</span><small>1v1 or 2v2 against real players</small></button>
-      <button id="mmCampaign" class="mm"><span>Campaign</span><small id="mmCampaignSub">Conquer eight territories</small></button>
+      <button id="mmStory" class="mm"><span>Story: The River War</span><small>Five missions on Riverlands: hold the bridge, escort the miners, the shrines, the ogre dens, Elderwood</small></button>
+      <button id="mmCampaign" class="mm"><span>Campaign</span><small id="mmCampaignSub">Conquer the war table: 49 regions</small></button>
       <button id="mmTraining" class="mm"><span>Training</span><small>Learn to command in two minutes</small></button>
       <button id="mmLab" class="mm"><span>Finisher Lab</span><small>140 finishers, 130 charges, every move</small></button>
       <button id="mmViewer" class="mm"><span>Unit Viewer</span><small>Every unit up close, with its story, stats and abilities</small></button>
@@ -160,8 +164,17 @@
         <button class="size" role="radio" data-size="1" aria-checked="false"><b>Large</b><span>60 a side</span><small>Regiments from the first second</small></button>
         <button class="size" role="radio" data-size="2" aria-checked="false"><b>Epic</b><span>200 a side</span><small>Full armies in ranks. Heavy on older phones</small></button>
       </div>
+      <h2 class="panel-h">Choose the enemy</h2>
+      <div class="pills foe-pills" role="radiogroup" aria-label="Enemy" id="foePills">
+        <button role="radio" data-foe="">Auto</button><button role="radio" data-foe="order">Order Empire</button><button role="radio" data-foe="chaos">Chaos Empire</button><button role="radio" data-foe="wild">Wildlands</button>
+      </div>
       <button id="skStart" class="mm primary"><span>Start battle</span></button>
       <button id="skBack" class="mm small">Back</button>
+    </div>
+    <div class="menu-panel" id="menuStory" hidden>
+      <h2 class="panel-h">The River War</h2>
+      <div class="storylist" id="storyList"></div>
+      <button id="stBack" class="mm small">Back</button>
     </div>
     <!-- online multiplayer: home (quick match, create, join) and the room lobby; drawn by 49b-net-lobby.js -->
     <div class="menu-panel online" id="menuOnline" hidden>
@@ -228,6 +241,7 @@
       <div class="rcharts" id="resCharts" hidden></div>
       <div class="stack">
         <button id="rAgain" class="mm primary"><span>Play again</span></button>
+        <button id="rReplay" class="mm small" hidden>Watch replay</button>
         <button id="rMenu" class="mm small">Main menu</button>
       </div>
     </div>
@@ -330,6 +344,8 @@
         <li><b>Knight</b> rides a barded warhorse with a couched lance. The fastest Order unit: runs down archers and casters, but Spartans stop his charge cold.</li>
         <li><b>Giant</b> smashes whole groups. Slow and expensive.</li>
       </ul>
+      <h3>Three empires</h3>
+      <p>Pick your side on the title screen: the <b>Order Empire</b>, the <b>Chaos Empire</b> or the <b>Wildlands</b> (fast Sylvan Rangers, Druids who heal and summon Treants, soldiers who regrow their wounds). In Skirmish, Choose the enemy picks who you fight. Story: The River War is five missions on Riverlands. After an offline battle, Watch replay shows it again.</p>
       <h3>Your general</h3>
       <p>Each army takes the field with a hero: the Order <b>General</b> or the Chaos <b>Warlord</b>. Kills level him up to level 5. Soldiers near him hit harder and keep their nerve. His two abilities sit in the bar above the dock (keys T and Y): Rally Cry heals and rallies the troops around him, Shield Wall cuts the damage they take, the Warlord's Meteor smashes the thickest enemy crowd. If he falls he is back 90 seconds later.</p>
       <h3>Commands</h3>

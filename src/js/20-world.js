@@ -13,7 +13,7 @@ function castleFloor(u,x,z){ const t=u.team, lx=t?MAP.cf-x:x+MAP.cf, f=CGY[t]+.0
 
 function makeUnit(type,team,x,z,opt){
   opt=opt||{}; if(team===2) rlNeutralTeam();   // a neutral camp's colours, made on first use (37f)
-  const T=TYPES[type], s=opt.s||T.s;
+  const T=opt.T||unitT(type,team), s=opt.s||T.s;   // a Wildlands soldier fights with his own sheet (36c)
   const u={id:++uid,type,team,T,s,pos:new V3(x,0,z),vel:new V3(),av:new V3(),last:new V3(x,0,z),spd:0,
     face:team===0?Math.PI/2:-Math.PI/2,faceGoal:0,hp:T.hp,maxHp:T.hp,alive:true,state:'ok',ai:opt.ai!==false,
     target:null,retarget:0,cdT:rand(0,.6),action:null,fin:null,fwdScale:1,

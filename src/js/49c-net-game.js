@@ -21,12 +21,12 @@ const r2=v=>Math.round(v*100), r3=v=>Math.round(v*1000);
 
 /* ---------------- host: recording what happens ---------------- */
 const netId=u=>u&&(u.isUnit||u.garrison)?u.id:0;
-function netCapPlay(u,name){ if(!NETG.cap||!(u.isUnit||u.garrison)) return; NETG.ev.push({t:hostNow(),k:'p',u,name,a:u.action}); }
-function netCapFin(u,v,name){ if(!NETG.cap) return; NETG.ev.push({t:hostNow(),e:['f',u.id,v.id,name]}); }
-function netCapDeath(u,imp,opt){ if(!NETG.cap||!(u.isUnit||u.garrison)) return; const i=imp||{x:0,y:0,z:0};
+function netCapPlay(u,name){ if(!NETG.cap||NETG.ev.length>8000||!(u.isUnit||u.garrison)) return; NETG.ev.push({t:hostNow(),k:'p',u,name,a:u.action}); }
+function netCapFin(u,v,name){ if(!NETG.cap||NETG.ev.length>8000) return; NETG.ev.push({t:hostNow(),e:['f',u.id,v.id,name]}); }
+function netCapDeath(u,imp,opt){ if(!NETG.cap||NETG.ev.length>8000||!(u.isUnit||u.garrison)) return; const i=imp||{x:0,y:0,z:0};
   NETG.ev.push({t:hostNow(),e:['d',u.id,r2(i.x),r2(i.y),r2(i.z),(opt&&opt.decap?1:0)|(u.state==='stunned'?2:0)]}); }
-function netCapNew(u,how,b){ if(!NETG.cap) return; NETG.ev.push({t:hostNow(),e:['n',u.id,how,b.id]}); }
-function netCapEvent(e){ if(!NETG.cap) return; NETG.ev.push({t:hostNow(),e}); }
+function netCapNew(u,how,b){ if(!NETG.cap||NETG.ev.length>8000) return; NETG.ev.push({t:hostNow(),e:['n',u.id,how,b.id]}); }
+function netCapEvent(e){ if(!NETG.cap||NETG.ev.length>8000) return; NETG.ev.push({t:hostNow(),e}); }
 function netCapOver(w,reason){ if(!NET.host||NETG.over) return; NETG.over={w,r:reason,stats:netStatsSummary()}; NETG.ev.push({t:hostNow(),e:['o',w===null?-1:w,reason,NETG.over.stats]}); NETG.reportP=netReportResult(); }
 function netStatsSummary(){ const S=game.stats||{}; return {kills:S.kills||[0,0],losses:S.losses||[0,0],fins:S.fins||[0,0],peak:S.peak||[0,0],t:Math.round(game.time-(S.t0||0))}; }
 // flush the recorded events into wire form ([kind, ms before the snapshot, ...])
@@ -473,6 +473,7 @@ function netLeavePressed(){
 }
 // leave the battle on purpose. A host ends it with no winner; a 1v1 guest surrenders; a 2v2 guest leaves their ally to fight on
 async function netLeaveMatch(toMenu){
+  if(NET.spectator){ spectLeave(toMenu); return; }
   const room=NETC.room;
   if(room&&NETC.phase==='battle'&&!NETG.over){
     if(NET.host){ netEndMatch(null,'abandoned'); const s=netSnapshot(); await netSend('tick',{s}); await (NETG.reportP||Promise.resolve()); }
@@ -484,7 +485,7 @@ async function netLeaveMatch(toMenu){
 }
 function netShutdown(){
   netBgTicker(false); netHeartbeat(false); netLeaveChannel();
-  NET.on=NET.host=NET.guest=false; NET.team=0; NETG.cap=false; NETC.phase='off';
+  NET.on=NET.host=NET.guest=false; NET.team=0; NETG.cap=false; NETC.phase='off'; if(NET.spectator||game.replay&&!RPL.play){ NET.spectator=false; game.replay=false; setBodyClass('replaying',false); }
   NETC.room=null; NETC.me=null; $('#netbar').hidden=true; netWaitUI(false);
   for(const u of units) u.net=false;
 }
@@ -503,8 +504,11 @@ function netShowResults(){
   resultsReport(me);
   $('#rAgain').innerHTML='<span>Online menu</span>'; musicStinger(w===me);
   NET.after=true;
-  const room=NETC.room; netShutdown(); NET.after=true;
-  if(room) netRpc('se3d_leave_room',{p_match:room.id}).catch(()=>{});
+  const room=NETC.room, spect=NET.spectator; if(spect){ $('#resH').textContent=w===null?'Match over':teamName(w)+' won'; R.classList.remove('win','lose'); }
+  netShutdown(); NET.after=true;
+  if(room&&spect) netRpc('se3d_stop_spectating',{p_match:room.id}).catch(()=>{});
+  else if(room) netRpc('se3d_leave_room',{p_match:room.id}).catch(()=>{});
+  if(room&&!spect&&room.config&&room.config.ranked&&w!==null) setTimeout(()=>{ netRpc('se3d_leaderboard',{p_limit:1}).then(L=>{ R4.lb=L; const m=L&&L.me, el=$('#resSub'); if(m&&el) el.textContent+=' Your rating is now '+m.rating+' (#'+m.rank+' this season).'; }).catch(()=>{}); },1800);
 }
 function netResultsAgain(){ NET.after=false; $('#results').hidden=true; openMenu('menuOnline'); openOnline(); }
 function netResultsMenu(){ NET.after=false; $('#results').hidden=true; openMenu(); }

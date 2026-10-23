@@ -11,7 +11,7 @@ const RESEARCH={
   mine:[{id:'hustle',name:'Miner Hustle',lv:1,cost:[[300,0]],t:[16],desc:'Miners dig faster and carry 80 gold a trip'}],
   barracks:[
     {id:'rage',name:'Rage',lv:1,cost:[[400,100]],t:[20],desc:'Swordsmen fly into a rage at close quarters: faster, +30% damage'},
-    {id:'shieldWall',name:'Shield Wall',lv:1,cost:[[500,60]],t:[22],desc:'Spartans holding formation take 35% less damage (50% from arrows)'},
+    {id:'shieldWall',nofac:'wild',name:'Shield Wall',lv:1,cost:[[500,60]],t:[22],desc:'Spartans holding formation take 35% less damage (50% from arrows)'},
   ],
   range:[
     {id:'fireArrows',name:'Fire Arrows',lv:1,cost:[[500,150]],t:[22],desc:'Archers light their arrows; targets burn'},
@@ -22,7 +22,8 @@ const RESEARCH={
     {id:'ewall',name:'Electric Wall',lv:1,cost:[[500,250]],t:[24],desc:'Wizards raise a crackling wall of lightning'},
     {id:'poison',name:'Poison Spray',lv:1,cost:[[400,200]],t:[20],desc:'Wizards spray poison over packed enemies'},
   ],
-  temple:[{id:'cure',name:'Cure',lv:1,cost:[[300,150]],t:[16],desc:'Clerics cleanse poison and burning'}],
+  temple:[{id:'cure',name:'Cure',lv:1,cost:[[300,150]],t:[16],desc:'Clerics cleanse poison and burning'},
+    {id:'grove',name:'Call of the Forest',lv:1,cost:[[450,150]],t:[24],desc:'Grove Druids can summon Treants out of the ground (ability bar, I): two in a forest, for 40 s',fac:'wild'}],
   aerie:[{id:'blazing',name:'Blazing Bolts',lv:1,cost:[[500,200]],t:[22],desc:'Wing Archers loose burning bolts'}],
   prison:[{id:'growth',name:'Giant Growth',lv:2,cost:[[600,200],[900,300]],t:[24,32],desc:'Giants grow 12% bigger and 30% tougher'}],
   // Chaos (prices in souls)
@@ -63,7 +64,8 @@ function rageTick(u,dt){
 
 /* ---------- starting and finishing research ---------- */
 function resBuilding(team,bid){ const C=CASTLES[team]; return bid==='castle'?C.keep:C.B[bid]; }
-function resNext(team,id){ const R=RES_BY_ID[id], l=CASTLES[team].res[id]||0; return l<R.lv?{R,l,cost:[Math.round(R.cost[l][0]*(R.native?1:econ(team))),R.cost[l][1]],t:R.t[l]}:null; }
+const resFits=(R,fac)=>!(R.fac&&R.fac!==fac)&&!(R.nofac&&R.nofac===fac);
+function resNext(team,id){ const R=RES_BY_ID[id]; if(!R||!resFits(R,facOf(team))||!resBuilding(team,R.bid)) return null; const l=CASTLES[team].res[id]||0; return l<R.lv?{R,l,cost:[Math.round(R.cost[l][0]*(R.native?1:econ(team))),R.cost[l][1]],t:R.t[l]}:null; }
 function startResearch(team,id){
   const R=RES_BY_ID[id], b=resBuilding(team,R.bid), N=R&&b?resNext(team,id):null, me=team===myTeam();
   if(!N) return false;
@@ -80,7 +82,7 @@ function finishResearch(C,b){
   if(r.id==='castleArchers') syncGarrison(C);
   if(r.id==='cerbRider') for(const u of units) if(u.alive&&u.team===t&&u.type==='cerberus') mountRider(u);
   if(r.id==='resilience'){ const st=statues[t]; if(st){ const add=st.max*.4; st.max+=add; st.hp+=add; } }
-  if(NET.host) netCapEvent(['rs',t,r.id,r.lvl]);
+  if(NET.host||NET.rec) netCapEvent(['rs',t,r.id,r.lvl]);
   if(t===myTeam()){ sfx('research',null,.9); narrate(r.id==='castleArchers'?'castleArchers':(C.nDone=(C.nDone||0)+1)%2?'researchDone':'upgradeDone',0);
     const R=RES_BY_ID[r.id]; alertPush('Research complete: '+rName(R,t),'good',undefined,undefined); showBanner(rName(R,t)+(R.lv>1?' '+['I','II','III'][r.lvl-1]:''),'research complete',1.4); refreshPanel(); }
 }
@@ -100,8 +102,9 @@ function aiResearch(team){
   if(Math.random()<.55||game.time<(aiSave['n'+team]||0)) return;
   const have={}; for(const u of units) if(u.alive&&u.team===team&&u.isUnit) have[u.type]=1;
   const want=facOf(team)==='chaos'?['income','castleArchers','soulSiphon','soulRend','hellCleave','magmaClaws','infernalPlate','cerbRider','resilience','income','castleArchers']
+    :facOf(team)==='wild'?['income','castleArchers','hustle','volley','rage','fireArrows','grove','growth','resilience','cure','shinobi','income','castleArchers']
     :['income','castleArchers','hustle','volley','rage','shieldWall','fireArrows','growth','resilience','cure','shinobi','poison','ewall','blazing','income','castleArchers'];
-  const UNIT_OF={hustle:'miner',rage:'sword',shieldWall:'spear',fireArrows:'archer',volley:'archer',growth:'giant',cure:'cleric',shinobi:'ninja',poison:'wizard',ewall:'wizard',blazing:'wing',
+  const UNIT_OF={hustle:'miner',rage:'sword',shieldWall:'spear',fireArrows:'archer',volley:'archer',growth:'giant',cure:'cleric',grove:'cleric',shinobi:'ninja',poison:'wizard',ewall:'wizard',blazing:'wing',
     soulSiphon:'thrall',magmaClaws:'crawler',hellCleave:'dread',infernalPlate:'dread',soulRend:'harvester'};
   for(const id of want){ const N=resNext(team,id); if(!N) continue; if(UNIT_OF[id]&&!have[UNIT_OF[id]]) continue;
     const b=resBuilding(team,N.R.bid); if(b.res) continue;
@@ -161,10 +164,10 @@ function openPanel(b){
   const box=$('#bpUnits'); box.innerHTML=''; const trains=b.trains||[];
   $('#bpTrainSec').hidden=!trains.length;
   for(const t of trains){ const T=TYPES[t], btn=document.createElement('button'); btn.className='bpu'; btn.dataset.t=t;
-    btn.innerHTML='<img alt="" src="'+(ICONS[t]||'')+'"><span class="n">'+T.name+'</span><span class="s">'+costTxt(T.cost,unitMana(t),myTeam())+'</span><span class="qn"></span>';
+    btn.innerHTML='<img alt="" src="'+(ICONS[t]||'')+'"><span class="n">'+tName(t)+'</span><span class="s">'+costTxt(T.cost,unitMana(t),myTeam())+'</span><span class="qn"></span>';
     btn.addEventListener('click',()=>buyUnit(t)); box.appendChild(btn); }   // costs shown in this army's currency
   const rb=$('#bpRes'); rb.innerHTML='';
-  for(const R of RESEARCH[b.id]||[]){ const d=document.createElement('button'); d.className='bpr'; d.dataset.id=R.id;
+  for(const R of RESEARCH[b.id]||[]){ if(!resFits(R,b.fac)) continue; const d=document.createElement('button'); d.className='bpr'; d.dataset.id=R.id;
     d.innerHTML='<span class="rn"></span><span class="rd">'+rDesc(R,myTeam())+'</span><span class="rc"></span><i class="rp"><b></b></i>';
     d.addEventListener('click',()=>{ issue('res',{id:R.id}); }); rb.appendChild(d); }
   refreshPanel();
@@ -183,7 +186,7 @@ function refreshPanel(){
       el.classList.toggle('done',!N); el.classList.toggle('busy',!!busy); el.classList.toggle('poor',!!N&&!busy&&(game.gold[me]<N.cost[0]||game.mana[me]<N.cost[1])); });
   }
   const gs=$('#bpGarr'); if(gs){ gs.hidden=b.id!=='castle'; if(b.id==='castle'){ const st=statues[me]; gs.textContent=C.garrison.length+(C.fac==='chaos'?' Soul Harvesters':' archers')+' on the walls · statue '+(st?Math.ceil(st.hp)+' / '+Math.ceil(st.max):''); } }
-  const tr=$('#bpTrain'); if(tr){ const cur=b.train; tr.textContent=cur?'Training '+TYPES[cur.type].name+' · '+Math.max(0,cur.t).toFixed(1)+'s':(b.q&&b.q.length?b.q.length+' waiting':''); }
+  const tr=$('#bpTrain'); if(tr){ const cur=b.train; tr.textContent=cur?'Training '+tName(cur.type)+' · '+Math.max(0,cur.t).toFixed(1)+'s':(b.q&&b.q.length?b.q.length+' waiting':''); }
 }
 function panelTick(dt){ panelT-=dt; if(panelT<=0){ panelT=.25; refreshPanel(); } }
 if($('#bpClose')) $('#bpClose').onclick=()=>{ sfx('ui'); closePanel(); };
@@ -202,11 +205,11 @@ function setHover(b,x,y){
   if(!tipEl) return;
   if(!b){ tipEl.hidden=true; return; }
   const own=b.team===myTeam(), C=CASTLES[b.team];
-  let sub=b.trains?'Trains '+b.trains.map(t=>TYPES[t].name).join(', '):'Research: '+(C.fac==='chaos'?'wall harvesters':'castle archers')+', income, resilience';
+  let sub=b.trains?'Trains '+b.trains.map(t=>tName(t,b.team)).join(', '):'Research: '+(C.fac==='chaos'?'wall harvesters':C.fac==='wild'?'wall rangers':'castle archers')+', income, resilience';
   if(own&&b.res) sub+=' · researching '+rName(RES_BY_ID[b.res.id],b.team);
-  if(own&&b.train) sub+=' · training '+TYPES[b.train.type].name;
-  const done=(RESEARCH[b.id]||[]).filter(R=>(C.res[R.id]||0)>0).length;
-  tipEl.innerHTML='<b>'+(own?'':teamName(b.team).split(' ')[0]+' ')+b.name+'</b><span>'+sub+'</span>'+(own?'<em>'+done+' of '+(RESEARCH[b.id]||[]).length+' upgrades · tap to open</em>':'');
+  if(own&&b.train) sub+=' · training '+tName(b.train.type,b.team);
+  const done=(RESEARCH[b.id]||[]).filter(R=>resFits(R,b.fac)&&(C.res[R.id]||0)>0).length;
+  tipEl.innerHTML='<b>'+(own?'':teamName(b.team).split(' ')[0]+' ')+b.name+'</b><span>'+sub+'</span>'+(own?'<em>'+done+' of '+(RESEARCH[b.id]||[]).filter(R=>resFits(R,b.fac)).length+' upgrades · tap to open</em>':'');
   tipEl.hidden=false; tipEl.style.left=Math.min(innerWidth-250,x+16)+'px'; tipEl.style.top=Math.max(8,y-12)+'px';
 }
 canvas.addEventListener('pointermove',e=>{ if(e.pointerType!=='mouse'||e.buttons||game.paused){ if(hoverB&&e.buttons) setHover(null); return; } setHover(pickBuilding(e.clientX,e.clientY),e.clientX,e.clientY); });
