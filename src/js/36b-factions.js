@@ -45,7 +45,7 @@ function syncTeamNames(){
 
 /* ---------- Chaos regiments, formations and weapon contact points ---------- */
 // Order cavalry (13g, 27e)
-Object.assign(REG_SIZE,{knight:4}); Object.assign(FORM,{knight:{cols:2,gap:4.2,depth:4.4}});   // wyverns need room for their wings
+Object.assign(REG_SIZE,{knight:2}); Object.assign(FORM,{knight:{cols:2,gap:8,depth:8}});   // wyverns need room for their wings
 { const i=FORM_ORDER.indexOf('giant'); FORM_ORDER.splice(i<0?FORM_ORDER.length:i+1,0,'knight'); }
 Object.assign(TYPE_PL,{knight:'Wyvern Knights'});
 Object.assign(REG_SIZE,{dread:10,harvester:8,boner:12,bomber:8,oracle:6,reaper:6,hades:1,hound:12,cerberus:2});

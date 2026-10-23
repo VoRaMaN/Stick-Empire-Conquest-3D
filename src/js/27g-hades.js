@@ -95,6 +95,7 @@ function hxDrawRider(u,R,d){
   const V=hxVar(u), rs=R.rs, tt=game.time;
   drawFigure(RJ,rs,hxC(V.body),1,_kvF,null,false,false);
   drawRiderArmor(RJ,rs,'chaos',u.team,_kvR,_kvU,_kvF);
+  hxArmour(u,V,rs,tt);   // v0.32: the lord's plate and great helm
   // the cloak: two dark panels falling behind him
   _hz1.copy(RJ.neck).addScaledVector(_kvF,-.12*rs); _hz2.copy(RJ.pelvis).addScaledVector(_kvF,-.28*rs).addScaledVector(UP,-.18*rs);
   _kvM.makeBasis(_kvR,_hz3.subVectors(_hz2,_hz1).normalize(),_kvF); _kvQ.setFromRotationMatrix(_kvM);
@@ -108,6 +109,36 @@ function hxDrawRider(u,R,d){
   _hz2.copy(_kvB).addScaledVector(_hz1,-.12*rs); _hz3.copy(_kvB).addScaledVector(_hz1,.12*rs); cyl(_hz2,_hz3,.022*rs,hxC('#3a2a20'),limbIM);
   for(const sd of [-1,1]){ _hz2.copy(_kvB).addScaledVector(_hz1,sd*.11*rs); _hz3.copy(_hz2).addScaledVector(d,.42*rs); cyl(_hz2,_hz3,.018*rs,hxC('#4a3a2c'),limbIM);
     glowAt(_hz3,(.07+.02*Math.sin(tt*14+sd))*rs,V.fire); if(Math.random()<.12) puff(_hz3,1,.05*rs,.7,V.fire); }
+}
+// the lord's armour: a horned great helm with a crown of spikes and a burning visor, spiked pauldrons, a breastplate
+// with a skull, tassets, a skull-buckled belt, gauntlets and spiked greaves, in the variant's metal
+const HX_METAL={infernal:['#5a3a22','#b8863a'],frost:['#46566a','#c8e0f0'],toxic:['#3a4826','#a8c860'],shadow:['#2a2232','#9a7ac8']};
+function hxArmour(u,V,rs,tt){
+  const [m0,m1]=HX_METAL[V.id]||HX_METAL.infernal, A=hxC(m0), B=hxC(m1), dark=hxC('#1a1416'), bone=hxC('#e6dabd');
+  const Uh=_hz1.subVectors(RJ.head,RJ.neck).normalize().clone(), F=_kvF, R=_kvR;
+  // helm
+  sph(_hz2.copy(RJ.head).addScaledVector(F,-.015*rs).addScaledVector(Uh,.02*rs),.228*rs,A,sphIM);
+  _kvM.makeBasis(R,Uh,F); _kvQ.setFromRotationMatrix(_kvM);
+  blob(_hz2.copy(RJ.head).addScaledVector(F,.19*rs).addScaledVector(Uh,-.02*rs),_kvQ,.15*rs,.13*rs,.03*rs,dark);   // the face guard
+  for(const sd of [-1,1]){ glowAt(_hz2.copy(RJ.head).addScaledVector(F,.22*rs).addScaledVector(Uh,.02*rs).addScaledVector(R,sd*.06*rs),.03*rs,V.fire);
+    _hz2.copy(RJ.head).addScaledVector(R,sd*.18*rs).addScaledVector(Uh,.08*rs); _hz3.copy(_hz2).addScaledVector(R,sd*.16*rs).addScaledVector(Uh,.14*rs).addScaledVector(F,-.06*rs); cyl(_hz2,_hz3,.035*rs,bone,limbIM);
+    _kvA.copy(_hz3).addScaledVector(Uh,.12*rs).addScaledVector(R,-sd*.04*rs); cyl(_hz3,_kvA,.02*rs,bone,limbIM); }
+  for(let i=0;i<5;i++){ const a=(i-2)*.42; _hz2.copy(RJ.head).addScaledVector(Uh,.19*rs).addScaledVector(R,Math.sin(a)*.12*rs).addScaledVector(F,Math.cos(a)*.08*rs);
+    _hz3.copy(_hz2).addScaledVector(Uh,(i===2?.16:.1)*rs); cyl(_hz2,_hz3,.018*rs,B,limbIM); }
+  // pauldrons with spikes
+  for(const [sh,sd] of [[RJ.sL,-1],[RJ.sR,1]]){ _hz2.copy(sh).addScaledVector(_kvU,.04*rs).addScaledVector(R,sd*.03*rs); sph(_hz2,.13*rs,A,jointIM); sph(_hz2.addScaledVector(_kvU,.02*rs),.095*rs,B,jointIM);
+    for(let k=0;k<2;k++){ _hz3.copy(sh).addScaledVector(_kvU,.1*rs).addScaledVector(F,(k-.5)*.08*rs); _kvA.copy(_hz3).addScaledVector(_kvU,.16*rs).addScaledVector(R,sd*.08*rs); cyl(_hz3,_kvA,.022*rs,dark,limbIM); } }
+  // breastplate and skull
+  _kvM.makeBasis(R,_kvU,F); _kvQ.setFromRotationMatrix(_kvM);
+  _hz2.copy(RJ.pelvis).lerp(RJ.chest,.72).addScaledVector(F,.07*rs); blob(_hz2,_kvQ,.16*rs,.2*rs,.1*rs,A);
+  _hz2.addScaledVector(F,.09*rs).addScaledVector(_kvU,.03*rs); sph(_hz2,.055*rs,bone,jointIM); for(const sd of [-1,1]) glowAt(_hz3.copy(_hz2).addScaledVector(F,.04*rs).addScaledVector(R,sd*.02*rs),.016*rs,V.fire);
+  // belt, tassets
+  _hz2.copy(RJ.pelvis).addScaledVector(F,.02*rs); blob(_hz2,_kvQ,.17*rs,.045*rs,.13*rs,dark); sph(_hz2.addScaledVector(F,.13*rs),.04*rs,B,jointIM);
+  for(const [hp,sd] of [[RJ.hipL,-1],[RJ.hipR,1]]){ _hz2.copy(hp).addScaledVector(_kvU,-.06*rs).addScaledVector(R,sd*.04*rs); blob(_hz2,_kvQ,.09*rs,.11*rs,.07*rs,A); }
+  // gauntlets and greaves
+  for(const [el,ha] of [[RJ.eL,RJ.hL],[RJ.eR,RJ.hR]]){ cyl(_hz2.copy(el).lerp(ha,.3),ha,.07*rs,A,limbIM); sph(ha,.075*rs,dark,jointIM); }
+  for(const [kn,ft] of [[RJ.kL,RJ.fL],[RJ.kR,RJ.fR]]){ cyl(_hz2.copy(kn).lerp(ft,.1),ft,.085*rs,A,limbIM); sph(kn,.09*rs,B,jointIM);
+    _hz3.copy(kn).addScaledVector(F,.14*rs).addScaledVector(_kvU,.05*rs); cyl(kn,_hz3,.02*rs,dark,limbIM); }
 }
 // glows at the mount and the burning ground
 function hxFx(u){ const V=hxVar(u), tt=game.time;

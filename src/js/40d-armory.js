@@ -155,7 +155,7 @@ function armDraw(u,J,s,F,R,mountOnly){
 /* ---------- the rooms ---------- */
 function armRoom(fac,cx,cy,cz){
   const G=new THREE.Group(), L=(c,o)=>new THREE.MeshLambertMaterial(Object.assign({color:c},o||{})), M=(g,m,x,y,z)=>{ const o=new THREE.Mesh(g,m); o.position.set(x,y,z); o.receiveShadow=true; G.add(o); return o; };
-  const R=14, Hh=10, P={order:{floor:'#8a8478',wall:'#6e6a62',ceil:'#4a4640',light:'#ffd8a0'},chaos:{floor:'#1e1a1c',wall:'#2a2224',ceil:'#140f10',light:'#ff6a3a'},wild:{floor:'#3e5a2a',wall:'#5a3e24',ceil:'#2a3a1e',light:'#c8ffb0'}}[fac];
+  const R=22, Hh=14, P={order:{floor:'#8a8478',wall:'#6e6a62',ceil:'#4a4640',light:'#ffd8a0'},chaos:{floor:'#1e1a1c',wall:'#2a2224',ceil:'#140f10',light:'#ff6a3a'},wild:{floor:'#3e5a2a',wall:'#5a3e24',ceil:'#2a3a1e',light:'#c8ffb0'}}[fac];
   M(new THREE.CylinderGeometry(R,R,Hh,40,1,true),L(P.wall,{side:THREE.BackSide}),cx,cy+Hh/2,cz);
   const fl=M(new THREE.CircleGeometry(R,40),L(P.floor),cx,cy+.02,cz); fl.rotation.x=-Math.PI/2;
   const ce=M(new THREE.CircleGeometry(R,40),L(P.ceil,{side:THREE.BackSide}),cx,cy+Hh,cz); ce.rotation.x=-Math.PI/2;
@@ -171,7 +171,7 @@ function armRoom(fac,cx,cy,cz){
       ARM.fx.push({k:'torch',p:new V3(x-Math.cos(a)*.7,cy+3.2,z-Math.sin(a)*.7)}); });
     for(let i=0;i<6;i++){ const a=i/6*TAU; const sh=M(new THREE.CircleGeometry(.6,16),L(i%2?'#2a4aa8':'#c8ced6',{side:THREE.DoubleSide}),cx+Math.cos(a)*(R-.15),cy+3.6,cz+Math.sin(a)*(R-.15)); sh.rotation.y=-a-Math.PI/2; }
   } else if(fac==='chaos'){
-    for(let i=0;i<10;i++){ const a=i/10*TAU, l=M(new THREE.BoxGeometry(.35,.04,R-2.5),L('#ff5a1a',{emissive:'#c03a0a'}),cx+Math.cos(a)*(R/2+.6),cy+.04,cz+Math.sin(a)*(R/2+.6)); l.rotation.y=-a+Math.PI/2; l.receiveShadow=false; }
+    for(let i=0;i<10;i++){ const a=i/10*TAU, l=M(new THREE.BoxGeometry(.35,.04,R-2.5),L('#c84a18',{emissive:'#7a2006'}),cx+Math.cos(a)*(R/2+.6),cy+.04,cz+Math.sin(a)*(R/2+.6)); l.rotation.y=-a+Math.PI/2; l.receiveShadow=false; }
     ring(6,(x,z,a,i)=>{ if(i%2===0){ M(new THREE.BoxGeometry(1.2,.7,.6),L('#2a2426'),x,cy+.85,z); M(new THREE.BoxGeometry(.6,.5,.5),L('#3a3236'),x,cy+.25,z); }
       else { M(new THREE.CylinderGeometry(.5,.3,1,10),L('#3a3236'),x,cy+.5,z); ARM.fx.push({k:'brazier',p:new V3(x,cy+1.05,z)}); }
       for(let k=0;k<6;k++){ const t=M(new THREE.TorusGeometry(.12,.03,5,10),L('#4a4246'),cx+Math.cos(a+.3)*(R-.5),cy+Hh-.4-k*.2,cz+Math.sin(a+.3)*(R-.5)); t.rotation.y=k%2?Math.PI/2:0; } });
@@ -186,7 +186,7 @@ function armRoom(fac,cx,cy,cz){
     for(let i=0;i<3;i++){ const a=i/3*TAU+.9, sx=cx+Math.cos(a)*(R-2.2), sz=cz+Math.sin(a)*(R-2.2); M(new THREE.BoxGeometry(.15,2.2,.15),L('#6a4a2a'),sx,cy+1.1,sz);
       const b=M(new THREE.PlaneGeometry(.9,1.6),L('#3a6a22',{side:THREE.DoubleSide}),sx,cy+1.6,sz+.1); b.rotation.y=-a; }
   }
-  const pl=new THREE.PointLight(P.light,1.2,R*2.2,1.6); pl.position.set(cx,cy+Hh-2,cz); G.add(pl);
+  const pl=new THREE.PointLight(P.light,.55,R*2.2,1.6); pl.position.set(cx,cy+Hh-2,cz); G.add(pl);
   G.traverse(o=>{ if(o.isMesh) o.castShadow=false; });
   scene.add(G); return G;
 }

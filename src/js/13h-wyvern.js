@@ -7,8 +7,8 @@
      procedurally (flap, glide, hover, climb, bank, dive), 54 in all.
    New pose channels (10-unit-types NF): wing (0 folded … 1 spread), wup (wings raised + / beaten down -),
    wsw (swept back + / forward -). */
-Object.assign(TYPES.knight,{name:'Wyvern Knight',wyvern:true,hp:470,dmg:34,speed:6.3,airSpeed:10.5,cost:550,s:1.38,armor:.2,
-  tailLow:-.55,tailL:.62,foreW:.66,hindW:.82,engage:2.4,reach:1.7,range:1.9,turn:5});
+Object.assign(TYPES.knight,{name:'Wyvern Knight',wyvern:true,hp:520,dmg:36,speed:6.6,airSpeed:11,cost:1200,s:2.76,armor:.2,thick:1.4,
+  tailLow:-.55,tailL:.62,foreW:.66,hindW:.82,engage:3.8,reach:3,range:3.2,turn:4});   // v0.32: twice the size, 1200 gold
 const WYK=(c,adds,extra)=>{ const o=hsClip(c,extra); o.keys.forEach((k,i)=>{ if(adds[i]) Object.assign(k,adds[i]); }); return o; };
 const WY_FIRE=(t0,n,dt,o)=>Array.from({length:n},(_,i)=>Object.assign({t:+(t0+i*dt).toFixed(3),e:'wyFire'},o||{}));
 Object.assign(RAW.knight,{

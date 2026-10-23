@@ -32,6 +32,8 @@ function brain(u,dt){
   if(u.T.brain&&u.T.brain(u,dt)) return;
   u.retarget-=dt;
   if(u.retarget<=0||(u.target&&(!u.target.alive||u.target.state==='stunned'))){ u.target=nearestEnemy(u); const far=u.target?Math.hypot(u.target.pos.x-u.pos.x,u.target.pos.z-u.pos.z):99; u.retarget=(far>18?.9:.3)+Math.random()*.25; }
+  if(!u.routing&&!u.T.ranged&&!u.T.worker&&u.target&&u.target.alive&&u.state==='ok'){ const td=Math.hypot(u.target.pos.x-u.pos.x,u.target.pos.z-u.pos.z);
+    if(td>5){ const th=closeThreat(u,Math.min(4.5,td-1)); if(th&&th!==u.target){ u.target=th; u.retarget=.5; } } }   // an enemy in reach is fought, not run past
   if(u.routing){ // fleeing back to the statue, arms flailing
     const gx=BASE_X[u.team]+DIRX[u.team]*3, dx=gx-u.pos.x, dz=-u.pos.z*.3, d=Math.hypot(dx,dz)||1, sp=u.T.speed*1.1;
     u.desired.set(dx/d*sp,0,dz/d*sp); u.faceGoal=Math.atan2(dx,dz); return; }

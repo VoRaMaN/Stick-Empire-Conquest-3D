@@ -24,6 +24,9 @@ function rlRoute(u,dt){
   const gside=G.x<rlRiverX(G.z)?-1:1;                               // which bank he is really going to
   if(!X){
     if(rlDeck(px,pz)>-1e8||gside===side) return;                     // on a bridge already, or no need to cross
+    // just came over: don't turn round and cross straight back because a formation place flickered to the other bank
+    const ro=u.reg&&u.reg.order, told=ro&&(ro.kind==='move'||ro.kind==='attack'||ro.kind==='charge');
+    if(u.rlDone>game.time&&u.rlDoneSide===side&&!told&&!u.routing) return;
     const gx=G.x, gz=G.z;
     let best=0, bc=1e9;
     const bad=u.rlBad&&u.rlBad.t>game.time?u.rlBad.set:null;
@@ -33,6 +36,7 @@ function rlRoute(u,dt){
   X.t+=dt; if(X.t>60){ u.rlX=null; u.rlNo=game.time+3; return; }
   const B=rlCrossings()[X.b], s=X.side, A0x=(s<0?B.w[0]:B.e[0])+B.ax*s*2.5, A0z=(s<0?B.w[1]:B.e[1])+B.az*s*2.5,
     A1x=(s<0?B.e[0]:B.w[0])-B.ax*s*2.5, A1z=(s<0?B.e[1]:B.w[1])-B.az*s*2.5;
+  if(X.ph===1&&gside===s&&!X.rev){ X.rev=1; X.side=-s; X.best=1e9; X.bt=0; return; }   // on the bridge and his goal is back where he came from: turn round on the deck, don't step off it sideways
   if(X.ph===0){
     if(gside===s){ u.rlX=null; return; }                             // changed his mind: his goal is on this bank now
     // at the bridgehead: close to the approach point, or already in the bridge's lane near its end (a crowd can't all stand on one spot)
@@ -44,13 +48,14 @@ function rlRoute(u,dt){
     if(dw<X.best-.5){ X.best=dw; X.bt=0; } else X.bt+=dt;
     if(X.bt>5){ X.bt=0; X.best=1e9;
       if(X.ph===0&&dw<8){ X.ph=1; }
+      else if(X.ph===1&&rlDeck(px,pz)>-1e8){ X.jit=(Math.random()*2-1)*.35*(B.wid||4); X.jitT=game.time+3; }   // jammed on the deck: edge round the crowd, never give up mid-bridge
       else { const RB=u.rlBad&&u.rlBad.t>game.time?u.rlBad:(u.rlBad={set:new Set(),t:0}); RB.set.add(X.b); RB.t=game.time+30; u.rlX=null;
         if(RB.set.size>2){ RB.set.clear(); u.rlNo=game.time+4; } return; } } }
   const wx=X.ph?A1x:A0x, wz=X.ph?A1z:A0z, dx=wx-px, dz=wz-pz, dd=Math.hypot(dx,dz)||1;
-  if(X.ph&&(dd<1.8||(side!==s&&rlDeck(px,pz)<-1e8&&Math.abs(px-rx)>rlRiverW(pz)+1.5))){ u.rlX=null; return; }
+  if(X.ph&&(dd<1.8||(side!==s&&rlDeck(px,pz)<-1e8&&Math.abs(px-rx)>rlRiverW(pz)+1.5))){ u.rlX=null; u.rlDone=game.time+10; u.rlDoneSide=side; return; }
   const v=Math.max(sp,u.T.speed*.75); let nx=dx/dd, nz=dz/dd;
   if(X.ph&&B.wid){ // on the way over: keep to the middle of the deck so the crowd files across instead of jamming at the rails
-    const lat=-(px-B.x)*B.az+(pz-B.z)*B.ax, lim=B.wid*.22; if(Math.abs(lat)>lim){ const c=clamp((Math.abs(lat)-lim)*.6,0,.8)*-Math.sign(lat); nx+=-B.az*c; nz+=B.ax*c; const n=Math.hypot(nx,nz)||1; nx/=n; nz/=n; } }
+    const lat=-(px-B.x)*B.az+(pz-B.z)*B.ax-(X.jitT>game.time?X.jit:0), lim=B.wid*.22; if(Math.abs(lat)>lim){ const c=clamp((Math.abs(lat)-lim)*.6,0,.8)*-Math.sign(lat); nx+=-B.az*c; nz+=B.ax*c; const n=Math.hypot(nx,nz)||1; nx/=n; nz/=n; } }
   d.x=nx*v; d.z=nz*v; if(!u.action) u.faceGoal=Math.atan2(dx,dz);
 }
 // a point in the river (not on a bridge or a ford) moved to the nearer bank: orders and formation places stay walkable
@@ -65,7 +70,10 @@ function rlDeckClamp(u){
     const qc=clamp(q,-lim,lim); u.pos.x=B.x+B.ax*s-B.az*qc; u.pos.z=B.z+B.az*s+B.ax*qc; return true; }
   return false; }
 // where a soldier is really going: his regiment's place, the enemy he is after, his place in the army, or the enemy statue
+const _rlHome=new V3();
 function rlGoal(u){
+  if(u.routing&&u.team<2) return _rlHome.set(BASE_X[u.team],0,0);
+  if(u.script&&u.script.pts){ const w=u.script.pts[u.script.i]; if(w) return w; }   // a scripted walk (out of the castle or the pit, a story path) goes where its script says   // fleeing: home, over the nearest crossing (it used to aim at the old goal across the river and run back and forth)
   const ro=u.reg&&game.mode==='battle'?u.reg.order:null;
   if(ro&&(ro.kind==='move'||ro.kind==='hold')) return regSlot(u.reg,u);
   if(u.T.worker) return u.target&&u.target.alive&&u.target.pos&&Math.hypot(u.target.pos.x-u.pos.x,u.target.pos.z-u.pos.z)<4.5?u.target.pos:null;   // a miner walks to his own mine: an enemy across the river is no reason to head for a bridge

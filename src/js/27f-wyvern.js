@@ -10,7 +10,7 @@
    Abilities (knight: J K N M B; wyvern: Shift + J K N M B):
      Royal Lance Charge · Aerial Execution · Shield of the Crown · Royal Pursuit · King's Judgment
      Infernal Breath · Talon Dive · Wingstorm · Predator's Screech · Aerial Assault */
-const WY_CRUISE=7;
+const WY_CRUISE=10;
 let wyReady=false; const WY_COATS=[]; let WY_TRI=null;
 function wyInit(){
   if(wyReady) return; wyReady=true; horseInit();
@@ -383,3 +383,4 @@ TYPES.knight.pick=(u,t)=>{
     if(u.wy&&u.wy.ab) return true;   // an ability is steering him (27f)
     if(brain0(u,dt)) return true;
     return false; }; }
+RIDER.knight.legW=.15; RIDER.knight.rs=1.22;   // v0.32: a knight on a wyvern twice the size
