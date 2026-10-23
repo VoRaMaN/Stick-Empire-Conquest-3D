@@ -381,7 +381,7 @@ function netResetState(){
 function netBattleScene(cfg,host){
   closeMenu(); closeOverlays(); closeCampaign(); game.demo=false; game.tutorial=null; game.campFight=null; game.classicMix=false; game.paused=false;
   setFactions(cfg.factions[0],cfg.factions[1]); game.size=cfg.size===1?1:0; game.finMode=cfg.finishers===0||cfg.finishers===2?cfg.finishers:1;
-  game.mode='battle'; syncModeUI(); setTab('battle'); setTerrain(cfg.map==='river'?'riverlands':'skirmish');
+  game.mode='battle'; syncModeUI(); setTab('battle'); setTerrain(cfg.map==='frontier'?'frontier':cfg.map==='river'?'riverlands':'skirmish');
   if(host){ resetBattle(); }
   else { clearAll(); game.over=0; game.winner=undefined; game.mana=[150,150]; game.gold=[0,0]; ensureCastles(); syncTeamNames(); setupStatues(); statsReset(); resetCastles(); closePanel();
     game.stance=['defend','defend']; game.bt=0; if(RL.on) rlResetZones(); }

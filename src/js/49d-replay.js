@@ -9,7 +9,7 @@ const replayRecOK=()=>game.mode==='battle'&&!NET.on&&!game.demo&&!game.tutorial&
 function replayStart(){
   RPL.rec=null; NET.rec=false; NETG.cap=false; if(!replayRecOK()) return;
   NETG.t0=performance.now(); NETG.ev.length=0; NETG.tickN=0; NETG.over=null; NETG.cap=true; NET.rec=true;
-  RPL.rec={cfg:{factions:game.fac.slice(),map:MAP.id==='classic'?'classic':'river',size:game.size,finishers:game.finMode},snaps:[],acc:0,me:myTeam(),
+  RPL.rec={cfg:{factions:game.fac.slice(),map:MAP.id==='classic'?'classic':MAP.var||'river',size:game.size,finishers:game.finMode},snaps:[],acc:0,me:myTeam(),
     title:(game.mission?game.mission.D.name:game.campFight?campName(game.campFight.id):teamName(0)+' against '+teamName(1)),at:Date.now()};
 }
 function replayFrame(rdt){

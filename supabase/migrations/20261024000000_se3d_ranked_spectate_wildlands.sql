@@ -18,7 +18,7 @@ create table if not exists se3d_private.presence (
   user_id    uuid primary key references auth.users(id) on delete cascade,
   name       text not null check (char_length(name) between 1 and 20),
   status     text not null check (status in ('online','lobby','battle')),
-  map        text not null default 'classic' check (map in ('classic','river')),
+  map        text not null default 'classic' check (map in ('classic','river','frontier')),
   seen_at    timestamptz not null default now()
 );
 create index if not exists se3d_presence_seen on se3d_private.presence (seen_at);
@@ -29,7 +29,7 @@ returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_uid uuid := se3d_private.require_uid(); v_name text := se3d_private.clean_name(p_name);
 begin
   if p_status not in ('online','lobby','battle') then p_status := 'online'; end if;
-  if p_map not in ('classic','river') then p_map := 'classic'; end if;
+  if p_map not in ('classic','river','frontier') then p_map := 'classic'; end if;
   insert into se3d_private.presence (user_id, name, status, map, seen_at) values (v_uid, v_name, p_status, p_map, now())
     on conflict (user_id) do update set name = excluded.name, status = excluded.status, map = excluded.map, seen_at = now();
   delete from se3d_private.presence where seen_at < now() - interval '10 minutes';
@@ -42,7 +42,8 @@ begin
                        order by (p.user_id = v_uid) desc, p.seen_at desc limit 30) q), '[]'::jsonb),
     'rooms', (select jsonb_build_object(
                 'classic', count(*) filter (where coalesce(m.match_config->>'map','classic') = 'classic'),
-                'river',   count(*) filter (where m.match_config->>'map' = 'river'))
+                'river',   count(*) filter (where m.match_config->>'map' = 'river'),
+                'frontier', count(*) filter (where m.match_config->>'map' = 'frontier'))
               from public.se3d_matches m where m.status = 'waiting' and m.is_private = false and m.expires_at > now()),
     'live', (select count(*) from public.se3d_matches m where m.status = 'playing' and m.is_private = false));
 end $$;
@@ -64,7 +65,7 @@ declare f0 text := coalesce(p #>> '{factions,0}', 'order'); f1 text := coalesce(
 begin
   if f0 not in ('order','chaos','wild') or f1 not in ('order','chaos','wild') then raise exception 'se3d:bad_config' using errcode = '22023'; end if;
   if sz not in (0,1) then sz := 0; end if;
-  if mp not in ('classic','river') then mp := 'classic'; end if;
+  if mp not in ('classic','river','frontier') then mp := 'classic'; end if;
   if fin not in (0,1,2) then fin := 1; end if;
   return jsonb_build_object('factions', jsonb_build_array(f0, f1), 'size', sz, 'map', mp, 'finishers', fin, 'ranked', rk);
 end $$;
@@ -94,7 +95,7 @@ declare v_uid uuid := se3d_private.require_uid(); v_id uuid; v_new boolean := fa
   v_rk boolean := coalesce((p_config->>'ranked')::boolean, false);
 begin
   if p_mode not in ('1v1','2v2') then raise exception 'se3d:bad_mode' using errcode = '22023'; end if;
-  if v_map not in ('classic','river') then v_map := 'classic'; end if;
+  if v_map not in ('classic','river','frontier') then v_map := 'classic'; end if;
   perform pg_advisory_xact_lock(hashtext('se3d_quick_match_' || p_mode));
   perform se3d_private.cleanup();
   perform se3d_private.leave_other_lobbies(v_uid, null);

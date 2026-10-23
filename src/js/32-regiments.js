@@ -159,8 +159,8 @@ const TPRESET={
   keep:{wave:.8,m:[[19,0,7,2.6],[8,-8,5,1.2]]},
 };
 let terrName='skirmish';
-function setTerrain(name){ if(terrName===name) return; terrName=name; const river=name==='riverlands';
-  if(river!==(MAP.id==='river')) setMapMode(river);   // Riverlands is a map of its own (37d); every other ground is the classic field
+function setTerrain(name){ if(terrName===name) return; terrName=name; const river=name==='riverlands'||name==='frontier', v=name==='frontier'?'frontier':'river';
+  if(river!==(MAP.id==='river')||river&&v!==MAP.var) setMapMode(river?v:false);   // the Frontier is Riverlands three times over (37h)   // Riverlands is a map of its own (37d); every other ground is the classic field
   if(!river){ const p=TPRESET[name]; TERR.wave=p.wave; TERR.m=p.m; } buildTerrain(); }
 
 

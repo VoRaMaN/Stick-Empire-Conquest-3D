@@ -113,7 +113,7 @@ function rlAvoid(t,src){
 const RL_KIND={market:{name:'Market',gold:6,mana:0,dmg:0,txt:'+6 gold a second'},shrine:{name:'Shrine',gold:2,mana:2,dmg:.1,txt:'+2 mana a second · +10% damage'},
   militia:{name:'Militia village',gold:1,mana:0,dmg:0,txt:'a militia swordsman every 30 s'},tower:{name:'Watchtower',gold:1,mana:0,dmg:0,txt:'sees 70 m around'},
   altar:{name:'Resurrection shrine',gold:0,mana:1,dmg:0,txt:'raises one of your fallen every 25 s'}};
-const RL_ZKIND={A:'shrine',B:'market',C:'market',D:'shrine',E:'militia',F:'militia',G:'tower',H:'tower',I:'altar',J:'altar'};
+const RL_ZKIND={K:'market',L:'market',M:'altar',N:'altar',O:'tower',P:'tower',A:'shrine',B:'market',C:'market',D:'shrine',E:'militia',F:'militia',G:'tower',H:'tower',I:'altar',J:'altar'};
 const RL_HEAL=3, RL_ZSIGHT=30;
 function rlKind(Z){ return RL_KIND[RL_ZKIND[Z.id]||'market']; }
 function rlZoneBonusTick(dt){   // every quarter second, on the host
@@ -127,7 +127,7 @@ const rlDmgMul=src=>RL.dmg&&src&&src.team!==undefined&&RL.dmg[src.team]||1;
 // The valley is cut into 128 × 128 cells (3 m). Each army sees round every soldier, its castle and statue, and the
 // zones it holds; it remembers the ground it has seen. An enemy outside what you can see is hidden and can't be
 // targeted; ground you have never seen is dark, ground you saw before is dim.
-const FOW={N:128,X0:-200,S:400/128,vis:[null,null],exp:[null,null],disp:null,tex:null,uTex:{value:null},uOn:{value:0},t:0,on:false,discs:new Map(),reveal:false};
+const FOW={N:128,X0:-200,S:400/128,vis:[null,null],exp:[null,null],disp:null,tex:null,uTex:{value:null},uOn:{value:0},uK:{value:new THREE.Vector2(200,400)},t:0,on:false,discs:new Map(),reveal:false};
 function fowInit(){ if(FOW.tex) return; const N=FOW.N;
   for(const t of [0,1]){ FOW.vis[t]=new Uint8Array(N*N); FOW.exp[t]=new Uint8Array(N*N); }
   FOW.disp=new Uint8Array(N*N*4); for(let i=0;i<N*N;i++){ FOW.disp[i*4]=FOW.disp[i*4+1]=FOW.disp[i*4+2]=70; FOW.disp[i*4+3]=255; }
@@ -177,10 +177,10 @@ function fowPatchMat(m){
   m.customProgramCacheKey=function(){ return (own?own.call(this):base)+'|fow'; };
   m.needsUpdate=true; }
 function fowInject(sh){
-  sh.uniforms.uFow=FOW.uTex; sh.uniforms.uFowOn=FOW.uOn;
+  sh.uniforms.uFow=FOW.uTex; sh.uniforms.uFowOn=FOW.uOn; sh.uniforms.uFowK=FOW.uK;
   if(!sh.vertexShader.includes('#include <project_vertex>')||!sh.fragmentShader.includes('#include <fog_fragment>')) return;
   sh.vertexShader='varying vec2 vFowXZ;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\n{ vec4 fw=vec4(transformed,1.0);\n#ifdef USE_INSTANCING\n fw=instanceMatrix*fw;\n#endif\n fw=modelMatrix*fw; vFowXZ=fw.xz; }');
-  sh.fragmentShader='uniform sampler2D uFow;\nuniform float uFowOn;\nvarying vec2 vFowXZ;\n'+sh.fragmentShader.replace('#include <fog_fragment>','if(uFowOn>0.5){ gl_FragColor.rgb*=texture2D(uFow,(vFowXZ+200.0)/400.0).r; }\n#include <fog_fragment>');
+  sh.fragmentShader='uniform sampler2D uFow;\nuniform float uFowOn;\nuniform vec2 uFowK;\nvarying vec2 vFowXZ;\n'+sh.fragmentShader.replace('#include <fog_fragment>','if(uFowOn>0.5){ gl_FragColor.rgb*=texture2D(uFow,(vFowXZ+uFowK.x)/uFowK.y).r; }\n#include <fog_fragment>');
 }
 function fowPatchScene(){ fowInit(); if(RL.fowPatched||!RL.group) return; RL.fowPatched=true;
   RL.group.traverse(o=>{ if(!o.material) return; for(const m of Array.isArray(o.material)?o.material:[o.material]) fowPatchMat(m); });

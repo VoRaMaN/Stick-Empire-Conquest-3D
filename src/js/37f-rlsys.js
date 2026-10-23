@@ -51,7 +51,8 @@ function ambushStart(u){ if(!RL.on) return; if(u.stealth&&!(u.revealT>game.time)
 /* ---------- fords ---------- */
 // shallow crossings between the bridges: slow (half speed in the water), and anyone wading can't dodge or parry
 // and takes 25% more damage
-const RL_FORDS=[{z:35},{z:-35},{z:105},{z:-105}];
+const RL_FORDS0=[{z:35},{z:-35},{z:105},{z:-105}];
+let RL_FORDS=RL_FORDS0;
 function rlFordK(z){ let k=0; for(const F of RL_FORDS){ const d=Math.abs(z-F.z); if(d<5) k=Math.max(k,smooth(clamp((5-d)/2.2,0,1))); } return k; }
 let RL_CROSS=null;   // bridges and fords, the ways over the river, for route-finding
 function rlCrossings(){ if(RL_CROSS) return RL_CROSS; RL_CROSS=RL_BRIDGES.slice();
@@ -87,12 +88,14 @@ function rlOnDeath(t){ if(!RL.on||t.team>1||!t.isUnit||t.T.worker||t.type==='gia
 /* ---------- neutral camps: bandits and ogres guard gold ---------- */
 // They belong to neither army (team 2), stay near their camp and attack anyone who comes close. The army that
 // strikes the last blow on the last of them takes the camp's gold; the camp is filled again after three minutes.
-const RL_NCAMPS=[{x:-24,z:-107,kind:'bandits',gold:300},{x:24,z:107,kind:'bandits',gold:300},{x:-87,z:136,kind:'ogres',gold:450},{x:87,z:-136,kind:'ogres',gold:450}];
-const NCAMP_UNITS={bandits:['sword','sword','sword','sword','spear'],ogres:['giant','sword','sword']};
+const RL_NCAMPS0=[{x:-24,z:-107,kind:'bandits',gold:300},{x:24,z:107,kind:'bandits',gold:300},{x:-87,z:136,kind:'ogres',gold:450},{x:87,z:-136,kind:'ogres',gold:450}];
+let RL_NCAMPS=RL_NCAMPS0;
+const NCAMP_UNITS={bandits:['sword','sword','sword','sword','spear'],ogres:['giant','sword','sword'],warband:['sword','sword','archer','spear','sword']};
 function rlNeutralTeam(){ if(TEAM[2]) return; const b=TEAM[1];
   TEAM[2]=Object.assign({},b,{cape:'#5a4a2a',bronze:new THREE.MeshPhongMaterial({color:'#8a7a5a',specular:'#c9b08a',shininess:30,side:THREE.DoubleSide}),crest:lam('#6a5a3a'),lambda:lam('#5a4a2a'),
     body:new THREE.Color('#2e2418'),bar:new THREE.Color('#d8c08a'),acc:lam('#7a6a4a'),acc2:lam('#9a8a6a')}); }
 function rlCampsReset(){
+  rlThirdFaction();   // the Frontier's outposts belong to the faction not in the battle (37h)
   for(const C of RL_NCAMPS){ C.units=[]; C.respawn=0; C.cleared=false; }
   if(!RL.on||NET.guest) return;
   for(const C of RL_NCAMPS) rlCampFill(C);
@@ -100,7 +103,7 @@ function rlCampsReset(){
 function rlCampFill(C){
   rlNeutralTeam(); C.units=[]; C.cleared=false;
   NCAMP_UNITS[C.kind].forEach((type,i)=>{ const a=i/NCAMP_UNITS[C.kind].length*6.28, x=C.x+Math.cos(a)*2.5, z=C.z+Math.sin(a)*2.5;
-    const u=makeUnit(type,2,x,z,{col:TEAM[2].body}); u.isUnit=true; u.camp=C; u.post={x,z}; if(type==='giant'){ u.maxHp=u.hp=1500; } units.push(u); C.units.push(u); });
+    const u=makeUnit(type,2,x,z,C.kind==='warband'&&facOf(2)!=='order'?{}:{col:TEAM[2].body}); u.isUnit=true;   /* a warband of the third faction wears its own colours (37h) */ u.camp=C; u.post={x,z}; if(type==='giant'){ u.maxHp=u.hp=1500; } units.push(u); C.units.push(u); });
 }
 function rlCampBrain(u,dt){
   const C=u.camp; u.retarget-=dt;

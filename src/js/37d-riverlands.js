@@ -11,21 +11,26 @@
    the same every time and the classic battles' random numbers are never touched. Vegetation is instanced in 100 m
    tiles so whatever is off screen (or beyond the haze) is skipped. */
 const RL={built:false,on:false,WL:-.45,zones:[],obst:[],og:null,ogN:85,ogS:4,og0:-170,sway:{value:0},flow:null,mills:[],fires:[],flags:[],tiles:[],mmBg:null,mmKey:'',low:null};
-const RL_CF=118, RL_HALF=160, RL_LIM=156, RL_EDGE=200;   // castle walls at |x| 118; soldiers within ±156; ground out to ±200
-const RL_ZONES=[{id:'A',x:32,z:-132},{id:'B',x:-32,z:-46},{id:'C',x:32,z:46},{id:'D',x:-32,z:132},
+let RL_CF=118, RL_HALF=160, RL_LIM=156, RL_EDGE=200;   // castle walls at |x| 118; soldiers within ±156; ground out to ±200 (the Frontier: 37h)
+let RLK=1, RL_VAR='river';   // the map's scale and which of the two big maps this is (Riverlands, or the Frontier three times its size)
+const RL_ZONES0=[{id:'A',x:32,z:-132},{id:'B',x:-32,z:-46},{id:'C',x:32,z:46},{id:'D',x:-32,z:132},
   {id:'E',x:-34,z:81},{id:'F',x:34,z:-81},{id:'G',x:-33,z:-74},{id:'H',x:33,z:74},{id:'I',x:-72,z:42},{id:'J',x:72,z:-42}];   // E–J: militia villages, watchtowers, resurrection shrines (37f)
+let RL_ZONES=RL_ZONES0;
 const RL_ZR=8, RL_CAPT=11, RL_INCOME=5;   // zone radius (m), seconds to capture alone, gold a second for each zone held
 // two mines a side, in the corners beside the castles, each with a storehouse nearer the field
-const RL_MINE=[[{x:-122,z:-112,dx:-110,dz:-100},{x:-122,z:112,dx:-110,dz:100}],[{x:122,z:-112,dx:110,dz:-100},{x:122,z:112,dx:110,dz:100}]];
+const RL_MINE0=[[{x:-122,z:-112,dx:-110,dz:-100},{x:-122,z:112,dx:-110,dz:100}],[{x:122,z:-112,dx:110,dz:-100},{x:122,z:112,dx:110,dz:100}]];
+let RL_MINE=RL_MINE0;
 function rlRng(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 const rlSym=L=>L.concat(L.map(q=>[-q[0],-q[1]].concat(q.slice(2))));   // the map turns about its centre: each feature has its twin
 
 /* ---------- the shape of the land ---------- */
-const rlRiverX=z=>8*Math.sin(z*.026)+3.5*Math.sin(z*.063);        // odd in z, like the rest of the layout
-const rlRiverDX=z=>8*.026*Math.cos(z*.026)+3.5*.063*Math.cos(z*.063);
+const rlRiverX0=z=>8*Math.sin(z*.026)+3.5*Math.sin(z*.063);
+const rlRiverX=z=>RLK*rlRiverX0(z/RLK);        // odd in z, like the rest of the layout; the Frontier's meanders are wider
+const rlRiverDX=z=>8*.026*Math.cos(z*.026/RLK)+3.5*.063*Math.cos(z*.063/RLK);
 const rlRiverW=z=>4.8+.6*Math.cos(z*.05);
 const rlRiverD=(x,z)=>Math.abs(x-rlRiverX(z))/rlRiverW(z);        // 0 mid-stream, 1 at the water's edge
-const RL_HILLS=rlSym([[-80,58,13,3.4],[-62,-118,9,2.4],[30,15,9,1.8],[-100,-62,12,2.2],[-40,100,10,2.6],[-22,-152,11,2.6],[-140,72,12,2.4],[-70,10,10,1.6],[-128,-150,14,3]]);
+const RL_HILLS0=rlSym([[-80,58,13,3.4],[-62,-118,9,2.4],[30,15,9,1.8],[-100,-62,12,2.2],[-40,100,10,2.6],[-22,-152,11,2.6],[-140,72,12,2.4],[-70,10,10,1.6],[-128,-150,14,3]]);
+let RL_HILLS=RL_HILLS0;
 function rlWave(x,z){ return .3*Math.sin(x*.083+.4)*Math.cos(z*.071+.2)+.22*Math.sin(x*.031+1.3)*Math.sin(z*.047+.5)+.16*Math.sin(x*.017-.6)*Math.cos(z*.013+1.1)+.12*Math.sin(x*.21+z*.17)+.07*Math.sin(x*.47-z*.39); }
 function rlLand(x,z){
   let h=.5+.45*(rlWave(x,z)+rlWave(-x,-z));
@@ -49,7 +54,8 @@ function rlGroundH(x,z){
   return h;
 }
 // bridges: a deck across the river, arched for the stone ones. Walking height is the higher of ground and deck.
-const RL_BRIDGES=[{z:0,len:20,wid:6,arch:1.2,kind:'stone'},{z:70,len:16,wid:4.5,arch:.4,kind:'wood'},{z:-70,len:16,wid:4.5,arch:.4,kind:'wood'},{z:138,len:17,wid:4.6,arch:.8,kind:'stone'},{z:-138,len:17,wid:4.6,arch:.8,kind:'stone'}];
+const RL_BRIDGES0=[{z:0,len:20,wid:6,arch:1.2,kind:'stone'},{z:70,len:16,wid:4.5,arch:.4,kind:'wood'},{z:-70,len:16,wid:4.5,arch:.4,kind:'wood'},{z:138,len:17,wid:4.6,arch:.8,kind:'stone'},{z:-138,len:17,wid:4.6,arch:.8,kind:'stone'}];
+let RL_BRIDGES=RL_BRIDGES0;
 function rlBridgeInit(){ for(const B of RL_BRIDGES){ B.x=rlRiverX(B.z); const dxz=rlRiverDX(B.z), n=Math.hypot(1,dxz);
   B.ax=1/n; B.az=-dxz/n;   // across the stream
   B.w=[B.x-B.ax*B.len/2,B.z-B.az*B.len/2]; B.e=[B.x+B.ax*B.len/2,B.z+B.az*B.len/2];   // west and east ends
@@ -63,8 +69,10 @@ function rlWalkH(x,z){ const g=rlGroundH(x,z), d=rlDeck(x,z); return d>g?d:g; }
 /* ---------- roads (dirt, painted into the ground's colours); built once the bridges are placed ---------- */
 let RL_ROADS=[], RL_SEG=[];
 function rlRoadsInit(){
-  const [B0,BN,BS,BN2,BS2]=RL_BRIDGES, G=RL_CF;
-  const both=L=>[L,L.map(p=>[-p[0],-p[1]])];   // a road and its twin across the centre
+  const [B0,BN,BS,BN2,BS2]=RL_BRIDGES, G=118;   // base coordinates (Riverlands); rlPt puts them on the map in use
+  for(const B of RL_BRIDGES){ B.w.isB=1; B.e.isB=1; }
+  const tw=p=>{ const q=[-p[0],-p[1]]; if(p.isB) q.isB=1; return q; };
+  const both=L=>[L,L.map(tw)];   // a road and its twin across the centre
   const xm=L=>[L,L.map(p=>[-p[0],p[1]])];      // castle roads mirror in x (the castles do)
   RL_ROADS=[].concat(
     // gate to gate over the stone bridge
@@ -78,6 +86,7 @@ function rlRoadsInit(){
     // the far stone bridges, and the back roads they open to the enemy's mines
     both([[-24,133],BN2.w]), both([BN2.e,[40,139],[80,124],[110,100]]),
   );
+  RL_ROADS=RL_ROADS.map(L=>L.map(p=>p.isB?p:rlPt(p))).concat(RLK>1?RL_ROADS_F.map(L=>L.map(rlPtF)):[]);
   // village streets, and tracks out to the fields
   for(const V of RL_VIL){ const P=(lx,lz)=>rlVilP(V,lx,lz); RL_ROADS.push([P(-16,0),P(0,0),P(16,0)]); RL_ROADS.push([P(-2,0),P(-1,-11)]); }
   RL_SEG=[]; for(const L of RL_ROADS) for(let i=0;i+1<L.length;i++) RL_SEG.push([L[i][0],L[i][1],L[i+1][0],L[i+1][1]]);
@@ -86,13 +95,17 @@ function rlRoadD(x,z){ let b=1e9; for(const s of RL_SEG){ const ex=s[2]-s[0], ez
 
 /* ---------- things placed on the map ---------- */
 // villages: a street along local x, houses either side, fields behind (local z -27..-12), a windmill on the big ones
-const RL_VIL=[{x:-56,z:-100,r:0,big:true},{x:56,z:100,r:Math.PI,big:true},{x:-58,z:76,r:-.55},{x:58,z:-76,r:Math.PI-.55}];
+const RL_VIL0=[{x:-56,z:-100,r:0,big:true},{x:56,z:100,r:Math.PI,big:true},{x:-58,z:76,r:-.55},{x:58,z:-76,r:Math.PI-.55}];
+let RL_VIL=RL_VIL0;
 function rlVilP(V,lx,lz){ const c=Math.cos(V.r), s=Math.sin(V.r); return [V.x+lx*c+lz*s,V.z-lx*s+lz*c]; }
 function rlVilL(V,x,z){ const c=Math.cos(V.r), s=Math.sin(V.r), dx=x-V.x, dz=z-V.z; return [dx*c-dz*s,dx*s+dz*c]; }
-const RL_CAMPS=[{t:0,x0:-148,x1:-124,z0:24,z1:40},{t:0,x0:-148,x1:-124,z0:-40,z1:-27},{t:1,x0:124,x1:148,z0:24,z1:40},{t:1,x0:124,x1:148,z0:-40,z1:-27}];
-const RL_FORESTS=rlSym([[-145,140,16],[-145,-140,16],[-12,57,9],[-61,-65,10],[-87,-152,12],[-106,152,14],[57,-158,12],[-80,-32,8],[-100,80,10],[-40,-150,10],[-25,30,7],[-84,118,8]]);
-const RL_TOWERS=rlSym([[-14,-8],[-20,-79],[-15,143]]);
-const RL_RUINS=rlSym([[-80,58]]);
+const RL_CAMPS0=[{t:0,x0:-148,x1:-124,z0:24,z1:40},{t:0,x0:-148,x1:-124,z0:-40,z1:-27},{t:1,x0:124,x1:148,z0:24,z1:40},{t:1,x0:124,x1:148,z0:-40,z1:-27}];
+let RL_CAMPS=RL_CAMPS0;
+const RL_FORESTS0=rlSym([[-145,140,16],[-145,-140,16],[-12,57,9],[-61,-65,10],[-87,-152,12],[-106,152,14],[57,-158,12],[-80,-32,8],[-100,80,10],[-40,-150,10],[-25,30,7],[-84,118,8]]);
+let RL_FORESTS=RL_FORESTS0;
+const RL_TOWERS0=rlSym([[-14,-8],[-20,-79],[-15,143]]);
+const RL_RUINS0=rlSym([[-80,58]]);
+let RL_TOWERS=RL_TOWERS0, RL_RUINS=RL_RUINS0;
 // footprints that must stay clear of trees and bushes: [x,z,r]
 function rlKeepOut(){ const L=[];
   for(const Z of RL_ZONES) L.push([Z.x,Z.z,RL_ZR+2.5]);
@@ -135,6 +148,7 @@ function rlGroundChunk(g){
       if(fx>1&&fx<16&&fz<-12&&fz>-27){ const k=Math.floor((fx-1)/2.6), w=(fx-1)/2.6-k; D.copy(k%3===0?wheat:k%3===1?crop:soil); if(w<.12||w>.88) D.lerp(soil,.5); C.lerp(D,.85); } }
     // mines: rocky, trampled
     for(const t of [0,1]) for(const m of RL_MINE[t]){ const d=Math.hypot(x-m.x,z-m.z); if(d<8) C.lerp(rock,clamp((8-d)/4,0,1)*.6); }
+    if(RLK>1) rlBiomeTint(C,x,z,y,n);   // the Frontier's lands (37h)
     // past the field's edge the grass darkens toward the forested rim
     const rr=Math.max(ax,Math.abs(z)); if(rr>RL_HALF-4) C.lerp(grassA,clamp((rr-RL_HALF+4)/10,0,1)*.5).multiplyScalar(1-clamp((rr-RL_HALF)/50,0,.25));
     col.setXYZ(i,C.r,C.g,C.b);
@@ -218,7 +232,7 @@ function rlCullTiles(){ const c=camera.position, low=RL.low, sh=typeof GFX!=='un
 
 /* ---------- static obstacles: soldiers walk around trees, houses, tents and the castle walls ---------- */
 function rlObst(o){ RL.obst.push(o); }
-function rlObstGrid(){ const N=RL.ogN, S=RL.ogS, O=RL.og0, G=Array.from({length:N*N},()=>[]); RL.og=G;
+function rlObstGrid(){ RL.og0=-(RL_HALF+10); RL.ogN=Math.ceil(2*(RL_HALF+10)/RL.ogS); const N=RL.ogN, S=RL.ogS, O=RL.og0, G=Array.from({length:N*N},()=>[]); RL.og=G;
   for(const o of RL.obst){ const R=(o.r||Math.hypot(o.hw,o.hd))+1; const i0=Math.max(0,Math.floor((o.x-R-O)/S)), i1=Math.min(N-1,Math.floor((o.x+R-O)/S)), j0=Math.max(0,Math.floor((o.z-R-O)/S)), j1=Math.min(N-1,Math.floor((o.z+R-O)/S));
     for(let j=j0;j<=j1;j++) for(let i=i0;i<=i1;i++) G[j*N+i].push(o); } }
 function mapCollide(u){
@@ -364,11 +378,12 @@ function rlBuild(){
   // ground: 400 m square in 2 m cells, in sixteen 100 m chunks so the ones off screen are skipped (soldiers stand on
   // the finer height grid, H)
   { RL.ground=new THREE.Group(); RL.group.add(RL.ground); const gm=new THREE.MeshLambertMaterial({vertexColors:true});
-    for(let i=0;i<4;i++) for(let j=0;j<4;j++){ const g=new THREE.PlaneGeometry(100,100,50,50); g.rotateX(-Math.PI/2); g.translate(-RL_EDGE+50+i*100,0,-RL_EDGE+50+j*100);
+    const nT=Math.ceil(2*RL_EDGE/100), TS=2*RL_EDGE/nT, sg=Math.round(TS/(RLK>1?4:2));   // the Frontier: 4 m cells (the soldiers walk on the finer grid H)
+    for(let i=0;i<nT;i++) for(let j=0;j<nT;j++){ const g=new THREE.PlaneGeometry(TS,TS,sg,sg); g.rotateX(-Math.PI/2); g.translate(-RL_EDGE+TS/2+i*TS,0,-RL_EDGE+TS/2+j*TS);
       g.setAttribute('color',new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count*3),3));
       const m=new THREE.Mesh(g,gm); m.receiveShadow=true; RL.ground.add(m); }
     // beyond it, the wooded hills go on into the haze
-    const E=RL_EDGE-1, sh=new THREE.Shape([new THREE.Vector2(-1200,-1200),new THREE.Vector2(1200,-1200),new THREE.Vector2(1200,1200),new THREE.Vector2(-1200,1200)]);
+    const E=RL_EDGE-1, FAR=RLK>1?3200:1200, sh=new THREE.Shape([new THREE.Vector2(-FAR,-FAR),new THREE.Vector2(FAR,-FAR),new THREE.Vector2(FAR,FAR),new THREE.Vector2(-FAR,FAR)]);
     sh.holes.push(new THREE.Path([new THREE.Vector2(-E,-E),new THREE.Vector2(-E,E),new THREE.Vector2(E,E),new THREE.Vector2(E,-E)]));
     const o=new THREE.ShapeGeometry(sh); o.rotateX(-Math.PI/2); const out=new THREE.Mesh(o,new THREE.MeshLambertMaterial({color:'#4a6431'})); out.position.y=12.3; RL.group.add(out); }
   const mats=rlMats(); RL.mats=mats;
@@ -404,25 +419,25 @@ function rlBuild(){
 
   // --- trees: pines and broadleaf in the forests, the odd one in the open, a thick belt round the rim ---
   const pines=[], oaks=[], placed=new Map(), PC=6;
-  const pkey=(i,j)=>i*4096+j;
-  const near=(x,z,r)=>{ const i0=Math.floor((x-r+256)/PC), i1=Math.floor((x+r+256)/PC), j0=Math.floor((z-r+256)/PC), j1=Math.floor((z+r+256)/PC);
+  const pkey=(i,j)=>i*8192+j, VG=RLK>1?5:1;   // the Frontier: five times the vegetation
+  const near=(x,z,r)=>{ const i0=Math.floor((x-r+2048)/PC), i1=Math.floor((x+r+2048)/PC), j0=Math.floor((z-r+2048)/PC), j1=Math.floor((z+r+2048)/PC);
     for(let i=i0;i<=i1;i++) for(let j=j0;j<=j1;j++){ const L=placed.get(pkey(i,j)); if(L) for(const p of L){ if((p[0]-x)**2+(p[1]-z)**2<r*r) return true; } } return false; };
-  const mark=(x,z)=>{ const k=pkey(Math.floor((x+256)/PC),Math.floor((z+256)/PC)); if(!placed.has(k)) placed.set(k,[]); placed.get(k).push([x,z]); };
+  const mark=(x,z)=>{ const k=pkey(Math.floor((x+2048)/PC),Math.floor((z+2048)/PC)); if(!placed.has(k)) placed.set(k,[]); placed.get(k).push([x,z]); };
   let nTrees=0;
   const plant=(x,z,kind,s,obst)=>{ const y=gy(x,z); if(y<RL.WL+.25) return false; mark(x,z); nTrees++;
     const ry=R()*6.28, tilt=(R()-.5)*.08;
     if(kind==='pine') pines.push({x,y:y+1.9*s,z,s,ry,rx:tilt,hue:R()});
     else { const k=1.05+R()*.25; oaks.push({x,y:y+3.1*s,z,s,sx:s*k,sy:s,sz:s*(1.05+R()*.25),ry,hue:R()}); }
     if(obst&&Math.abs(x)<RL_LIM+1&&Math.abs(z)<RL_LIM+1) rlObst({x,z,r:.42*s}); return true; };
-  const clearAt=(x,z,m)=>Math.abs(x)<RL_EDGE-2&&Math.abs(z)<RL_EDGE-2&&rlRiverD(x,z)>1.5&&roadOK(x,z,3)&&keepOK(x,z,m)&&!rlInCastle(x,z,3)&&!rlInCamp(x,z,2)&&!rlInField(x,z);
+  const clearAt=(x,z,m)=>!(RLK>1&&rlBiome(x,z)==='ash'&&R()<.75)&&Math.abs(x)<RL_EDGE-2&&Math.abs(z)<RL_EDGE-2&&rlRiverD(x,z)>1.5&&roadOK(x,z,3)&&keepOK(x,z,m)&&!rlInCastle(x,z,3)&&!rlInCamp(x,z,2)&&!rlInField(x,z);
   for(const F of RL_FORESTS){ const [fx,fz,fr]=F, n=Math.round(fr*fr*.55);
     for(let i=0;i<n*3&&n>0;i++){ const a=R()*6.28, r=fr*Math.sqrt(R()), x=fx+Math.cos(a)*r, z=fz+Math.sin(a)*r;
       if(!clearAt(x,z,1)||near(x,z,2.4)) continue; plant(x,z,R()<.62?'pine':'oak',.8+R()*.55,true); } }
   // the rim: a dense belt from the field's edge out into the hills
-  const rim0=nTrees; for(let i=0;i<9000&&nTrees-rim0<1700;i++){ const x=(R()*2-1)*(RL_EDGE-2), z=(R()*2-1)*(RL_EDGE-2), e=Math.max(Math.abs(x),Math.abs(z)); if(e<RL_HALF+2) continue;
+  const rim0=nTrees; for(let i=0;i<9000*VG&&nTrees-rim0<1700*VG;i++){ const x=(R()*2-1)*(RL_EDGE-2), z=(R()*2-1)*(RL_EDGE-2), e=Math.max(Math.abs(x),Math.abs(z)); if(e<RL_HALF+2) continue;
     if(!clearAt(x,z,0)||near(x,z,e>RL_HALF+18?4.6:3)) continue; plant(x,z,R()<.7?'pine':'oak',.95+R()*.75,false); }
   // lone trees and small copses in the open
-  for(let i=0,k=0;i<2500&&k<170;i++){ const x=(R()*2-1)*(RL_HALF-6), z=(R()*2-1)*(RL_HALF-6); if(!clearAt(x,z,4)||near(x,z,10)||rlRiverD(x,z)<2.4) continue;
+  for(let i=0,k=0;i<2500*VG&&k<170*VG;i++){ const x=(R()*2-1)*(RL_HALF-6), z=(R()*2-1)*(RL_HALF-6); if(!clearAt(x,z,4)||near(x,z,10)||rlRiverD(x,z)<2.4) continue;
     if(plant(x,z,R()<.5?'oak':'pine',.75+R()*.5,true)){ k++; if(R()<.35) for(let c=0;c<3;c++){ const cx=x+(R()-.5)*8, cz=z+(R()-.5)*8; if(clearAt(cx,cz,4)&&!near(cx,cz,2.6)) plant(cx,cz,R()<.5?'oak':'pine',.7+R()*.4,true); } } }
   { // trunk and crown merged into one shape per kind (the trunk sits below the crown's origin), a plainer one far off
     const dark=new THREE.Color('#2f4a26'), mid=new THREE.Color('#41602e'), oa=new THREE.Color('#4c6b2c'), ob=new THREE.Color('#6d8a37');
@@ -437,21 +452,21 @@ function rlBuild(){
   const bushes=[];
   const bush=(x,z,s)=>{ const y=gy(x,z); if(y<RL.WL+.1) return; bushes.push({x,y:y+.25*s,z,s,sy:s*(.7+R()*.3),ry:R()*6.28,hue:R()}); };
   for(const F of RL_FORESTS){ for(let i=0;i<F[2]*3;i++){ const a=R()*6.28, r=F[2]*(.85+R()*.5), x=F[0]+Math.cos(a)*r, z=F[1]+Math.sin(a)*r; if(clearAt(x,z,0)) bush(x,z,.6+R()*.7); } }
-  for(let i=0;i<6000&&bushes.length<1400;i++){ const x=(R()*2-1)*(RL_HALF+16), z=(R()*2-1)*(RL_HALF+16); const rd=rlRiverD(x,z);
+  for(let i=0;i<6000*VG&&bushes.length<1400*VG;i++){ const x=(R()*2-1)*(RL_HALF+16), z=(R()*2-1)*(RL_HALF+16); const rd=rlRiverD(x,z);
     if(rd<1.25||!roadOK(x,z,2.6)||!keepOK(x,z,0)||rlInCastle(x,z,1)||rlInCamp(x,z,1)||rlInField(x,z)) continue; if(rd>2.6&&R()<.55) continue; bush(x,z,.5+R()*.75); }
   { const bc=new THREE.Color('#3f5a28'), bd=new THREE.Color('#6a8235');
     rlTiled(gBlob(1,0,9),mats.bush,bushes,{cast:true,col:(it,c)=>c.copy(bc).lerp(bd,it.hue),T:64,far:130}); }
 
   // --- long grass, flowers, reeds and rocks ---
   const grass=[], flowers=[], reeds=[], rocks=[];
-  for(let i=0;i<40000&&grass.length<9500;i++){ const x=(R()*2-1)*(RL_HALF+14), z=(R()*2-1)*(RL_HALF+14), y=gy(x,z);
+  for(let i=0;i<40000*VG&&grass.length<9500*VG;i++){ const x=(R()*2-1)*(RL_HALF+14), z=(R()*2-1)*(RL_HALF+14), y=gy(x,z);
     if(y<RL.WL+.2||rlRiverD(x,z)<1.3||!roadOK(x,z,2.4)||rlInCastle(x,z,0)||rlInField(x,z)) continue;
     let inZone=false; for(const Z of RL.zones) if((x-Z.x)**2+(z-Z.z)**2<(RL_ZR+.4)**2) inZone=true; if(inZone) continue;
     grass.push({x,y,z,s:.7+R()*.7,sy:.6+R()*.9,ry:R()*6.28,hue:R()}); }
-  for(let c=0;c<200;c++){ const cx=(R()*2-1)*(RL_HALF-8), cz=(R()*2-1)*(RL_HALF-8), col=Math.floor(R()*4);
+  for(let c=0;c<200*VG;c++){ const cx=(R()*2-1)*(RL_HALF-8), cz=(R()*2-1)*(RL_HALF-8), col=Math.floor(R()*4);
     for(let i=0;i<14;i++){ const x=cx+(R()-.5)*8, z=cz+(R()-.5)*8, y=gy(x,z); if(y<RL.WL+.2||rlRiverD(x,z)<1.4||!roadOK(x,z,2.2)||!keepOK(x,z,-2)||rlInCastle(x,z,0)||rlInField(x,z)) continue; flowers.push({x,y:y+.25,z,s:.9+R()*.5,ry:R()*6.28,col}); } }
-  for(let i=0;i<8000&&reeds.length<1500;i++){ const z=(R()*2-1)*(RL_EDGE-4), side=R()<.5?-1:1, d=.86+R()*.55, x=rlRiverX(z)+side*d*rlRiverW(z); if(rlDeck(x,z)>-1e8) continue; const y=gy(x,z); reeds.push({x,y,z,s:.8+R()*.6,sy:.8+R()*.7,ry:R()*6.28,hue:R()}); }
-  for(let i=0;i<8000&&rocks.length<620;i++){ const x=(R()*2-1)*(RL_EDGE-4), z=(R()*2-1)*(RL_EDGE-4), y=gy(x,z); const e=Math.max(Math.abs(x),Math.abs(z));
+  for(let i=0;i<8000*VG&&reeds.length<1500*(RLK>1?3:1);i++){ const z=(R()*2-1)*(RL_EDGE-4), side=R()<.5?-1:1, d=.86+R()*.55, x=rlRiverX(z)+side*d*rlRiverW(z); if(rlDeck(x,z)>-1e8) continue; const y=gy(x,z); reeds.push({x,y,z,s:.8+R()*.6,sy:.8+R()*.7,ry:R()*6.28,hue:R()}); }
+  for(let i=0;i<8000*VG&&rocks.length<620*VG;i++){ const x=(R()*2-1)*(RL_EDGE-4), z=(R()*2-1)*(RL_EDGE-4), y=gy(x,z); const e=Math.max(Math.abs(x),Math.abs(z));
     if(rlRiverD(x,z)<1.6||!roadOK(x,z,2.8)||!keepOK(x,z,0)||rlInCastle(x,z,1)||rlInCamp(x,z,1)||rlInField(x,z)) continue; if(e<RL_HALF&&y<1.8&&R()<.8) continue;
     const s=e>RL_HALF?.6+R()*1.8:.3+R()*.9; rocks.push({x,y:y+s*.15,z,s,sx:s*(1+R()*.6),sz:s*(.8+R()*.5),rx:R()*3,ry:R()*3,rz:R()*3}); if(s>.75&&e<RL_LIM) rlObst({x,z,r:s*.9}); }
   { // grass: three crossed blades
@@ -531,7 +546,7 @@ function rlBuild(){
     { const y=gy(x0,z0); K.put('marble',gBox(.7,3.6,.7,CTILE.marble),TM(x0-1.4,y+1.8,z0)); K.put('marble',gBox(.7,3.6,.7,CTILE.marble),TM(x0+1.4,y+1.8,z0)); K.put('marble',gBox(3.6,.6,.8,CTILE.marble),TM(x0,y+3.9,z0)); rlObst({x:x0-1.4,z:z0,r:.6}); rlObst({x:x0+1.4,z:z0,r:.6}); } }
 
   // --- signposts at the crossroads ---
-  for(const [x,z,ry] of rlSym([[-80,8,.6],[-62,-9,1.2],[-104,10,0],[-30,-58,1.2],[-96,42,2.2]])){ const y=gy(x,z); K.put('wood',gBox(.14,2.2,.14,CTILE.wood),TM(x,y+1.1,z)); K.put('wood',gBox(1.1,.28,.06,CTILE.wood),TM(x+.3,y+1.9,z,ry)); K.put('wood',gBox(1.0,.25,.06,CTILE.wood),TM(x-.2,y+1.5,z,ry+2.2)); }
+  for(const [x,z,ry] of rlSym([[-80,8,.6],[-62,-9,1.2],[-104,10,0],[-30,-58,1.2],[-96,42,2.2]]).map(q=>rlPt(q).concat([q[2]]))){ const y=gy(x,z); K.put('wood',gBox(.14,2.2,.14,CTILE.wood),TM(x,y+1.1,z)); K.put('wood',gBox(1.1,.28,.06,CTILE.wood),TM(x+.3,y+1.9,z,ry)); K.put('wood',gBox(1.0,.25,.06,CTILE.wood),TM(x-.2,y+1.5,z,ry+2.2)); }
   // stumps and logs at the forest edges
   for(const F of RL_FORESTS) for(let i=0;i<4;i++){ const a=R()*6.28, x=F[0]+Math.cos(a)*(F[2]+1.5), z=F[1]+Math.sin(a)*(F[2]+1.5); if(!clearAt(x,z,0)) continue; const y=gy(x,z);
     if(i===0) K.put('wood',gCyl(.32,.32,2.6,8,CTILE.wood),TM(x,y+.25,z,R()*3,0,Math.PI/2)); else K.put('wood',gCyl(.32,.4,.5,8,CTILE.wood),TM(x,y+.2,z)); }
@@ -566,13 +581,15 @@ function rlBuild(){
 
 /* ---------- switching maps ---------- */
 const RL_CLASSIC={fx0:-42,fx1:42,fz0:-15,fz1:15,cx:72,cz:20,cf:46};
-function setMapMode(river){
-  if(river&&!RL.built) rlBuild();
-  RL.on=river; MAP.id=river?'river':'classic';
+function setMapMode(mode){
+  const river=!!mode, v=mode==='frontier'?'frontier':'river';
+  if(river) rlUseVariant(v);   // Riverlands or the Frontier: each built once, kept, swapped in (37h)
+  RL.on=river; MAP.id=river?'river':'classic'; MAP.var=river?v:'classic';
   rlRangeMode(river);   // bows and spells reach four or five times as far on the big map (37e)
-  if(river){ Object.assign(MAP,{fx0:-RL_LIM,fx1:RL_LIM,fz0:-RL_LIM,fz1:RL_LIM,cx:165,cz:165,cf:RL_CF,zmax:130,obst:true,ground:RL.ground});
+  if(river){ Object.assign(MAP,{fx0:-RL_LIM,fx1:RL_LIM,fz0:-RL_LIM,fz1:RL_LIM,cx:RL_HALF+5,cz:RL_HALF+5,cf:RL_CF,zmax:RLK>1?240:130,obst:true,ground:RL.ground});
     BASE_X[0]=-(RL_CF-12); BASE_X[1]=RL_CF-12;
-    heightGrid(-RL_EDGE,-RL_EDGE,RL_EDGE*2+1,RL_EDGE*2+1,1); setGrid(-174,-174,58,58,6); Object.assign(MM,{x0:-163,x1:163,z0:-163,z1:163}); }
+    if(RLK>1) heightGrid(-RL_EDGE,-RL_EDGE,RL_EDGE+1,RL_EDGE+1,2); else heightGrid(-RL_EDGE,-RL_EDGE,RL_EDGE*2+1,RL_EDGE*2+1,1);
+    const gh=RL_HALF+14; setGrid(-gh,-gh,Math.ceil(2*gh/6),Math.ceil(2*gh/6),6); Object.assign(MM,{x0:-(RL_HALF+3),x1:RL_HALF+3,z0:-(RL_HALF+3),z1:RL_HALF+3}); }
   else { Object.assign(MAP,RL_CLASSIC,{zmax:70,obst:false,ground:null}); BASE_X[0]=-34; BASE_X[1]=34;
     heightGrid(-60,-32,181,97,120/180); setGrid(-48,-21,32,14,3); Object.assign(MM,{x0:-62,x1:62,z0:-19,z1:17}); }
   for(const C of CASTLES) if(C&&C.group){ C.group.position.x=C.team?MAP.cf:-MAP.cf; C.group.updateMatrixWorld(true); }
@@ -581,8 +598,8 @@ function setMapMode(river){
   dnLightsOn(river);
   if(groundMesh) groundMesh.visible=!river; if(rocksIM) rocksIM.visible=!river;
   // a greener, hazier light on the valley; the dusk plain keeps its own. The sky follows the camera on the big map.
-  FOG0.near=river?70:38; FOG0.far=river?215:105; HORIZON.set(river?'#d6d3b4':'#e3c79a'); if(scene.fog) scene.fog.color.copy(HORIZON);
-  MAP.far=river?240:400;   // the far plane itself follows the view distance (applyDistances)
+  FOG0.near=river?(RLK>1?90:70):38; FOG0.far=river?(RLK>1?300:215):105; HORIZON.set(river?'#d6d3b4':'#e3c79a'); if(scene.fog) scene.fog.color.copy(HORIZON);
+  MAP.far=river?(RLK>1?330:240):400;   // the far plane itself follows the view distance (applyDistances)
   if(!river){ if(skyDome) skyDome.position.set(0,0,0); if(sunDisc){ sunDisc.position.set(-90,60,-170); } }
   if(typeof applyGfx==='function'&&typeof GFX!=='undefined'&&GFX) applyGfx(GFX);
   setBodyClass('map-river',river); RL.mmKey='';

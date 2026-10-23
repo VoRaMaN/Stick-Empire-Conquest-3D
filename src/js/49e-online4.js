@@ -22,7 +22,7 @@ function r4HomeHTML(off){
   if(R4.ok===false) return '<small class="opt-note r4-note">Ranked play, the leaderboard, the Wildlands online and watching live matches open as soon as the server update is installed.</small>';
   if(!R4.ok) return '';
   const me=R4.lb&&R4.lb.me;
-  return '<div class="r4" id="r4Box"><button class="mm" id="onRanked"'+(off?' disabled':'')+'><span>Ranked quick match · '+(ON.map==='river'?'Riverlands':'Classic')+'</span><small>'+(me?'Your rating '+me.rating+' · '+me.wins+'–'+me.losses+' this season':'Season '+(R4.lb?R4.lb.current:1)+' · everyone starts at 1000')+'</small></button>'+
+  return '<div class="r4" id="r4Box"><button class="mm" id="onRanked"'+(off?' disabled':'')+'><span>Ranked quick match · '+(ON.map==='frontier'?'Frontier':ON.map==='river'?'Riverlands':'Classic')+'</span><small>'+(me?'Your rating '+me.rating+' · '+me.wins+'–'+me.losses+' this season':'Season '+(R4.lb?R4.lb.current:1)+' · everyone starts at 1000')+'</small></button>'+
     '<div class="mm-row"><button class="mm small" id="onBoard">Leaderboard</button><button class="mm small" id="onWatch">Watch live'+(ON.live&&ON.live.live?' ('+ON.live.live+')':'')+'</button></div><div id="r4Panel"></div></div>';
 }
 function r4Bind(B){
@@ -39,7 +39,7 @@ function r4Render(){
       (me?'<p class="r4-me">You: #'+me.rank+' · '+me.rating+' (best '+me.peak+')</p>':'')+
       '<div class="r4-ban"><span>Banner colour</span><div class="pills">'+BANNERS.map(B=>{ const ok=bannerOK(B,me); return '<button data-b="'+B.id+'" aria-pressed="'+((settings.banner||'')===B.id)+'"'+(ok?'':' disabled title="Reach '+B.need+' this season"')+'>'+(B.col?'<i style="background:'+B.col+'"></i>':'')+B.name+(ok?'':' · '+B.need)+'</button>'; }).join('')+'</div></div></div>'; }
   else if(R4.view==='live'){ const L=R4.live||[];
-    h='<div class="r4-live"><h4>Live matches</h4>'+(L.length?L.map(m=>'<div class="r4-m"><span><b>'+esc(m.mode)+' · '+(m.map==='river'?'Riverlands':'Classic')+(m.ranked?' · ranked':'')+'</b><small>'+(m.players||[]).map(p=>esc(p.name)).join(' vs ')+' · '+(m.watching||0)+' watching</small></span><button data-w="'+esc(m.id)+'">Watch</button></div>').join(''):'<p class="opt-note">No public matches are being played right now.</p>')+
+    h='<div class="r4-live"><h4>Live matches</h4>'+(L.length?L.map(m=>'<div class="r4-m"><span><b>'+esc(m.mode)+' · '+(m.map==='frontier'?'Frontier':m.map==='river'?'Riverlands':'Classic')+(m.ranked?' · ranked':'')+'</b><small>'+(m.players||[]).map(p=>esc(p.name)).join(' vs ')+' · '+(m.watching||0)+' watching</small></span><button data-w="'+esc(m.id)+'">Watch</button></div>').join(''):'<p class="opt-note">No public matches are being played right now.</p>')+
       '<div class="mm-row"><label class="on-field" style="flex:1 1 auto">Or watch by room code<input id="r4Code" class="code" maxlength="8" autocomplete="off" placeholder="ABC234"></label><button class="mm small" id="r4CodeGo">Watch</button></div></div>'; }
   P.innerHTML=h;
   for(const b of qsa(P,'.r4-ban button')) b.onclick=()=>{ if(b.disabled) return; sfx('ui'); settings.banner=b.dataset.b; saveSettings(); r4Render(); };

@@ -35,7 +35,7 @@ function refreshMenu(){
   $('#ver').textContent='Version '+BUILD.version+(BUILD.target==='web'?'':' · preview');
   updateInstallButton();
   menuEl.querySelectorAll&&menuEl.querySelectorAll('.size').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.size===menuSize)));
-  menuEl.querySelectorAll&&menuEl.querySelectorAll('.mapc').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.map===(settings.map==='river'?'river':'classic'))));
+  menuEl.querySelectorAll&&menuEl.querySelectorAll('.mapc').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.map===(settings.map==='river'||settings.map==='frontier'?settings.map:'classic'))));
 }
 function startDemo(){
   game.demo=true; game.mode='battle'; setFactions(settings.side); syncModeUI(); setTerrain('skirmish');
@@ -63,12 +63,13 @@ function demoCamera(rdt){
 function startSkirmish(size){
   game.size=size; settings.size=size; saveSettings();
   closeMenu(); game.campFight=null; game.tutorial=null;
-  const river=settings.map==='river';
-  game.mode='battle'; setFactions(settings.side); syncModeUI(); setTab('battle'); setTerrain(river?'riverlands':'skirmish'); resetBattle();
+  const front=settings.map==='frontier', river=settings.map==='river'||front;
+  game.mode='battle'; setFactions(settings.side); syncModeUI(); setTab('battle'); setTerrain(front?'frontier':river?'riverlands':'skirmish'); resetBattle();
   game.auto=[settings.auto,true]; syncBattleButtons();
-  showBanner(river?'Riverlands':BATTLE_SIZES[size].name+' battle',river?BATTLE_SIZES[size].name+' · '+BATTLE_SIZES[size].start+' soldiers a side':BATTLE_SIZES[size].start+' soldiers a side',1.8);
+  showBanner(front?'The Frontier':river?'Riverlands':BATTLE_SIZES[size].name+' battle',river?BATTLE_SIZES[size].name+' · '+BATTLE_SIZES[size].start+' soldiers a side':BATTLE_SIZES[size].start+' soldiers a side',1.8);
   sfx('horn');
-  if(river) setTimeout(()=>{ if(game.mode==='battle'&&MAP.id==='river'&&!game.demo&&game.over<=0) toast('Markets B and C pay gold · shrines A and D give mana and +10% damage · held zones heal and reveal. Only the bridges cross the river.',null,null,9); },2600);
+  if(front) setTimeout(()=>{ if(game.mode==='battle'&&MAP.var==='frontier'&&!game.demo&&game.over<=0) toast('The Frontier: '+FACTIONS[facOf(2)].name+' warbands hold four outposts and the old camps, hostile to both armies. Sixteen zones, seven bridges, four lands. Wyverns and Eagle Scouts cross it fastest.',null,null,10); },2600);
+  else if(river) setTimeout(()=>{ if(game.mode==='battle'&&MAP.id==='river'&&!game.demo&&game.over<=0) toast('Markets B and C pay gold · shrines A and D give mana and +10% damage · held zones heal and reveal. Only the bridges cross the river.',null,null,9); },2600);
 }
 function menuClick(id,fn){ const b=$('#'+id); if(b) b.onclick=()=>{ sfx('ui'); fn(); }; }
 menuClick('mmSkirmish',()=>showPanel('menuSkirmish'));
@@ -85,7 +86,7 @@ syncSideUI();
 menuClick('skBack',()=>showPanel('menuMain'));
 menuClick('skStart',()=>startSkirmish(menuSize));
 if(menuEl.querySelectorAll) menuEl.querySelectorAll('.size').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); menuSize=+b.dataset.size; refreshMenu(); }));
-if(menuEl.querySelectorAll) menuEl.querySelectorAll('.mapc').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); settings.map=b.dataset.map==='river'?'river':'classic'; saveSettings(); refreshMenu(); }));
+if(menuEl.querySelectorAll) menuEl.querySelectorAll('.mapc').forEach(b=>b.addEventListener('click',()=>{ sfx('ui'); settings.map=b.dataset.map==='river'||b.dataset.map==='frontier'?b.dataset.map:'classic'; saveSettings(); refreshMenu(); }));
 menuClick('mmContinue',()=>{ closeMenu(); game.demo=false; camp=campLoad(); setTab('camp'); openCampaign(); });
 menuClick('mmCampaign',()=>{ const sv=campLoad(), b=$('#mmCampaign');
   if(sv&&!sv.over&&!b.dataset.armed){ b.dataset.armed='1'; $('#mmCampaignSub').textContent='Tap again to replace your saved campaign'; return; }

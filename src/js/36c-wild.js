@@ -32,7 +32,7 @@ FACTIONS.wild={id:'wild',name:'Wildlands Confederacy',roster:WILD,worker:'miner'
   mix:['sword','archer','sword','archer','ninja','cleric','spear','archer','archer','sword','wizard','cleric','ninja','giant','archer','sword','wing','archer','cleric','sword','ninja','archer','spear','knight']};
 ECON.wild=1;
 // the unit sheet a soldier of this army fights with, and the names the HUD shows
-function unitT(type,team){ return team!==undefined&&team<2&&WILD_DEF[type]&&facOf(team)==='wild'?WILD_T[type]:TYPES[type]; }
+function unitT(type,team){ return team!==undefined&&team<3&&WILD_DEF[type]&&facOf(team)==='wild'?WILD_T[type]:TYPES[type]; }
 const tName=(t,team)=>unitT(t,team===undefined?myTeam():team).name;
 const tPl=(t,team)=>facOf(team===undefined?myTeam():team)==='wild'&&WILD_DEF[t]?WILD_DEF[t].pl:(TYPE_PL[t]||TYPES[t].name+'s');
 // the general's shopping list

@@ -20,6 +20,9 @@ const STORY=[
   {id:'elderwood',name:'Elderwood',place:'The enemy castle',
     brief:'The last battle. The enemy comes with everything it has, its general at the head. Destroy their statue.',
     gold:3000,foeGold:2600,extra:3},
+  {id:'frontier',name:'The Three Crowns',place:'The Frontier',map:'frontier',
+    brief:'Beyond the river lies the Frontier. The third crown\'s warbands hold four fortified outposts and raid both armies. Break all four outposts within fifteen minutes while the enemy army comes for you. Wyverns and Eagle Scouts cross the land fastest.',
+    gold:4200,foeGold:2200},
 ];
 const STORY_ROLE={order:{melee:'sword',ranged:'archer',heavy:'spear',worker:'miner'},chaos:{melee:'dread',ranged:'harvester',heavy:'crawler',worker:'thrall'},wild:{melee:'sword',ranged:'archer',heavy:'giant',worker:'miner'}};
 const storyRole=(t,r)=>(STORY_ROLE[facOf(t)]||STORY_ROLE.order)[r];
@@ -31,7 +34,7 @@ function startStory(i){
   const D=STORY[i]; if(!D||!storyUnlocked(i)) return;
   closeMenu(); game.campFight=null; game.tutorial=null; game.size=0;
   const side=FACTIONS[settings.side]?settings.side:'order', foe=D.id==='elderwood'?(side==='wild'?'chaos':'wild'):otherSide(side);
-  game.mode='battle'; setFactions(side,foe); syncModeUI(); setTab('battle'); setTerrain('riverlands');
+  game.mode='battle'; setFactions(side,foe); syncModeUI(); setTab('battle'); setTerrain(D.map||'riverlands');
   resetBattle({gold:[D.gold,D.foeGold],enemyExtra:D.extra||0});
   MS={i,id:D.id,D,t:0,state:null,lost:0,held:0,arrived:0,wave:0,fired:{}}; game.mission=MS;
   game.auto=[settings.auto,!D.passive]; syncBattleButtons();
@@ -55,6 +58,7 @@ function storySetup(M){
     M.escRegs=[...new Set(esc.map(u=>u.reg).filter(Boolean))]; M.go=20;   // the column sets off after 20 s; the escort keeps beside it until you order it elsewhere
     M.ambush=[{at:-90,ax:-72,az:20},{at:-80,ax:-98,az:62},{at:-68,ax:-44,az:54},{at:-61,ax:-72,az:96}]; }
   else if(M.id==='shrines'){ M.zones=['A','B','D']; }
+  else if(M.id==='frontier'){ M.limit=900; M.cl=new Set(); }
   else if(M.id==='ogres'){ M.limit=480; spawnSquad(me,[storyRole(me,'heavy'),storyRole(me,'heavy'),storyRole(me,'melee'),storyRole(me,'melee'),storyRole(me,'melee'),storyRole(me,'melee'),storyRole(me,'ranged'),storyRole(me,'ranged'),storyRole(me,'ranged'),storyRole(me,'ranged')],-96,10,4); }
 }
 function storyEnd(win,why){
@@ -85,6 +89,9 @@ function storyTick(dt){
   else if(M.id==='shrines'){
     const all=M.zones.every(id=>{ const Z=RL.zones.find(z=>z.id===id); return Z&&Z.owner===me; });
     if(all) M.held+=dt; if(M.held>=60) storyEnd(true,'All three shrines held for a minute'); else if(M.t>=720) storyEnd(false,'Time ran out'); }
+  else if(M.id==='frontier'){
+    const W=RL_NCAMPS.filter(C=>C.kind==='warband'); for(const C of W) if(C.cleared) M.cl.add(C); M.held=M.cl.size;
+    if(M.cl.size>=W.length) storyEnd(true,'All four warband outposts broken'); else if(M.t>=M.limit) storyEnd(false,'Time ran out'); }
   else if(M.id==='ogres'){
     const dens=RL_NCAMPS.filter(C=>C.kind==='ogres'), done=dens.filter(C=>C.cleared).length; M.held=done;
     if(done>=dens.length) storyEnd(true,'Both dens cleared'); else if(M.t>=M.limit) storyEnd(false,'Time ran out'); }
@@ -100,6 +107,7 @@ function storyHud(force){
   if(M.id==='bridge'){ goal='Hold the bridgehead'; prog=M.t/300; sub=mm(300-M.t)+' left · wave '+M.wave+' of 7'+(M.lost>0?' · bridgehead under threat '+Math.ceil(20-M.lost)+' s':''); }
   else if(M.id==='escort'){ const alive=M.miners?M.miners.filter(u=>u.alive).length:6; goal='Bring 3 miners to Ashford'; prog=M.arrived/3; sub=(M.go>0?'the column sets off in '+Math.ceil(M.go)+' s · ':'')+M.arrived+' arrived · '+alive+' alive'; }
   else if(M.id==='shrines'){ goal='Hold A, B and D together'; prog=M.held/60; sub=Math.floor(M.held)+' / 60 s held · '+mm(720-M.t)+' left'; }
+  else if(M.id==='frontier'){ goal='Break the four warband outposts'; prog=(M.held||0)/4; sub=(M.held||0)+' of 4 broken · '+mm((M.limit||900)-M.t)+' left'; }
   else if(M.id==='ogres'){ goal='Clear both ogre dens'; prog=(M.held||0)/2; sub=(M.held||0)+' of 2 cleared · '+mm((M.limit||480)-M.t)+' left'; }
   else { goal='Destroy the enemy statue'; const st=statues[1]; prog=st?1-st.hp/st.max:0; sub='statue '+(st?Math.ceil(st.hp):0)+' / '+(st?Math.ceil(st.max):0); }
   el.innerHTML='<b>'+M.D.name+'</b><span>'+goal+'</span><i class="mbar"><i style="width:'+(100*clamp(prog,0,1)).toFixed(1)+'%"></i></i><small>'+sub+'</small>';
@@ -111,6 +119,7 @@ function storyDraw(){
   if(M.id==='escort'&&M.miners) for(const u of M.miners) if(u.alive&&!u.escortDone){ _op1.set(u.pos.x,u.pos.y+2.3*u.s,u.pos.z); _s.setScalar(.14); _m.compose(_op1,_qi,_s); put(glowIM,scol('#ffe08a')); }
   if(M.id==='shrines') for(const id of M.zones){ const Z=RL.zones.find(z=>z.id===id); if(Z) pts.push([Z.x,Z.z,RL_ZR+1]); }
   if(M.id==='ogres') for(const C of RL_NCAMPS) if(C.kind==='ogres'&&!C.cleared) pts.push([C.x,C.z,9]);
+  if(M.id==='frontier') for(const C of RL_NCAMPS) if(C.kind==='warband'&&!(M.cl&&M.cl.has(C))) pts.push([C.x,C.z,10]);
   const tt=game.time;
   for(const [x,z,R] of pts) for(let i=0;i<36;i++){ const a=i/36*TAU+tt*.2; _op1.set(x+Math.cos(a)*R,0,z+Math.sin(a)*R); _op1.y=H(_op1.x,_op1.z)+.15; _s.setScalar(.16); _m.compose(_op1,_qi,_s); put(glowIM,scol('#ffe08a')); }
 }

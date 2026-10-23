@@ -24,7 +24,7 @@ function liveRender(){ const el=$('#onLive'); if(el) el.outerHTML=liveHTML(); co
 async function livePing(){
   const sc=$('#menuOnline'), mn=$('#menu'), onScreen=ON.liveOn&&sc&&!sc.hidden&&mn&&!mn.hidden;
   if(!onScreen&&!NETC.room) return; if(!NETC.user||onlineProblem()) return;
-  const st=NETC.phase==='battle'?'battle':NETC.room?'lobby':'online', map=NETC.room&&NETC.room.config&&NETC.room.config.map==='river'?'river':ON.map;
+  const st=NETC.phase==='battle'?'battle':NETC.room?'lobby':'online', map=NETC.room&&NETC.room.config&&(NETC.room.config.map==='river'||NETC.room.config.map==='frontier')?NETC.room.config.map:ON.map;
   try{ ON.live=await netRpc('se3d_presence',{p_name:myName(),p_status:st,p_map:map}); ON.liveErr=false; }catch(e){ ON.liveErr=true; }
   liveRender();
 }
@@ -72,9 +72,9 @@ function renderOnlineHome(){
   onBody().innerHTML=liveHTML()+rejoin+
     '<label class="on-field">Your name<input id="onName" maxlength="20" autocomplete="nickname" value="'+esc(myName())+'"></label>'+
     '<div class="on-seg" role="radiogroup" aria-label="Mode"><button data-m="1v1" aria-pressed="'+(ON.mode==='1v1')+'">1v1</button><button data-m="2v2" aria-pressed="'+(ON.mode==='2v2')+'">2v2</button></div>'+
-    '<div class="on-seg on-map" role="radiogroup" aria-label="Map"><button data-map="classic" aria-pressed="'+(ON.map==='classic')+'">Classic</button><button data-map="river" aria-pressed="'+(ON.map==='river')+'">Riverlands</button></div>'+
-    '<small class="opt-note">'+(ON.map==='river'?'Riverlands PvP: a 320 m valley, four capture zones with bonuses, bridges, fog of war and long-range bows.':'The classic field: one straight battle between the two castles.')+'</small>'+
-    '<button class="mm primary" id="onQuick"'+(off?' disabled':'')+'><span>Quick match · '+(ON.map==='river'?'Riverlands':'Classic')+'</span><small>Play the next '+(ON.mode==='2v2'?'three players':'player')+' who search'+(ON.mode==='2v2'?'':'es')+' for this map · '+ON.mode+'</small></button>'+
+    '<div class="on-seg on-map" role="radiogroup" aria-label="Map"><button data-map="classic" aria-pressed="'+(ON.map==='classic')+'">Classic</button><button data-map="river" aria-pressed="'+(ON.map==='river')+'">Riverlands</button>'+(R4.ok?'<button data-map="frontier" aria-pressed="'+(ON.map==='frontier')+'">Frontier</button>':'')+'</div>'+
+    '<small class="opt-note">'+(ON.map==='frontier'?'The Frontier: a 1 km three-faction battlefield, sixteen zones, the third faction\'s warbands against both sides.':ON.map==='river'?'Riverlands PvP: a 320 m valley, four capture zones with bonuses, bridges, fog of war and long-range bows.':'The classic field: one straight battle between the two castles.')+'</small>'+
+    '<button class="mm primary" id="onQuick"'+(off?' disabled':'')+'><span>Quick match · '+(ON.map==='frontier'?'Frontier':ON.map==='river'?'Riverlands':'Classic')+'</span><small>Play the next '+(ON.mode==='2v2'?'three players':'player')+' who search'+(ON.mode==='2v2'?'':'es')+' for this map · '+ON.mode+'</small></button>'+
     r4HomeHTML(off)+
     '<button class="mm" id="onCreate"'+(off?' disabled':'')+'><span>Create private room</span><small>Get a code to share with '+(ON.mode==='2v2'?'three friends':'a friend')+'</small></button>'+
     '<div class="mm-row"><label class="on-field" style="flex:1 1 auto">Room code<input id="onCode" class="code" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC234"></label></div>'+
@@ -133,9 +133,9 @@ function onRoomChanged(r,prev){
 function leaveLobbyLocal(){ netHeartbeat(false); netLeaveChannel(); NETC.room=null; NETC.me=null; NETC.phase='off'; }
 const facLabel=f=>f==='chaos'?'Chaos':f==='wild'?'Wildlands':'Order';
 // the room's battle settings: the host picks the map and the finishers, everyone sees them
-function cfgUI(r,host){ const c=r.config||{}, map=c.map==='river'?'river':'classic', fin=c.finishers===0||c.finishers===2?c.finishers:1, dis=host?'':' disabled';
+function cfgUI(r,host){ const c=r.config||{}, map=c.map==='river'||c.map==='frontier'?c.map:'classic', fin=c.finishers===0||c.finishers===2?c.finishers:1, dis=host?'':' disabled';
   return '<div class="on-cfg"><div class="opt"><span>Map</span><div class="pills" role="radiogroup" aria-label="Map">'+
-    [['classic','Classic field'],['river','Riverlands']].map(([v,t])=>'<button role="radio" data-map="'+v+'" aria-checked="'+(map===v)+'" aria-pressed="'+(map===v)+'"'+dis+'>'+t+'</button>').join('')+'</div></div>'+
+    [['classic','Classic field'],['river','Riverlands']].concat(R4.ok?[['frontier','Frontier']]:[]).map(([v,t])=>'<button role="radio" data-map="'+v+'" aria-checked="'+(map===v)+'" aria-pressed="'+(map===v)+'"'+dis+'>'+t+'</button>').join('')+'</div></div>'+
     '<div class="opt"><span>Finishers</span><div class="pills" role="radiogroup" aria-label="Finishers">'+
     [[0,'Off'],[1,'Sometimes'],[2,'Always']].map(([v,t])=>'<button role="radio" data-fin="'+v+'" aria-checked="'+(fin===v)+'" aria-pressed="'+(fin===v)+'"'+dis+'>'+t+'</button>').join('')+'</div></div>'+
     '<small class="opt-note">'+(host?'You are the host: changing these asks everyone to ready up again.':'The host picks the map and the finishers.')+(map==='river'?' Riverlands: a 320 m valley with four capture zones, bridges and fog of war.':'')+'</small></div>'; }
