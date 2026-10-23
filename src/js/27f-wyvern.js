@@ -92,11 +92,11 @@ function wyWet(x,z){ if(!RL.on) return false; const rx=rlRiverX(z), W=rlRiverW(z
 function wyMode(u,m,force){
   const F=wyU(u), now=game.time; if(F.mode===m) return; if(!force&&F.modeT>now&&!NET.guest) return;
   F.mode=m; F.modeT=now+2.2;
-  if(m==='up'){ F.fastDown=false; if(!u.action&&u.state==='ok') { play(u,'wyTakeoff'); u.fwdScale=0; } if(F.alt<.2) sfx('flap',u.pos,.9,{rate:.55}); }
+  if(m==='up'){ F.fastDown=false; if(!u.action&&u.state==='ok') { play(u,'wyTakeoff'); u.fwdScale=0; } if(F.alt<.2) sfx('wyvernTakeoff',u.pos,.9); }
 }
 function wyTouch(u){ const F=u.wy; F.mode='ground'; F.air=false; F.fastDown=false;
   if(!u.action&&u.state==='ok') { play(u,'wyLand'); u.fwdScale=0; }
-  puff(u.pos,6,.4*u.s,2,'#8a7a66'); shakeAt(u.pos,.12); sfx('giantStep',u.pos,.6); }
+  puff(u.pos,6,.4*u.s,2,'#8a7a66'); shakeAt(u.pos,.12); sfx('wyvernLand',u.pos,.6); }
 function wyAIOwned(u){ return game.mode==='battle'&&!NET.on&&!game.tutorial&&(u.team===1||game.demo||game.auto[u.team]); }
 
 /* ---------- every frame (host and guest): altitude, wings, speed in the air, the abilities ---------- */
@@ -116,7 +116,7 @@ function wyTick(u,dt){
     const amp=climb?1:desc?.75:.55-.42*F.gl; F.amp+=(amp-F.amp)*(1-Math.exp(-dt*4));
     F.fq+=((climb?2.2:desc?1.9:1.45)-F.fq)*(1-Math.exp(-dt*3));
     const pp=F.ph; F.ph+=TAU*F.fq*dt*(1-F.gl*.85);
-    if(Math.floor(pp/TAU)!==Math.floor(F.ph/TAU)&&F.amp>.4&&u.crVis!==false) sfx('flap',u.pos,.3+F.amp*.35,{rate:.55+Math.random()*.1}); }
+    if(Math.floor(pp/TAU)!==Math.floor(F.ph/TAU)&&F.amp>.4&&u.crVis!==false) sfx('wyvernFlap',u.pos,.3+F.amp*.35,{rate:1+Math.random()*.15}); }
   else F.amp*=Math.exp(-dt*5);
   F.bank+=((flying?clamp(-(u.turnV||0)*.32,-.8,.8):0)-F.bank)*(1-Math.exp(-dt*5));
   u.wyA=F.alt+(flying?Math.sin(F.ph)*F.amp*.16*u.s:0);
@@ -181,7 +181,7 @@ function wyAbTick(u,F,dt){
       if(A.ph===0){ if(F.mode!=='ground'){ if(F.mode!=='down'){ wyMode(u,'down',true); } F.fastDown=true; if(t&&t.alive) toward(t.pos.x,t.pos.z,u.T.speed); if(A.t>5) wyEnd(u,F); return; }
         const c=t&&t.alive?t:(wyCluster(u,24)||{}).o; if(!c){ wyEnd(u,F); return; }
         const dx=c.pos.x-u.pos.x, dz=c.pos.z-u.pos.z, d=Math.hypot(dx,dz)||1; A.dx=dx/d; A.dz=dz/d; A.ph=1; A.t=0; u.action=null; play(u,'knRoyalRun'); u.fwdScale=0;
-        sfx('hornEnemy',u.pos,.5); callout(u,'For the Crown!','#ffd36a'); }
+        sfx('lanceCharge',u.pos,.6); callout(u,'For the Crown!','#ffd36a'); }
       if(A.ph===1){ const v=u.T.speed*2.3; u.desired.set(A.dx*v,0,A.dz*v); u.faceGoal=Math.atan2(A.dx,A.dz);
         for(const o of wyFoes(u,3,o=>!isAir(o))){ if(A.hit.has(o)) continue; const ox=o.pos.x-u.pos.x, oz=o.pos.z-u.pos.z, fw=ox*A.dx+oz*A.dz, lat=Math.abs(-ox*A.dz+oz*A.dx);
           if(fw>-.3&&lat<1.9){ A.hit.add(o); damage(o,u.T.dmg*1.5,u,new V3(A.dx,0,A.dz),5,.5); knockDown(o,u); bleed(o.j.chest.clone(),new V3(A.dx,.3,A.dz),5,2,.4); sfx('stab',o.j.chest,.6); } }
@@ -191,7 +191,7 @@ function wyAbTick(u,F,dt){
       if(!t||!t.alive){ const n=A.id==='dive'?(wyCluster(u,20)||{}).o:wyBestPrey(u,20); if(!n){ wyEnd(u,F); return; } A.tgt=n; return; }
       if(A.t>9){ wyEnd(u,F); return; }
       if(A.ph===0){ if(F.mode==='ground'||F.mode==='down') wyMode(u,'up',true);
-        const d=toward(t.pos.x,t.pos.z,u.T.airSpeed*1.15); if(d<3&&F.alt>2.4){ A.ph=1; F.mode='down'; F.fastDown=true; sfx('roar',u.j.head,.8,{rate:.7}); }
+        const d=toward(t.pos.x,t.pos.z,u.T.airSpeed*1.15); if(d<3&&F.alt>2.4){ A.ph=1; F.mode='down'; F.fastDown=true; sfx('wyvernScreech',u.j.head,.8); }
         else if(F.air) u.desired.multiplyScalar(1); else u.desired.multiplyScalar(u.T.speed/u.T.airSpeed); return; }
       if(A.ph===1){ toward(t.pos.x,t.pos.z,u.T.speed*1.2);
         if(F.alt<.7){ A.ph=2; u.action=null; play(u,A.id==='dive'?'wyDiveLand':'knExecute'); u.fwdScale=0; u.atkTarget=t; } return; }
@@ -203,7 +203,7 @@ function wyAbTick(u,F,dt){
         if(F.alt<3){ u.desired.set(0,0,0); return; }
         const c=t&&t.alive?t:(wyCluster(u,30)||{}).o; if(!c){ wyEnd(u,F); return; }
         const dx=c.pos.x-u.pos.x, dz=c.pos.z-u.pos.z, d=Math.hypot(dx,dz)||1; A.dx=dx/d; A.dz=dz/d; A.len=d+12; A.x0=u.pos.x; A.z0=u.pos.z; A.ph=1; F.altT=3.2;
-        u.action=null; play(u,'wyAssaultLoop'); u.fwdScale=0; sfx('roar',u.j.head,1,{rate:.65}); }
+        u.action=null; play(u,'wyAssaultLoop'); u.fwdScale=0; sfx('wyvernRoar',u.j.head,1); }
       if(A.ph===1){ const v=u.T.airSpeed*1.25; u.desired.set(A.dx*v,0,A.dz*v); u.faceGoal=Math.atan2(A.dx,A.dz); F.br=.15;
         for(const o of wyFoes(u,4.5,o=>!isAir(o))){ const ox=o.pos.x-u.pos.x, oz=o.pos.z-u.pos.z, fw=ox*A.dx+oz*A.dz, lat=Math.abs(-ox*A.dz+oz*A.dx);
           if(fw>-1&&fw<4&&lat<2.8&&(A.hitT.get(o)||0)<now){ A.hitT.set(o,now+.6); damage(o,u.T.dmg*.45,u,new V3(A.dx,0,A.dz),1.5,.3); applyBurn(o,u,7,3); } }
@@ -241,30 +241,30 @@ function wyAI(u,F,dt){
 const _wy1=new V3(), _wy2=new V3(), _wy3=new V3();
 function wyHit(u,o,k,kb,up){ const dx=o.pos.x-u.pos.x, dz=o.pos.z-u.pos.z, d=Math.hypot(dx,dz)||1; damage(o,u.T.dmg*k,u,new V3(dx/d,0,dz/d),kb||1,up||.2); }
 Object.assign(EXTRA_EV,{
-  wyFire:(u,e,fin,v)=>{ const F=wyU(u); F.br=e.big?.35:.24; if(Math.random()<.45) crSfx('flameWave','ignite',F.mouth,.5);
+  wyFire:(u,e,fin,v)=>{ const F=wyU(u); F.br=e.big?.35:.24; if(Math.random()<.45) sfx('wyvernBreath',F.mouth,.5);
     if(e.fin){ const rg=fin&&(fin.rag||fin.rag2), P=v&&v.alive?v.j.chest:(rg?rg.p[1]:null); if(P) fireBurst(P,7,.17*u.s,1.3,.6); return; }
     if(NET.guest) return;
     const hx=Math.sin(u.face), hz=Math.cos(u.face), R=e.air?Math.max(9,F.alt*1.4+4):8.5;
     for(const o of wyFoes(u,R+1,o=>!isAir(o))){ const dx=o.pos.x-u.pos.x, dz=o.pos.z-u.pos.z, d=Math.hypot(dx,dz)||1;
       if(d<R&&((dx*hx+dz*hz)/d>(e.air?.55:.76)||d<1.6)){ damage(o,u.T.dmg*.32,u,new V3(dx/d,0,dz/d),1.1,.2); applyBurn(o,u,7,3.5); } } },
-  wyGust:(u)=>{ const F=wyU(u); shakeAt(u.pos,.2); sfx('flap',u.pos,1,{rate:.45}); _wy1.copy(u.pos); _wy1.y=H(u.pos.x,u.pos.z)+.1; ring(_wy1,6.5,'#d8d0c0'); puff(_wy1,10,.5*u.s,4,'#b8ac98');
+  wyGust:(u)=>{ const F=wyU(u); shakeAt(u.pos,.2); sfx('wyvernFlap',u.pos,1,{rate:.8}); _wy1.copy(u.pos); _wy1.y=H(u.pos.x,u.pos.z)+.1; ring(_wy1,6.5,'#d8d0c0'); puff(_wy1,10,.5*u.s,4,'#b8ac98');
     if(NET.guest) return;
     for(const o of wyFoes(u,6.8)){ if(isAir(o)) continue; wyHit(u,o,.25,6,.7); knockDown(o,u); if(o.action&&!o.action.c.idle&&!o.fin&&o.state==='ok'){ o.action=null; play(o,'flinch'); } } },
-  wyScreech:(u)=>{ const F=wyU(u); shakeAt(u.pos,.5); sfx('roar',u.j.head,1.1,{rate:.62}); crSfx('dreadRoar','warcry',u.j.head,.7); _wy1.copy(u.pos); _wy1.y=H(u.pos.x,u.pos.z)+.2; ring(_wy1,10,'#ffd36a');
+  wyScreech:(u)=>{ const F=wyU(u); shakeAt(u.pos,.5); sfx('wyvernScreech',u.j.head,1.1); _wy1.copy(u.pos); _wy1.y=H(u.pos.x,u.pos.z)+.2; ring(_wy1,10,'#ffd36a');
     if(NET.guest) return; const now=game.time;
     for(const o of wyFoes(u,10)){ o.morale=Math.max(0,(o.morale===undefined?60:o.morale)-28); o.slowT=now+4; if(!o.action&&o.state==='ok'&&o.isUnit) play(o,'flinch'); }
     gridEach(u.pos.x,u.pos.z,10,o=>{ if(o.alive&&o.team===u.team&&o.isUnit) o.rallyT=now+5; }); },
-  wyRoar:(u,e)=>{ sfx('roar',u.j.head,e.mini?.55:1,{rate:.72+Math.random()*.08}); if(!e.mini) shakeAt(u.pos,.25); },
-  wyRustle:(u)=>{ sfx('flap',u.pos,.35,{rate:.9}); },
-  wyFlapSfx:(u)=>{ sfx('flap',u.pos,.6,{rate:.6}); },
-  wyLaunch:(u)=>{ _wy1.copy(u.pos); _wy1.y=H(u.pos.x,u.pos.z)+.1; puff(_wy1,10,.45*u.s,3,'#9a8a74'); ring(_wy1,3.5,'#b8ac98'); sfx('flap',u.pos,1,{rate:.5}); },
+  wyRoar:(u,e)=>{ sfx('wyvernRoar',u.j.head,e.mini?.55:1,{rate:1+Math.random()*.1}); if(!e.mini) shakeAt(u.pos,.25); },
+  wyRustle:(u)=>{ sfx('wyvernFlap',u.pos,.35,{rate:1.5}); },
+  wyFlapSfx:(u)=>{ sfx('wyvernFlap',u.pos,.6); },
+  wyLaunch:(u)=>{ _wy1.copy(u.pos); _wy1.y=H(u.pos.x,u.pos.z)+.1; puff(_wy1,10,.45*u.s,3,'#9a8a74'); ring(_wy1,3.5,'#b8ac98'); sfx('wyvernTakeoff',u.pos,1); },
   wyTouch:(u)=>{ puff(u.pos,6,.4*u.s,2,'#8a7a66'); },
-  wyDiveHit:(u)=>{ const t=u.atkTarget; shakeAt(u.pos,.45); _wy1.copy(u.pos); _wy1.y=H(u.pos.x,u.pos.z)+.1; ring(_wy1,3.4,'#e8d8b0'); puff(_wy1,12,.5*u.s,3.5,'#8a7a66'); sfx('giantStep',u.pos,1);
+  wyDiveHit:(u)=>{ const t=u.atkTarget; shakeAt(u.pos,.45); _wy1.copy(u.pos); _wy1.y=H(u.pos.x,u.pos.z)+.1; ring(_wy1,3.4,'#e8d8b0'); puff(_wy1,12,.5*u.s,3.5,'#8a7a66'); sfx('wyvernLand',u.pos,1);
     if(NET.guest) return;
     for(const o of wyFoes(u,3.4,o=>!isAir(o))){ wyHit(u,o,o===t?2.6:2,5,.6); knockDown(o,u); } },
-  knCrown:(u)=>{ const now=game.time; u.crownT=now+7; u.crownK=.55; wyU(u).glow=1.2; sfx('research',u.pos,.5); _wy1.copy(u.pos); _wy1.y=H(u.pos.x,u.pos.z)+.15; ring(_wy1,5.5,'#ffd36a');
+  knCrown:(u)=>{ const now=game.time; u.crownT=now+7; u.crownK=.55; wyU(u).glow=1.2; sfx('royalShield',u.pos,.6); _wy1.copy(u.pos); _wy1.y=H(u.pos.x,u.pos.z)+.15; ring(_wy1,5.5,'#ffd36a');
     if(NET.guest) return; gridEach(u.pos.x,u.pos.z,5.5,o=>{ if(o!==u&&o.alive&&o.team===u.team&&o.isUnit){ o.crownT=now+7; o.crownK=Math.max(o.crownT>now&&o.crownK||0,.3); } }); },
-  knRaise:(u)=>{ wyU(u).glow=.9; sfx('swordDraw',u.pos,.6); },
+  knRaise:(u)=>{ wyU(u).glow=.9; sfx('lanceRaise',u.pos,.6); },
   knJudge:(u)=>{ const F=wyU(u); F.glow=.6; shakeAt(u.pos,.4);
     const t=u.atkTarget&&u.atkTarget.alive?u.atkTarget:(wyFoes(u,4.8,o=>!isAir(o))[0]); if(t){ _wy1.copy(t.pos); _wy1.y=H(t.pos.x,t.pos.z)+.1; ring(_wy1,3,'#ffd36a'); for(let i=0;i<8;i++){ _wy2.copy(_wy1).addScaledVector(UP,i*.45); glowAt(_wy2,.35-i*.03,'#ffe08a'); } }
     if(NET.guest||!t) return; sfx('stab',t.j.chest,1);
@@ -279,7 +279,7 @@ Object.assign(EXTRA_EV,{
 // the old horse noises become a wyvern's
 { const sn=EXTRA_EV.hsSnort, ne=EXTRA_EV.hsNeigh;
   EXTRA_EV.hsSnort=(u,e)=>{ if(!u.T.wyvern) return sn(u,e); const F=wyU(u); puff(F.mouth,3,.08*u.s,.7,'#9a948a'); if(Math.random()<.3) emitFire(F.mouth,2,.08*u.s,F.hd.x,.3,F.hd.z,.3,.35); };
-  EXTRA_EV.hsNeigh=(u,e)=>{ if(!u.T.wyvern) return ne(u,e); sfx('roar',u.j.head,.6,{rate:.78}); }; }
+  EXTRA_EV.hsNeigh=(u,e)=>{ if(!u.T.wyvern) return ne(u,e); sfx('wyvernRoar',u.j.head,.6,{rate:1.08}); }; }
 
 /* ---------- damage: the Crown's shield, the pursued prey ---------- */
 function wyMul(t,src){

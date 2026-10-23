@@ -25,6 +25,8 @@ const partFiles = fs.readdirSync(path.join(SRC, 'js')).filter(f => f.endsWith('.
 const parts = partFiles.map(f => read('js/' + f)).join('');
 // ---------- embedded assets: ElevenLabs sounds and voices, Artlist textures (assets/) ----------
 const ASSETS = path.join(ROOT, 'assets');
+// the sound manifest (assets/sfx-manifest.json): the game takes each sound's category, mix and stand-in
+const SFX_MAN = (()=>{ try{ const M=JSON.parse(fs.readFileSync(path.join(ROOT,'assets/sfx-manifest.json'),'utf8')), o={}; for(const k in M.sounds){ const s=M.sounds[k]; o[k]={c:s.cat}; if(s.alias) o[k].a=s.alias; if(s.vol) o[k].v=s.vol; } return JSON.stringify(o); }catch(e){ return '{}'; } })();
 const assetData = { sfx: {}, vox: {}, tex: {} };
 for (const [kind, ext] of [['sfx', '.mp3'], ['vox', '.mp3'], ['tex', '.jpg']]) {
   const dir = path.join(ASSETS, kind); if (!fs.existsSync(dir)) continue;
@@ -43,7 +45,7 @@ const FX_FILES = ['postprocessing/EffectComposer.js', 'shaders/CopyShader.js', '
 const fxSrc = FX_FILES.map(f => fs.readFileSync(path.join(ROOT, 'node_modules/three/examples/js', f), 'utf8')).join(';\n');
 const fxJs = (await transform(fxSrc, { minify: true, target: 'es2017', legalComments: 'none' })).code;
 const gameJs = (target, assets) => "(function(){\n'use strict';\n" +
-  `const BUILD={target:'${target}',version:'${pkg.version}',assets:'${assets}'};\n` + parts + '})();\n';
+  `const BUILD={target:'${target}',version:'${pkg.version}',assets:'${assets}'};\nconst SFX_MANIFEST=${SFX_MAN};\n` + parts + '})();\n';
 
 // ---------- online play: the Supabase browser SDK and the project's public configuration ----------
 // The SDK (version pinned in package-lock.json) is bundled from node_modules into its own IIFE that exposes

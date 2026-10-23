@@ -26,10 +26,10 @@ function njDress(u,G,acc,acc2){ const X=rvInit();
   const r=grp(); const sa=mesh(X.sash,acc,0,.02,0); sa.rotation.x=Math.PI/2; sa.scale.set(1,.85,1); r.add(sa); const k1=mesh(X.knot,acc,.1,-.06,.12); k1.rotation.z=.3; r.add(k1); G.r=r; }
 const _rv1=new V3();
 Object.assign(EXTRA_EV,{
-  brSoul:(u,e)=>{ _rv1.copy(u.j.chest); puff(_rv1,e.big?10:5,e.big?.25:.16,e.big?2.4:1.4,'#ff3a1a'); if(e.big){ ring(_rv1.setY(H(u.pos.x,u.pos.z)+.1),2.2,'#ff5a2a'); } crSfx('soul','clank',u.j.chest,.4); },
-  njDash:(u)=>{ for(let i=0;i<4;i++){ _rv1.copy(u.j.chest).addScaledVector(u.fwdW,-i*.35*u.s); puff(_rv1,1,.18,.4,'#2a2a34'); } sfx('swish',u.pos,.7); },
-  njSmoke:(u,e)=>{ puff(u.j.chest,e.mini?4:10,e.mini?.2:.32,e.mini?.8:1.8,'#3a3a44'); if(!e.mini) sfx('swish',u.pos,.5,{rate:.7}); },
-  njStar:(u,e)=>{ const t=u.atkTarget||u.target; sfx('swish',u.j.hR,.7,{rate:1.4});
+  brSoul:(u,e)=>{ _rv1.copy(u.j.chest); puff(_rv1,e.big?10:5,e.big?.25:.16,e.big?2.4:1.4,'#ff3a1a'); if(e.big){ ring(_rv1.setY(H(u.pos.x,u.pos.z)+.1),2.2,'#ff5a2a'); } sfx('boneSoul',u.j.chest,.5); },
+  njDash:(u)=>{ for(let i=0;i<4;i++){ _rv1.copy(u.j.chest).addScaledVector(u.fwdW,-i*.35*u.s); puff(_rv1,1,.18,.4,'#2a2a34'); } sfx('ninjaSwish',u.pos,.7); },
+  njSmoke:(u,e)=>{ puff(u.j.chest,e.mini?4:10,e.mini?.2:.32,e.mini?.8:1.8,'#3a3a44'); if(!e.mini) sfx('smokeBomb',u.pos,.6); },
+  njStar:(u,e)=>{ const t=u.atkTarget||u.target; sfx('shurikenThrow',u.j.hR,.7);
     for(let i=0;i<(e.n||3);i++){ _rv1.copy(u.j.hR).addScaledVector(u.fwdW,.5+i*.6); glowAt(_rv1,.05,'#d8e0ea'); }
     if(NET.guest||!t||!t.alive||!t.isUnit||t.team===u.team||!canTarget(u,t)) return;
     const dx=t.pos.x-u.pos.x, dz=t.pos.z-u.pos.z, d=Math.hypot(dx,dz)||1; if(d>9) return;

@@ -240,7 +240,7 @@ function armPanel(show){
   for(const b of qsa(P,'button[data-f]')) b.onclick=()=>{ sfx('ui'); armOpen(b.dataset.f); };
   for(const b of qsa(P,'button[data-t]')) b.onclick=()=>{ sfx('ui'); ARM.type=b.dataset.t; game.duelSel=ARM.type; resetViewer(); };
   for(const b of qsa(P,'button[data-c]')) b.onclick=()=>{ sfx('ui'); ARM.cat=b.dataset.c; armPanel(true); };
-  for(const b of qsa(P,'button[data-i]')) b.onclick=()=>{ if(b.disabled) return; sfx('ui'); armSet(fac,type,ARM.cat,b.dataset.i); if(VW.u&&VW.u.G&&VW.u.G.h) VW.u.G.h.visible=true; armPanel(true); };
+  for(const b of qsa(P,'button[data-i]')) b.onclick=()=>{ if(b.disabled) return; sfx(b.dataset.i?'armoryEquip':'ui'); armSet(fac,type,ARM.cat,b.dataset.i); if(VW.u&&VW.u.G&&VW.u.G.h) VW.u.G.h.visible=true; armPanel(true); };
   const cl=P.querySelector&&P.querySelector('#armClear'); if(cl) cl.onclick=()=>{ sfx('ui'); const A=settings.armory; if(A&&A[fac]) delete A[fac][type]; saveSettings(); if(VW.u&&VW.u.G&&VW.u.G.h) VW.u.G.h.visible=true; armPanel(true); };
   const bk=P.querySelector&&P.querySelector('#armBack'); if(bk) bk.onclick=()=>{ sfx('ui'); armClose(); openMenu(); };
 }

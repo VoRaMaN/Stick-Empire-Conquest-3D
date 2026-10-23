@@ -691,3 +691,5 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .armory .arm-items{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
 .armory .arm-items button{text-align:left;display:flex;flex-direction:column;gap:2px}
 .armory .arm-items small{font-size:11px;opacity:.8}
+
+.sfx-cats h4{margin:10px 0 4px;font-size:13px;opacity:.8}.sfx-cats .row{display:flex;align-items:center;gap:10px;margin:4px 0}.sfx-cats .row span{min-width:84px;font-size:13px}.sfx-cats input{flex:1}

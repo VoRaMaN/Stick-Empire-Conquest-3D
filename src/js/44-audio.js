@@ -140,6 +140,7 @@ function spatial(p){ // gain and stereo position of a world sound for the curren
 }
 function sfx(name,pos,vol,opt){
   if(!audio.ready||audio.ctx.state!=='running') return;
+  { const r=sfxResolve(name,vol,opt); if(!r) return; name=r[0]; vol=r[1]; opt=r[2]; }   // the sound registry (44c)
   if(name==='hornEnemy'&&audio.bank.horn&&audio.bank.horn.rec){ opt=Object.assign({rate:.8},opt); name='horn'; vol=(vol===undefined?1:vol)*.85; }
   const S=audio.bank[name]; if(!S||!S.v.length) return;
   const c=audio.ctx, now=c.currentTime, delay=(opt&&opt.delay)||0;

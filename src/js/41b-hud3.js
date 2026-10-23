@@ -159,7 +159,7 @@ function pingArm(on){ HUD3.pingArm=on; const b=$('#pingB'); if(b) b.setAttribute
 canvas.addEventListener('pointerdown',e=>{ if(!HUD3.pingArm||game.mode!=='battle') return; const gp=groundPoint(e.clientX,e.clientY); pingArm(false); if(gp){ pingSend(gp.x,gp.z); e.stopImmediatePropagation(); } },true);
 function hud3Late(){   // after every file has loaded (the map and the menus are defined further on)
   if(mmEl&&mmEl.addEventListener) mmEl.addEventListener('pointerdown',e=>{ if(!HUD3.pingArm) return; const r=mmEl.getBoundingClientRect(); pingArm(false); pingSend(MM.x0+(e.clientX-r.left)/r.width*(MM.x1-MM.x0),MM.z0+(e.clientY-r.top)/r.height*(MM.z1-MM.z0)); e.stopImmediatePropagation(); },true);
-  applyAccess(); accessUI();
+  applyAccess(); accessUI(); sfxCatUI();
 }
 
 /* ---------- keys: T Y the general, U I the selection's specials, L the latest alert, P ping ---------- */

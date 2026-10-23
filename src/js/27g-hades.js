@@ -58,7 +58,7 @@ function hxAI(u,dt){
 // an Apocalypse strike: a pillar of the variant's fire
 function hxPillar(u,x,z){ const V=hxVar(u), y=H(x,z); _hz1.set(x,y+.1,z); ring(_hz1,2.6,V.fire); shakeAt(_hz1,.25);
   for(let i=0;i<10;i++) emitFire(_hz1,1,.3,rand(-1,1),rand(6,10),rand(-1,1),.5,.8); fireBurst(_hz1,10,.25,3,.6);
-  flashes.push({p:_hz1.clone().setY(y+1),r0:.4,r1:1.6,t:0,life:.35,col:V.fire}); crSfx('ignite','ignite',_hz1,.8);
+  flashes.push({p:_hz1.clone().setY(y+1),r0:.4,r1:1.6,t:0,life:.35,col:V.fire}); sfx('hellPillar',_hz1,.8);
   if(NET.guest) return;
   gridEach(x,z,2.8,o=>{ if(!o.alive||o.team===u.team||!o.isUnit||isAir(o)) return; const dx=o.pos.x-x, dz=o.pos.z-z, d=Math.hypot(dx,dz)||1; if(d>2.6) return;
     damage(o,u.T.dmg*1.5,u,new V3(dx/d,0,dz/d),3,.6); applyBurn(o,u,8,4); }); }
@@ -66,25 +66,25 @@ const _hz1=new V3(), _hz2=new V3(), _hz3=new V3();
 Object.assign(EXTRA_EV,{
   hdRide:(u,e)=>{ u.hxR={k:e.k,t:0,d:e.d||(e.k==='sweep'?.35:e.k==='slam'?.55:e.k==='raise'?1:.3)}; if(e.k==='thrust'){ u.lanceT=LANCE_T; u.lanceTgt=u.atkTarget||u.target; } },
   hxStrike:(u)=>{ const V=hxVar(u); _hz1.copy(u.pos).addScaledVector(u.fwdW,1.1*u.s); _hz1.y=H(_hz1.x,_hz1.z)+.1; ring(_hz1,3.6,V.fire); shakeAt(_hz1,.45); fireBurst(_hz1,16,.3,4,.7);
-    flashes.push({p:_hz1.clone().setY(_hz1.y+.6),r0:.4,r1:2,t:0,life:.3,col:V.fire}); sfx('boom',_hz1,.7);
+    flashes.push({p:_hz1.clone().setY(_hz1.y+.6),r0:.4,r1:2,t:0,life:.3,col:V.fire}); sfx('infernalStrike',_hz1,.8);
     if(NET.guest) return;
     gridEach(_hz1.x,_hz1.z,3.8,o=>{ if(!o.alive||o.team===u.team||!o.isUnit||isAir(o)) return; const dx=o.pos.x-_hz1.x, dz=o.pos.z-_hz1.z, d=Math.hypot(dx,dz)||1; if(d>3.6) return;
       damage(o,u.T.dmg*2.2,u,new V3(dx/d,0,dz/d),5,.8); applyBurn(o,u,8,4); knockDown(o,u); }); },
-  hxRage:(u)=>{ u.hxRageT=game.time+8; callout(u,'Cerberus Rage!','#ff7a1a'); },
+  hxRage:(u)=>{ sfx('cerberusRage',u.j.head,.9); u.hxRageT=game.time+8; callout(u,'Cerberus Rage!','#ff7a1a'); },
   hxDrain:(u)=>{ const V=hxVar(u); let got=0, n=0;
     for(const o of wyFoes(u,7.5,o=>!isAir(o))){ if(n++>=6) break;
       for(let i=0;i<3;i++){ _hz1.copy(o.j.chest).lerp(u.j.chest,i/3+Math.random()*.15); glowAt(_hz1,.09,V.hot); }
       if(!NET.guest){ const before=o.hp; const dx=o.pos.x-u.pos.x, dz=o.pos.z-u.pos.z, dd=Math.hypot(dx,dz)||1; damage(o,u.T.dmg*.22,u,new V3(dx/dd,0,dz/dd),.2,0); got+=Math.max(0,before-o.hp); o.morale=Math.max(0,(o.morale===undefined?60:o.morale)-4); } }
     if(!NET.guest&&got>0) u.hp=Math.min(u.maxHp,u.hp+got*.5);
-    if(Math.random()<.5) crSfx('soul','warcry',u.j.head,.4); },
+    if(Math.random()<.5) sfx('soulDrain',u.j.head,.5); },
   hxBlink:(u)=>{ const t=u.hxStepTo&&u.hxStepTo.alive?u.hxStepTo:null; u.hxStepTo=null;
-    _hz1.copy(u.pos); puff(_hz1,14,.5,2.4,'#1a1020'); puff(_hz1,6,.35,1.6,hxVar(u).fire);
+    _hz1.copy(u.pos); puff(_hz1,14,.5,2.4,'#1a1020'); sfx('shadowStep',_hz1,.8); puff(_hz1,6,.35,1.6,hxVar(u).fire);
     if(!t||NET.guest) return;
     const dx=t.pos.x-u.pos.x, dz=t.pos.z-u.pos.z, d=Math.hypot(dx,dz)||1, nx=dx/d, nz=dz/d;
     let x=t.pos.x+nx*2.2*u.s, z=t.pos.z+nz*2.2*u.s; x=clamp(x,MAP.fx0+1,MAP.fx1-1); z=clamp(z,MAP.fz0+1,MAP.fz1-1); if(wyWet(x,z)){ x=t.pos.x-nx*2; z=t.pos.z-nz*2; }
     u.pos.x=x; u.pos.z=z; u.pos.y=groundAt(u,x,z); u.last.copy(u.pos); u.vel.set(0,0,0); u.face=u.faceGoal=Math.atan2(-nx,-nz); crPlace(u);
     u.hxShadow=game.time+3; u.target=t; u.atkTarget=t; puff(u.pos,14,.5,2.4,'#1a1020'); shakeAt(u.pos,.2); },
-  hxApo:(u)=>{ const a=u.hxApoAt||{x:u.pos.x+u.fwdW.x*6,z:u.pos.z+u.fwdW.z*6}; u.hxApo={n:9,t:0,cx:a.x,cz:a.z}; shakeAt(u.pos,.6); sfx('roar',u.j.head,1,{rate:.55}); callout(u,'Apocalypse!','#ff5a2a'); },
+  hxApo:(u)=>{ const a=u.hxApoAt||{x:u.pos.x+u.fwdW.x*6,z:u.pos.z+u.fwdW.z*6}; u.hxApo={n:9,t:0,cx:a.x,cz:a.z}; shakeAt(u.pos,.6); sfx('apocalypse',u.j.head,1); callout(u,'Apocalypse!','#ff5a2a'); },
   hxSoul:(u,e,fin,v)=>{ const V=hxVar(u); const P=v&&v.j?v.j.chest:u.j.head; for(let i=0;i<8;i++){ _hz1.copy(P).addScaledVector(UP,i*.18); glowAt(_hz1,.12-.01*i,V.hot); }
     if(!NET.guest) u.hp=Math.min(u.maxHp,u.hp+u.maxHp*.12); },
 });
