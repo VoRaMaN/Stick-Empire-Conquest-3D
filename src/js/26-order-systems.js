@@ -80,7 +80,7 @@ function gxInit(){
 }
 function buildGearX(u,G,acc,acc2,steel){
   if(u.T.crawler){ buildCrawler(u,G); return; }
-  if(u.T.chaos){ buildChaosGear(u,G); return; }
+  if(u.T.chaos){ buildChaosGear(u,G); if(u.type==='boner') brDress(u,G); return; }   // the Bone Reaver's new look (26e)
   gxInit(); const team=u.team;
   switch(u.type){
     case 'wizard':{
@@ -109,7 +109,7 @@ function buildGearX(u,G,acc,acc2,steel){
       const h=grp(); h.add(new THREE.Mesh(GX.eyes,new THREE.MeshBasicMaterial({color:'#f6f3ea'})));
       for(const sd of [-1,1]){ const t1=mesh(GX.nTail,acc2,sd*.035,-.03,-.2); t1.rotation.x=1.0; t1.rotation.z=sd*.25; h.add(t1); }
       G.h=h;
-      const b=grp(); const sc=mesh(GX.scab,lamOf('#1c1612'),0,0,-.02); sc.rotation.z=.75; b.add(sc); G.b=b; break; }
+      const b=grp(); const sc=mesh(GX.scab,lamOf('#1c1612'),0,0,-.02); sc.rotation.z=.75; b.add(sc); G.b=b; njDress(u,G,acc,acc2); break; }   // the Ninja's new look (26e)
     case 'wing':{
       const mem=lamOf(team?'#7a4650':'#ad9560',{side:THREE.DoubleSide}), frame=lamOf('#3b2b1c');
       for(const [key,geo,fr] of [['wl1',GX.wIn,GX.frameIn],['wl2',GX.wOut,GX.frameOut],['wr1',GX.wIn,GX.frameIn],['wr2',GX.wOut,GX.frameOut]]){
@@ -133,6 +133,7 @@ function updateGearX(u){
   if(u.T.chaos){ updateChaosGear(u); return; }
   const G=u.G, j=u.j, s=u.s; if(!G) return;
   _gfl.copy(u.fwdW).addScaledVector(u.spine,-u.fwdW.dot(u.spine)); if(_gfl.lengthSq()<1e-6) _gfl.copy(u.fwdW); _gfl.normalize();
+  if(u.type==='ninja'&&G.r) orient(G.r,j.pelvis,u.spine,_gfl);   // the sash
   if(u.type==='cleric'){
     if(G.r) orient(G.r,j.pelvis,u.spine,_gfl);
     if(G.k){ const d=u.skD||(u.skD=new V3(0,1,0));

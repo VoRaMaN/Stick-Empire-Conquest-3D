@@ -249,7 +249,8 @@ function drawChaos2(){
     if(!u.alive||!CHAOS2.includes(u.type)) continue;
     if(Math.abs(u.pos.x-ct.x)>48||Math.abs(u.pos.z-ct.z)>34) continue;
     const s=u.s, j=u.j, fw=u.fwdW, rw=u.rightW, sp=_dc2.subVectors(j.head,j.neck).normalize();
-    if(u.type==='boner'){ for(const sd of [-1,1]){ _ch1.copy(j.head).addScaledVector(fw,.13*s).addScaledVector(rw,sd*.065*s); glowAt(_ch1,.02*s,'#ff3a2a'); } }
+    if(u.type==='boner'){ for(const sd of [-1,1]){ _ch1.copy(j.head).addScaledVector(fw,.13*s).addScaledVector(rw,sd*.065*s); glowAt(_ch1,.02*s,'#ff3a2a'); }
+      _ch1.copy(j.chest).addScaledVector(sp,-.05*s); glowAt(_ch1,(.07+.02*Math.sin(tt*5+u.id))*s,'#ff4a1a'); }   // the soul-fire in the ribs (26e)
     else if(u.type==='bomber'){ if(!(u.bombT>0)){ _ch1.copy(j.hR).addScaledVector(u.wRw,.26*s); glowAt(_ch1,(.03+.015*Math.sin(tt*30+u.id))*s,'#ffb347'); } }
     else if(u.type==='oracle'){ oracleTip(u,_ch1); const pul=.5+.5*Math.sin(tt*3+u.id); glowAt(_ch1,(.08+.03*pul+.1*(u.soulGlow||0))*s,'#5dffc8');
       _ch1.copy(j.head).addScaledVector(fw,.17*s).addScaledVector(sp,.08*s); glowAt(_ch1,.03*s,'#7dffd6'); }
