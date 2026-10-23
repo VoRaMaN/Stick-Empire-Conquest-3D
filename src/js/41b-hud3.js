@@ -8,7 +8,7 @@ const COUNTER={
   sword:['Archers, Thralls, casters','Spartans, Giants'],spear:['Knights, Cerberus, Hounds, charges','Archers, Wizards'],
   archer:['Spartans, Giants, slow troops','Knights, Ninjas, Hounds'],giant:['Swordsmen, packed crowds','Archers, Ninjas'],
   ninja:['Archers, Wizards, Clerics','Spartans, Swordsmen'],wizard:['Packed crowds','Knights, Ninjas'],cleric:['Keeps the line alive','Knights, Ninjas'],
-  wing:['Giants and slow troops','Archers, Harvesters'],knight:['Archers and casters','Spartans'],
+  wing:['Giants and slow troops','Archers, Harvesters'],knight:['Archers, casters, crowds (from the air)','Spartans; archers when aloft'],
   crawler:['Archers and light troops','Spartans, Giants'],hound:['Stragglers, archers','Spartans'],dread:['Swordsmen, shield walls','Archers, Wizards'],
   harvester:['Spartans, Giants','Knights, Ninjas'],boner:['Archers','Spartans'],bomber:['Packed crowds','Knights, Archers'],oracle:['Keeps the horde alive','Knights, Ninjas'],
   reaper:['Swordsmen, crowds','Archers'],hades:['Almost anything','Massed archers'],cerberus:['Crowds, Swordsmen','Spartans, Archers'],
@@ -168,7 +168,9 @@ window.addEventListener('keydown',e=>{
   const k=(e.key||'').toUpperCase();
   if(k==='P'){ pingArm(!HUD3.pingArm); return; }
   if(k==='L'){ const a=ALERTS.find(x=>x.x!==undefined); if(a) alertJump(a); return; }
-  if('TYUI'.includes(k)&&k.length===1){ const L=abEntries().filter(x=>x.key===k); if(L.length){ e.preventDefault(); abUse(L[0].id); } }
+  if('TYUI'.includes(k)&&k.length===1){ const L=abEntries().filter(x=>x.key===k); if(L.length){ e.preventDefault(); abUse(L[0].id); } return; }
+  const kk=(e.shiftKey?'⇧':'')+k;   // the Wyvern Knight: G, J K N M B, Shift + J K N M B (27f)
+  if(/^(⇧?[JKNMB]|G)$/.test(kk)){ const L=abEntries().filter(x=>x.key===kk); if(L.length){ e.preventDefault(); abUse(L[0].id); } }
 });
 
 /* ---------- the order path: dots on the ground from the regiment to each waypoint, and on the map ---------- */

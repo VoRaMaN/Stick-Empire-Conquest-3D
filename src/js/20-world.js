@@ -7,7 +7,7 @@ const game={size:0,stance:['defend','defend'],holdX:[-20,20],duelDefend:true,mod
 const BASE_X=[-34,34], MINE=[new V3(-27.5,0,-8.5),new V3(27.5,0,8.5)];
 const statues=[];
 
-function groundAt(u,x,z){return u&&u.gy!==undefined?u.gy:u&&u.inCastle?castleFloor(u,x,z):H(x,z);}
+function groundAt(u,x,z){const g=u&&u.gy!==undefined?u.gy:u&&u.inCastle?castleFloor(u,x,z):H(x,z); return u&&u.wyA?g+u.wyA:g;}   // a wyvern in flight: its altitude (27f)
 // inside the walls a soldier walks on the courtyard paving; past the gate the road blends back into the field
 function castleFloor(u,x,z){ const t=u.team, lx=t?MAP.cf-x:x+MAP.cf, f=CGY[t]+.08; if(lx<-.5) return f; return lerp(f,H(x,z),smooth(clamp((lx+.5)/5,0,1))); }
 

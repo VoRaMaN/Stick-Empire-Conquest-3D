@@ -14,10 +14,11 @@ function updateUnit(u,dt){
   }
   if(u.type==='sword'&&!game.classicMix&&game.mode==='battle'&&!NET.guest) rageTick(u,dt);
   if(u.rootT>game.time) u.desired.set(0,0,0); else if(u.spurT>game.time) u.desired.multiplyScalar(1.4); else if(u.rallyT>game.time) u.desired.multiplyScalar(1.12);
+  if(u.slowT>game.time) u.desired.multiplyScalar(.65);   // a wyvern's screech (27f)
   if(u.T.crawler) crawlerTick(u,dt);   // Rage research (never in the classic battle)
   if(u.T.chaos) chaosTick(u,dt);       // Infernal Regeneration, glows
   const acc=u.T.acc||(u.type==='giant'?3:9);
-  if(MAP.obst&&!u.inCastle&&!u.garrison){ mapWade(u); mapSteer(u,dt); }   // Riverlands: wading slows, obstacles are walked round (37d)
+  if(MAP.obst&&!u.inCastle&&!u.garrison&&!isAir(u)){ mapWade(u); mapSteer(u,dt); }   // Riverlands: wading slows, obstacles are walked round (37d)
   u.vel.lerp(u.desired,1-Math.exp(-dt*acc));
   u.last.copy(u.pos);
   u.pos.addScaledVector(u.vel,dt);
@@ -29,7 +30,7 @@ function updateUnit(u,dt){
   if(!u.alive) return;
   if(NET.guest&&u.net) netPuppetCorrect(u,dt);   // keep a replicated soldier on the host's track
   updateFinAim(u,dt); updateCharge(u,dt);
-  if(!u.inCastle&&!u.garrison){ u.pos.x=clamp(u.pos.x,MAP.fx0,MAP.fx1); u.pos.z=clamp(u.pos.z,MAP.fz0,MAP.fz1); if(MAP.obst) mapCollide(u); } u.pos.y=groundAt(u,u.pos.x,u.pos.z);
+  if(!u.inCastle&&!u.garrison){ u.pos.x=clamp(u.pos.x,MAP.fx0,MAP.fx1); u.pos.z=clamp(u.pos.z,MAP.fz0,MAP.fz1); if(MAP.obst&&!isAir(u)) mapCollide(u); } u.pos.y=groundAt(u,u.pos.x,u.pos.z);
   const rv=_tmp.subVectors(u.pos,u.last).multiplyScalar(1/Math.max(dt,1e-4)); rv.y=0;
   const prevF=u.av.x*Math.sin(u.face)+u.av.z*Math.cos(u.face);
   u.av.lerp(rv,1-Math.exp(-dt*12)); u.spd=Math.hypot(u.av.x,u.av.z);
@@ -48,7 +49,7 @@ function separate(){
   for(let i=0;i<units.length;i++){ const a=units[i]; if(!a.alive) continue; const ia=gI(a.pos.x), ja=gJ(a.pos.z);
     for(let gj=Math.max(0,ja-1);gj<=Math.min(GNZ-1,ja+1);gj++) for(let gi=Math.max(0,ia-1);gi<=Math.min(GNX-1,ia+1);gi++){ const cell=gridCells[gj*GNX+gi];
     for(let k=0;k<cell.length;k++){ const b=cell[k]; if(b===a||!b.alive||b.id<a.id) continue;
-      if(!a.fl!==!b.fl&&((a.fl&&a.fl.air)||(b.fl&&b.fl.air))) continue;   // a flyer passes over soldiers on the ground
+      if(isAir(a)!==isAir(b)) continue;   // a flyer passes over soldiers on the ground
       const dx=b.pos.x-a.pos.x,dz=b.pos.z-a.pos.z,d2=dx*dx+dz*dz,min=(a.s+b.s)*(a.team===b.team?.58:(bodyBlow(a,b)||bodyBlow(b,a)?.26:.42))*(a.fl&&b.fl&&a.fl.air&&b.fl.air?2.2:1); if(d2>=min*min||d2<1e-8) continue;
       const d=Math.sqrt(d2),pen=(min-d), fa=(a.fin||a.state==='stunned'||!a.isUnit)?0:b.s*b.s, fb=(b.fin||b.state==='stunned'||!b.isUnit)?0:a.s*a.s, ft=fa+fb; if(!ft) continue;
       const nx=dx/d,nz=dz/d; a.pos.x-=nx*pen*fa/ft; a.pos.z-=nz*pen*fa/ft; b.pos.x+=nx*pen*fb/ft; b.pos.z+=nz*pen*fb/ft; } } }

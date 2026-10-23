@@ -1,6 +1,6 @@
 /* ---------------- combat ---------------- */
 function meleeHit(u,t,e,dm){
-  if(isAir(t)&&!u.fl) return 'miss';   // a blade can't reach a wing archer in the air
+  if(isAir(t)&&!u.fl&&!(u.wy&&u.wy.air)) return 'miss';   // a blade can't reach a wing archer in the air
   const nm=t.action&&t.action.c.name, at=t.action?t.action.t:0;
   const dx=u.pos.x-t.pos.x,dz=u.pos.z-t.pos.z,d=Math.hypot(dx,dz)||1, facing=(dx*t.fwdW.x+dz*t.fwdW.z)/d>.2;
   const spark=guardPoint(t,new V3()), cp=e.part?partPoint(t,e.part,new V3()):t.j.chest.clone();
@@ -38,16 +38,17 @@ function damage(t,amt,src,dirW,kb,up,blocked,at){
   if(t.invuln||NET.guest) return;   // online guest: health only ever comes from the host
   if(amt>0) t.hurtAt=game.time;   // Chaos regeneration waits for the wounds to stop
   if(src&&src.team!==undefined&&src.team<2){ t.lastHitTeam=src.team; t.lastHitBy=src; }
-  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)*vetDealt(src)*vetTaken(t)*formTaken(t,src))*(RL.on?rlDmgMul(src)*rlSysMul(t,src):1)*(game.classicMix?1:heroMul(t,src)); if(game.mode==='battle'&&!game.classicMix){ alertHit(t,src); fightMark(t); if(src&&src.team<2&&game.stats&&game.stats.dmg) game.stats.dmg[src.team]+=amt; } if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
+  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)*vetDealt(src)*vetTaken(t)*formTaken(t,src))*(RL.on?rlDmgMul(src)*rlSysMul(t,src):1)*(game.classicMix?1:heroMul(t,src)*wyMul(t,src)); if(game.mode==='battle'&&!game.classicMix){ alertHit(t,src); fightMark(t); if(src&&src.team<2&&game.stats&&game.stats.dmg) game.stats.dmg[src.team]+=amt; } if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
   if(t.hp<=0){ kill(t,dirW.clone().multiplyScalar(2.5*(kb||1)).add(new V3(0,1.8+(kb||1)*.6+(up||0),0)),{}); }
 }
 function kill(t,impWorld,opt){
   if(!t.alive||(NET.guest&&!NET.allowKill)) return;
   shakeMorale(t); onKill(t);
-  if(t.isUnit){ if(t.type==='giant') sfx('roar',t.j.head,.9,{rate:.8}); else if(t.T.horse) sfx('roar',t.j.head,.6,{rate:1.6}); else if(t.T.crawler) crSfx('crDie','roar',t.j.head,.85); else if(Math.random()<.75) sfx('death',t.j.head,.9,{rate:t.type==='miner'?1.08:1}); }
+  if(t.isUnit){ if(t.type==='giant') sfx('roar',t.j.head,.9,{rate:.8}); else if(t.T.wyvern) sfx('roar',t.j.head,1,{rate:.6}); else if(t.T.horse) sfx('roar',t.j.head,.6,{rate:1.6}); else if(t.T.crawler) crSfx('crDie','roar',t.j.head,.85); else if(Math.random()<.75) sfx('death',t.j.head,.9,{rate:t.type==='miner'?1.08:1}); }
   if(t.fin&&t.fin.rag) releaseRag(t.fin.rag,new V3(0,0,0));
   if(t.fin&&t.fin.victim&&t.fin.victim.alive){ unstun(t.fin.victim); }
   t.fin=null; t.target=null;
+  if(t.wy) wyDie(t);   // a wyvern shot down falls from the sky
   if(t.cr&&(t.T.horse||t.rider)) throwRider(t,impWorld);
   toRagdoll(t,impWorld,opt);
 }
@@ -110,7 +111,7 @@ function planDefense(t,u,c){
 }
 function canFinish(u,t){
   if(game.mode==='duel') return false;
-  if(game.finMode===0||!t.alive||t.state==='stunned'||t.fin||t.type==='giant'||t.invuln||t.fl) return false;
+  if(game.finMode===0||!t.alive||t.state==='stunned'||t.fin||t.type==='giant'||t.invuln||t.fl||isAir(t)) return false;
   if(u.T.ranged&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)>(u.T.finR||1.9)) return false;
   const expected=u.T.dmg*(1-(t.T.armor||0));
   if(t.hp>expected*1.05) return false;

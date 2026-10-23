@@ -45,9 +45,9 @@ function syncTeamNames(){
 
 /* ---------- Chaos regiments, formations and weapon contact points ---------- */
 // Order cavalry (13g, 27e)
-Object.assign(REG_SIZE,{knight:6}); Object.assign(FORM,{knight:{cols:3,gap:2.7,depth:3.4}});
+Object.assign(REG_SIZE,{knight:4}); Object.assign(FORM,{knight:{cols:2,gap:4.2,depth:4.4}});   // wyverns need room for their wings
 { const i=FORM_ORDER.indexOf('giant'); FORM_ORDER.splice(i<0?FORM_ORDER.length:i+1,0,'knight'); }
-Object.assign(TYPE_PL,{knight:'Knights'});
+Object.assign(TYPE_PL,{knight:'Wyvern Knights'});
 Object.assign(REG_SIZE,{dread:10,harvester:8,boner:12,bomber:8,oracle:6,reaper:6,hades:1,hound:12,cerberus:2});
 Object.assign(FORM,{dread:{cols:5,gap:1.5,depth:1.6},harvester:{cols:4,gap:1.45,depth:1.5},boner:{cols:6,gap:1.3,depth:1.4},bomber:{cols:4,gap:1.45,depth:1.5},oracle:{cols:3,gap:1.5,depth:1.5},reaper:{cols:3,gap:1.7,depth:1.7},hades:{cols:1,gap:3.5,depth:3},hound:{cols:6,gap:1.3,depth:1.8},cerberus:{cols:2,gap:3,depth:3}});
 FORM_ORDER.unshift('hound','cerberus','hades','dread','reaper','boner'); { const i=FORM_ORDER.indexOf('archer'); FORM_ORDER.splice(i+1,0,'harvester','bomber','oracle'); }

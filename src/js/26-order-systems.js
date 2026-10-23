@@ -2,11 +2,11 @@
    appearance · flight · spells · status effects · targeting rules · unit brains */
 
 /* ---------- targeting rules ---------- */
-const isAir=o=>!!(o&&o.fl&&o.fl.air&&o.alive!==false);
+const isAir=o=>!!(o&&(o.fl&&o.fl.air||o.wy&&o.wy.air)&&o.alive!==false);   // a wing archer aloft, or a wyvern (27f)
 // only arrows, bolts and spells reach a flyer; a cloaked ninja is invisible until he is close
 function canTarget(u,o){
   if(o.inCastle||o.emerging) return false;     // still inside its castle walls (or climbing out of the Hellpit)
-  if(isAir(o)&&!u.T.ranged&&!u.fl) return false;
+  if(isAir(o)&&!u.T.ranged&&!u.fl&&!(u.wy&&u.wy.air)) return false;
   if(o.cloak&&Math.hypot(o.pos.x-u.pos.x,o.pos.z-u.pos.z)>1.8) return false;
   if(FOW.on&&o.team!==u.team&&!fowSees(u.team,o)) return false;   // Riverlands: nobody shoots at what his army can't see (37e)
   return true;

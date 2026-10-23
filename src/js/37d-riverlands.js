@@ -222,7 +222,7 @@ function rlObstGrid(){ const N=RL.ogN, S=RL.ogS, O=RL.og0, G=Array.from({length:
   for(const o of RL.obst){ const R=(o.r||Math.hypot(o.hw,o.hd))+1; const i0=Math.max(0,Math.floor((o.x-R-O)/S)), i1=Math.min(N-1,Math.floor((o.x+R-O)/S)), j0=Math.max(0,Math.floor((o.z-R-O)/S)), j1=Math.min(N-1,Math.floor((o.z+R-O)/S));
     for(let j=j0;j<=j1;j++) for(let i=i0;i<=i1;i++) G[j*N+i].push(o); } }
 function mapCollide(u){
-  if(u.fl&&u.fl.air) return;
+  if(isAir(u)) return;
   rlRiverCollide(u);   // the river: only the bridges cross it (37e)
   const N=RL.ogN, i=Math.floor((u.pos.x-RL.og0)/RL.ogS), j=Math.floor((u.pos.z-RL.og0)/RL.ogS); if(i<0||j<0||i>=N||j>=N) return;
   const ur=.3*u.s;
@@ -249,7 +249,7 @@ function mapSteer(u,dt){
 }
 // wading: the river slows everyone on foot, and splashes
 function mapWade(u){ if(u.type==='ninja'&&dnNight()>.5){ u.desired.x*=1.15; u.desired.z*=1.15; }   // ninjas run freely in the dark
-  if(u.fl) return; const dep=RL.WL-H(u.pos.x,u.pos.z); if(dep<.05) return;
+  if(u.fl||isAir(u)) return; const dep=RL.WL-H(u.pos.x,u.pos.z); if(dep<.05) return;
   u.wadeT=game.time+.3; const k=Math.min(.5,1-Math.min(.5,dep*.65)); u.desired.x*=k; u.desired.z*=k;   // wading a ford: half speed and exposed (37f)
   if(u.spd>.8&&Math.random()<.06) puff(new V3(u.pos.x,RL.WL+.05,u.pos.z),1,.18,.6,'#d6e6e8'); }
 
@@ -313,7 +313,7 @@ function rlZonesStep(dt){
   if(game.mode!=='battle'||NET.guest) return;   // online, the host holds the zones and sends them round
   RL.zT-=dt; if(RL.zT<=0){ RL.zT=.25; rlZoneBonusTick(.25);
     for(const Z of RL.zones){ Z.n[0]=Z.n[1]=0;
-      gridEach(Z.x,Z.z,RL_ZR,u=>{ if(!u.alive||!u.isUnit||u.team>1||u.T.worker||(u.fl&&u.fl.air)||u.routing) return; if((u.pos.x-Z.x)**2+(u.pos.z-Z.z)**2<RL_ZR*RL_ZR) Z.n[u.team]++; });
+      gridEach(Z.x,Z.z,RL_ZR,u=>{ if(!u.alive||!u.isUnit||u.team>1||u.T.worker||isAir(u)||u.routing) return; if((u.pos.x-Z.x)**2+(u.pos.z-Z.z)**2<RL_ZR*RL_ZR) Z.n[u.team]++; });
       Z.contest=Z.n[0]>0&&Z.n[1]>0; Z.cap=Z.contest?-1:Z.n[0]>0?0:Z.n[1]>0?1:-1; } }
   if(game.over>0) return;
   for(const Z of RL.zones){ const s0=Z.s;

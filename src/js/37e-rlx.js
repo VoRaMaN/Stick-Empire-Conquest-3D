@@ -8,14 +8,14 @@ function rlRangeMode(on){
   for(const k in RL_RANGE){ const T=TYPES[k]; if(!T) continue; if(T.range0===undefined) T.range0=T.range;
     T.range=on?T.range0*RL_RANGE[k]:T.range0; } }
 // how far a soldier sees: three times the old engagement distance (+200%), and at least as far as he shoots
-function rlSight(u){ const T=u.T; let r=T.worker?26:42; if(T.ranged) r=Math.max(r,T.range+3); if(u.fl) r+=8; return r*(1-.4*dnNight()); }   // night: 40% less
+function rlSight(u){ const T=u.T; let r=T.worker?26:42; if(T.ranged) r=Math.max(r,T.range+3); if(u.fl) r+=8; if(isAir(u)) r+=14; return r*(1-.4*dnNight()); }   // night: 40% less
 // the old look-out distances, tripled on Riverlands
 const sightK=()=>RL.on?3:1;
 
 /* ---------- the river: only the bridges cross it ---------- */
 // a soldier on foot whose way runs into the water walks to the best bridge, over it, and on to where he was going
 function rlRoute(u,dt){
-  if(u.fl&&u.fl.air){ u.rlX=null; return; }
+  if(isAir(u)){ u.rlX=null; return; }
   const d=u.desired, sp=Math.hypot(d.x,d.z), px=u.pos.x, pz=u.pos.z, rx=rlRiverX(pz), side=px<rx?-1:1;
   let X=u.rlX;
   if(sp<.15) return;
@@ -76,7 +76,7 @@ function rlGoal(u){
 }
 // no wading: a soldier who steps into the river is put back on the bank (or the bridge) he came from
 function rlRiverCollide(u){
-  if(u.fl&&u.fl.air) return;
+  if(isAir(u)) return;
   const rx=rlRiverX(u.pos.z), W=rlRiverW(u.pos.z)*1.04, dx=u.pos.x-rx;
   if(Math.abs(dx)>=W||rlDeck(u.pos.x,u.pos.z)>-1e8||rlFordK(u.pos.z)>.45) return;   // bridges and fords
   if(u.last&&rlDeck(u.last.x,u.last.z)>-1e8){ if(!rlDeckClamp(u)){ u.pos.x=u.last.x; u.pos.z=u.last.z; } return; }

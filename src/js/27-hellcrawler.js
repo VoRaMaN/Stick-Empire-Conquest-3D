@@ -174,6 +174,7 @@ function computeCrawlPose(u){
   u.crAW=w; u.crR=cp?cp.R:null; u.crL=cp?cp.L:null;
   if(!a||a.c.idle) p.draw=Math.max(p.draw,.06+.05*Math.sin(game.time*2.6+u.id));   // panting
   if(u.emerge){ const k=smooth(clamp(u.emerge.t/u.emerge.dur,0,1)); p.lean=lerp(-1.05,p.lean,k); p.draw=Math.max(p.draw,.9*(1-k)); p.crouch=0; }
+  if(u.T.wyvern) wyPose(u,p);   // flight attitude, spread wings (27f)
   return p;
 }
 
@@ -264,6 +265,7 @@ function buildCrawlSkel(u,p,dt){
   cr.jaw+=(clamp(p.draw,0,1)-cr.jaw)*(1-Math.exp(-dt*25));
   if(u.T.heads){ const k=1-Math.exp(-dt*16); for(const c of ['hbY','hbP','hbJ','hcY','hcP','hcJ']) cr[c]=(cr[c]||0)+((p[c]||0)-(cr[c]||0))*k; }   // Cerberus' side heads
   crTailStep(u,p,dt,true);
+  if(u.T.wyvern) wySkel(u,p);   // the wings' bones (27f)
 }
 
 /* ---------- gait: walk (lateral sequence) → trot (diagonal pairs) → gallop (bounding), feet stay planted ---------- */
@@ -369,6 +371,7 @@ function updateCrawlerModel(u){
   for(let i=0;i<CR_TN;i++) orient(G['c_t'+i],T[i],_cm1.subVectors(T[i+1],T[i]),UP);
   orient(G.c_tt,T[CR_TN],_cm1.subVectors(T[CR_TN],T[CR_TN-1]),UP);
   if(u.T.hound) houndModel(u);
+  if(u.T.wyvern) wyModel(u);
 }
 function crSetHot(u,hot){ if(!!u.crHot===hot) return; u.crHot=hot; const G=u.G; if(!G) return;
   for(const k in G){ const g=G[k]; if(g&&g.isObject3D) for(const c of g.children) if(c.userData.skin) c.material=hot?CRM.hot:CRM.skin; } }
@@ -447,6 +450,7 @@ function crawlerTick(u,dt){
     if(Math.random()<dt*14) puff(_cd1.set(u.pos.x+rand(-.8,.8),E.yg+.1,u.pos.z+rand(-.8,.8)),1,.25,1.6,Math.random()<.5?'#ff7a2a':'#3a302a');
     if(k>=1){ delete u.gy; u.emerge=null; u.emerging=false; for(const l of crLimbs(u)){ l.pos.y=groundAt(u,l.pos.x,l.pos.z); l.t=-1; }
       if(u.script) u.script.speed=u.T.speed*.85; } }
+  if(u.T.wyvern) wyTick(u,dt);   // flight and abilities (27f)
   if(u.T.horse||u.rider){ riderTick(u,dt); if(u.T.horse) return; }
   u.hissT=(u.hissT===undefined?rand(4,14):u.hissT)-dt;
   if(u.hissT<=0){ u.hissT=rand(6,16); if(u.target&&Math.random()<.6) crSfx(Math.random()<.5?'crHiss':'crScreech',null,u.j.head,.45); }
@@ -457,7 +461,7 @@ let crFrustumF=-1, crForce=false;
 function crInView(u){
   if(crForce) return true;
   if(crFrustumF!==draw.frame){ crFrustumF=draw.frame; camera.updateMatrixWorld(); _cpm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse); crFrustum.setFromProjectionMatrix(_cpm); }
-  _csph.center.copy(u.alive?u.pos:u.j.pelvis); _csph.radius=2.6*u.s; return crFrustum.intersectsSphere(_csph);
+  _csph.center.copy(u.alive?u.pos:u.j.pelvis); _csph.radius=(u.T.wyvern?4.6:2.6)*u.s; return crFrustum.intersectsSphere(_csph);
 }
 function crPrep(u){
   if(!u.cr||!u.G) return; const vis=crInView(u);
@@ -468,6 +472,7 @@ function crPrep(u){
 const _ce=new V3();
 function drawCrawlerFx(u){
   if(u.T.horse||u.rider) drawRider(u);
+  if(u.T.wyvern&&u.alive) wyFx(u);
   if(!u.alive||!u.cr||u.T.horse) return;
   const cr=u.cr, s=u.s, hr=_cm2.crossVectors(cr.hd,cr.hu).normalize();
   const k=CR_HEAD*s; for(const sd of [-1,1]){ _ce.copy(u.j.neck).addScaledVector(cr.hd,.16*k).addScaledVector(cr.hu,.058*k).addScaledVector(hr,sd*.075*k); glowAt(_ce,.032*k,u.crHot?'#ffb040':'#ff8a2a'); }

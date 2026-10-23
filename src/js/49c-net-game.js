@@ -44,7 +44,7 @@ function netFlushEvents(t){
 const ORD={army:0,move:1,hold:2,attack:3,charge:4}, ORDN=['army','move','hold','attack','charge'];
 function unitFlags(u){ const S=u.st||{};
   return (u.routing?1:0)|(u.inCastle?2:0)|(u.state==='stunned'?4:0)|(S.burn?8:0)|(S.poison?16:0)|(S.rend?32:0)|(u.rage>0?64:0)|(u.cloak?128:0)
-    |(u.fl&&u.fl.air?256:0)|(u.emerge?512:0)|(u.carry?1024:0)|(u.mining?2048:0)|(u.hero?4096:0)|(u.rider?8192:0)|((u.heroLv||0)<<14); }
+    |(isAir(u)?256:0)|(u.emerge?512:0)|(u.carry?1024:0)|(u.mining?2048:0)|(u.hero?4096:0)|(u.rider?8192:0)|((u.heroLv||0)<<14); }
 function netSnapshot(){
   const t=hostNow(), U=[], R=[];
   for(const u of units){ if(!u.alive||!u.isUnit) continue;
@@ -266,6 +266,7 @@ function netUpdatePuppet(u,rec){
   u.rage=fl&64?1:0; u.carry=!!(fl&1024); u.mining=!!(fl&2048);
   if((fl&8192)&&!u.rider) mountRider(u); if(fl&4096) heroPuppet(u,(fl>>14)&7);
   if(u.fl&&(fl&256)&&!u.fl.air&&u.fl.mode==='ground'&&!u.inCastle) u.fl.takeT=Math.min(u.fl.takeT,.05);
+  if(u.T.wyvern) wyU(u).netAir=!!(fl&256);   // the host says whether the wyvern is aloft (27f)
   u.chg=rec[11]?{i:rec[11]-1}:null;
   if(u.G&&u.G.b&&u.type==='miner') u.G.b.visible=u.carry;
 }

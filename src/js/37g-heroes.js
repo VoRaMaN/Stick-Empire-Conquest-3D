@@ -155,6 +155,18 @@ const UNIT_AB={
   heal:{name:'Mass Heal',key:'U',ico:'✚',types:{cleric:1},cd:16,desc:'Clerics heal everyone around them at once'},
   summon:{name:'Summon Treants',key:'I',ico:'♣',types:{cleric:1},res:'grove',fac:'wild',cd:50,desc:'The Druids call a Treant up out of the ground (two in a forest); it fights for 40 s'},
   spur:{name:'Spur',key:'I',ico:'»',types:{knight:1,hound:1,cerberus:1,crawler:1},cd:25,desc:'Mounts and beasts sprint 40% faster for 5 s'},
+  // the Wyvern Knight (27f): five for the knight, five for the wyvern, and flight
+  fly:{name:'Take Off / Land',key:'G',ico:'⇅',types:{knight:1},cd:2,desc:'Keep the wyvern aloft (it attacks with its breath from the sky), or bring it down and keep it on the ground for 25 s'},
+  royal:{name:'Royal Lance Charge',key:'J',ico:'⚔',types:{knight:1},cd:20,desc:'The knight levels his lance: the wyvern lands and charges through the thickest crowd, throwing down everyone in its path'},
+  exec:{name:'Aerial Execution',key:'K',ico:'⇓',types:{knight:1},cd:30,desc:'Soars, swoops on the most valuable wounded enemy and drives the lance home (executes below 40% health)'},
+  shield:{name:'Shield of the Crown',key:'N',ico:'⛨',types:{knight:1},cd:24,desc:'The royal shield goes up: 55% less damage for 7 s, 30% for allies close by'},
+  pursuit:{name:'Royal Pursuit',key:'M',ico:'➹',types:{knight:1},cd:22,desc:'Marks an archer or caster and hunts it for 8 s: 45% faster, 50% more damage to it'},
+  judge:{name:"King's Judgment",key:'B',ico:'♛',types:{knight:1},cd:40,desc:'The lance comes down from on high: 4.5× damage, executes below 35% health; a kill shakes the nerve of everyone near'},
+  breath:{name:'Infernal Breath',key:'⇧J',ico:'♨',types:{knight:1},cd:16,desc:'A sweeping cone of fire that burns everyone in front, from the ground or the air'},
+  dive:{name:'Talon Dive',key:'⇧K',ico:'⤓',types:{knight:1},cd:20,desc:'Climbs, then drops talons-first onto the thickest crowd: heavy damage, knocks them flat'},
+  storm:{name:'Wingstorm',key:'⇧N',ico:'≋',types:{knight:1},cd:18,desc:'Three great wingbeats hurl everyone near away and break their attacks'},
+  screech:{name:"Predator's Screech",key:'⇧M',ico:'!',types:{knight:1},cd:26,desc:'Shakes the nerve of enemies near (morale, 35% slower for 4 s) and spurs allies on'},
+  assault:{name:'Aerial Assault',key:'⇧B',ico:'✈',types:{knight:1},cd:35,desc:'A strafing run low over the enemy line, burning and raking everything beneath'},
 };
 function regAbilities(r){ const out=[]; if(!r) return out; for(const id in UNIT_AB){ const A=UNIT_AB[id]; if(!A.types[r.type]) continue; if(A.res&&!hasRes(r.team,A.res)) continue; if(A.fac&&facOf(r.team)!==A.fac) continue; out.push(id); } return out; }
 function regAbReady(r,ab){ return !r.abT||!(r.abT[ab]>game.time); }
@@ -167,7 +179,8 @@ function regAbility(team,r,ab){
     if(ab==='rage'){ u.rage=6; u.rageCd=18; n++; }
     else if(ab==='vanish'){ if(!u.cloak&&!u.action){ play(u,'shinobi'); u.fwdScale=0; u.cdShin=24; n++; } }
     else if(ab==='heal'){ if(!u.action){ u.healT=u; u.massCd=game.time+15; play(u,'massHeal'); u.fwdScale=0; u.healCd=1.1; n++; } }
-    else if(ab==='spur'){ u.spurT=game.time+5; n++; } }
+    else if(ab==='spur'){ u.spurT=game.time+5; n++; }
+    else if(WY_AB[ab]){ if(u.T.wyvern&&wyCast(u,ab)) n++; } }
   if(ab==='summon'){ const c=regCenter(r), forest=RL.on&&typeof inForest==='function'&&inForest(c.x,c.z); summonTreants(r.team,c.x+DIRX[r.team]*2,c.z,forest?2:1); n++; }
   const b=regAlive(r)[0]; if(b) callout(b,A.name+'!','#ffd36a');
   if(NET.host||NET.rec) netCapEvent(['ab',r.id,ab]);

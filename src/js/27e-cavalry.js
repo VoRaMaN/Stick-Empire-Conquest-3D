@@ -61,6 +61,7 @@ function horsePart(name,s,k,u,coat){
     const ms=mesh(P[m],mat); if(m==='heye') ms.castShadow=false; g.add(ms); }
   g.scale.setScalar(s*(k||1)); freezeGear(g); return g; }
 function buildHorse(u,G){
+  if(u.T.wyvern){ buildWyvern(u,G); return; }   // the Knight rides a wyvern now (27f)
   horseInit(); const s=u.s, coat=HS_COATS[(u.id*7+3)%HS_COATS.length], P=(n,k)=>horsePart(n,s,k,u,coat);
   G.c_pel=P('hspel'); G.c_abd=P('hsabd'); G.c_tor=P('hstor'); G.c_nek=P('hsnek'); G.c_skl=P('hsskl'); G.c_jaw=P('hsjaw');
   for(const sd of ['L','R']){ G['c_ua'+sd]=P('hsua'); G['c_fa'+sd]=P('hsfa'); G['c_hd'+sd]=P('hshoof'); G['c_th'+sd]=P('hsth'); G['c_sh'+sd]=P('hssh'); G['c_mt'+sd]=P('hsmt'); G['c_ft'+sd]=P('hshoof'); }
@@ -78,12 +79,12 @@ const lanceK=u=>u.lanceT>0?Math.sin(Math.PI*clamp(1-u.lanceT/LANCE_T,0,1)):0;
 function riderOf(u){ return u.T.horse?RIDER.knight:u.rider?RIDER[u.type]||RIDER.cerberus:null; }
 // pose the rider on the mount's back (world space, into RJ); returns the lance direction in _kvD
 function riderPose(u){
-  const R=riderOf(u), cr=u.cr, j=u.j, s=u.s, rs=R.rs, k=lanceK(u);
+  const R=riderOf(u), cr=u.cr, j=u.j, s=u.s, rs=R.rs, k=lanceK(u), RM=u.T.wyvern?wyRiderMode(u):null, rw=RM?RM.w:0;
   _kvF.subVectors(j.chest,j.pelvis); if(_kvF.lengthSq()<1e-6) _kvF.copy(u.fwdW); _kvF.normalize();
   _kvR.crossVectors(_kvF,cr.n).normalize(); _kvU.crossVectors(_kvR,_kvF).normalize();
-  const lean=.08+.22*k;
+  const lean=.08+.22*k+(RM&&RM.m==='charge'?.32*rw:RM&&RM.m==='stand'?.5*rw:RM&&RM.m==='raise'?-.12*rw:0);
   _kvS.copy(_kvU).multiplyScalar(Math.cos(lean)).addScaledVector(_kvF,Math.sin(lean)).lerp(UP,.5).normalize();
-  RJ.pelvis.copy(j.pelvis).lerp(j.chest,R.seatF).addScaledVector(cr.n,R.seatH*s).addScaledVector(_kvU,.03*rs);
+  RJ.pelvis.copy(j.pelvis).lerp(j.chest,R.seatF).addScaledVector(cr.n,R.seatH*s).addScaledVector(_kvU,.03*rs+(RM&&RM.m==='stand'?.16*rs*rw:0));
   RJ.hipL.copy(RJ.pelvis).addScaledVector(_kvR,-.05*rs); RJ.hipR.copy(RJ.pelvis).addScaledVector(_kvR,.05*rs);
   RJ.chest.copy(RJ.pelvis).addScaledVector(_kvS,.54*rs); RJ.neck.copy(RJ.pelvis).addScaledVector(_kvS,.62*rs);
   _kvT.copy(_kvS).addScaledVector(_kvF,.12).normalize(); RJ.head.copy(RJ.neck).addScaledVector(_kvT,.19*rs);
@@ -91,9 +92,11 @@ function riderPose(u){
   // the lance arm: couched under the arm, driven forward in a thrust
   _kvT.copy(RJ.chest).addScaledVector(_kvR,.13*rs).addScaledVector(_kvS,-.2*rs+.07*k*rs).addScaledVector(_kvF,(.14+.36*k)*rs);
   _kvP.copy(RJ.sR).addScaledVector(_kvS,-1*rs).addScaledVector(_kvR,.5*rs).addScaledVector(_kvF,-.4*rs);
+  if(RM&&RM.m==='raise') _kvT.lerp(_kvA.copy(RJ.head).addScaledVector(_kvS,.34*rs).addScaledVector(_kvF,.06*rs).addScaledVector(_kvR,.1*rs),rw);   // the lance high, point down
   ik2(RJ.sR,_kvT,.32*rs,.32*rs,_kvP,RJ.eR,RJ.hR);
   _kvT.copy(RJ.chest).addScaledVector(_kvR,-.05*rs).addScaledVector(_kvS,-.3*rs).addScaledVector(_kvF,.3*rs);
   _kvP.copy(RJ.sL).addScaledVector(_kvS,-1*rs).addScaledVector(_kvR,-.5*rs).addScaledVector(_kvF,-.2*rs);
+  if(RM&&RM.m==='shield') _kvT.lerp(_kvA.copy(RJ.chest).addScaledVector(_kvF,.36*rs).addScaledVector(_kvS,.16*rs).addScaledVector(_kvR,.02*rs),rw);   // the shield up before him
   ik2(RJ.sL,_kvT,.32*rs,.32*rs,_kvP,RJ.eL,RJ.hL);
   // legs round the barrel
   for(const [hip,kn,ft,sd] of [[RJ.hipL,RJ.kL,RJ.fL,-1],[RJ.hipR,RJ.kR,RJ.fR,1]]){
@@ -104,6 +107,7 @@ function riderPose(u){
   _kvD.copy(_kvF).setY(0); if(_kvD.lengthSq()<1e-4) _kvD.copy(u.fwdW); _kvD.normalize().addScaledVector(UP,-.08).addScaledVector(_kvR,.03).normalize();   // level, whatever the mount's pitch
   const t=u.lanceTgt&&u.lanceTgt.alive&&k>0?u.lanceTgt:null;
   if(t){ _kvT.subVectors(t.j.chest,RJ.hR); const l=_kvT.length(); if(l>.3){ _kvT.multiplyScalar(1/l); if(_kvT.dot(_kvF)>.3) _kvD.lerp(_kvT,k).normalize(); } }
+  if(RM&&RM.m==='raise'){ _kvA.copy(_kvF).setY(0); if(_kvA.lengthSq()<1e-4) _kvA.copy(u.fwdW); _kvA.normalize().multiplyScalar(.5).addScaledVector(UP,-.86).normalize(); _kvD.lerp(_kvA,rw).normalize(); }
   return _kvD;
 }
 // helmet, plate and the trappings (also drawn on a thrown rider's corpse: directionless pieces only)
