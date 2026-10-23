@@ -8,7 +8,7 @@ const FACTIONS={
   order:{id:'order',name:'Order Empire',roster:ORDER,worker:'miner',garrison:'archer',garrisonAtk:'shoot',statue:'sword',money:'gold',
     team:['Gold Legion','Crimson Horde'],cap:['Sparta Hills','Crimson Keep'],
     start:['miner','miner','sword','sword','sword','archer','archer','spear'],
-    mix:['sword','spear','sword','archer','ninja','spear','sword','archer','wizard','sword','spear','archer','cleric','sword','ninja','giant','wing','spear','archer','sword']},
+    mix:['sword','spear','sword','archer','ninja','spear','sword','archer','wizard','sword','spear','archer','cleric','sword','ninja','giant','wing','spear','archer','sword','knight']},
   chaos:{id:'chaos',name:'Chaos Empire',roster:CHAOS,worker:'thrall',garrison:'harvester',garrisonAtk:'soulBolt',statue:'dread',money:'souls',
     team:['Infernal Dominion','Chaos Empire'],cap:['Hellmouth Caldera','Infernal Gate'],
     start:['thrall','thrall','crawler','crawler','crawler','harvester','harvester','dread'],
@@ -34,7 +34,7 @@ function factionStart(t,n){
 function factionPick(t){
   const F=FAC(t);
   if(F.id==='chaos'){ const r=Math.random(); return r<.22?'crawler':r<.33?'hound':r<.47?'dread':r<.57?'harvester':r<.67?'boner':r<.75?'bomber':r<.82?'oracle':r<.89?'reaper':r<.96?'cerberus':'hades'; }
-  const r=Math.random(); return r<.3?'sword':r<.48?'archer':r<.62?'spear':r<.72?'ninja':r<.8?'wizard':r<.87?'cleric':r<.94?'wing':'giant';
+  const r=Math.random(); return r<.3?'sword':r<.48?'archer':r<.62?'spear':r<.72?'ninja':r<.8?'wizard':r<.87?'cleric':r<.92?'wing':r<.96?'knight':'giant';
 }
 function syncTeamNames(){
   for(const [id,t] of [['#nA',0],['#nB',1]]){ const el=$(id); if(el) el.textContent=teamName(t); }
@@ -43,6 +43,10 @@ function syncTeamNames(){
 }
 
 /* ---------- Chaos regiments, formations and weapon contact points ---------- */
+// Order cavalry (13g, 27e)
+Object.assign(REG_SIZE,{knight:6}); Object.assign(FORM,{knight:{cols:3,gap:2.7,depth:3.4}});
+{ const i=FORM_ORDER.indexOf('giant'); FORM_ORDER.splice(i<0?FORM_ORDER.length:i+1,0,'knight'); }
+Object.assign(TYPE_PL,{knight:'Knights'});
 Object.assign(REG_SIZE,{dread:10,harvester:8,boner:12,bomber:8,oracle:6,reaper:6,hades:1,hound:12,cerberus:2});
 Object.assign(FORM,{dread:{cols:5,gap:1.5,depth:1.6},harvester:{cols:4,gap:1.45,depth:1.5},boner:{cols:6,gap:1.3,depth:1.4},bomber:{cols:4,gap:1.45,depth:1.5},oracle:{cols:3,gap:1.5,depth:1.5},reaper:{cols:3,gap:1.7,depth:1.7},hades:{cols:1,gap:3.5,depth:3},hound:{cols:6,gap:1.3,depth:1.8},cerberus:{cols:2,gap:3,depth:3}});
 FORM_ORDER.unshift('hound','cerberus','hades','dread','reaper','boner'); { const i=FORM_ORDER.indexOf('archer'); FORM_ORDER.splice(i+1,0,'harvester','bomber','oracle'); }

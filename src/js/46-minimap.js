@@ -30,12 +30,12 @@ function drawMinimap(){
   c.fillStyle='rgba(228,178,58,.55)'; for(const m of MINE){ c.beginPath(); c.arc(mmX(m.x,w),mmZ(m.z,h),2.6*dpr,0,TAU); c.fill(); }
   }
   // statues with their health
-  for(const st of statues){ const x=mmX(st.pos.x,w), y=mmZ(st.pos.z,h), s=5*dpr, col=st.team?'#d0465a':'#e4b23a';
+  for(const st of statues){ const x=mmX(st.pos.x,w), y=mmZ(st.pos.z,h), s=5*dpr, col=PAL.ring[st.team];
     c.fillStyle='rgba(0,0,0,.45)'; c.fillRect(x-s,y-s,2*s,2*s); c.fillStyle=col; const f=clamp(st.hp/st.max,0,1); c.fillRect(x-s,y+s-2*s*f,2*s,2*s*f);
     c.strokeStyle=col; c.lineWidth=dpr; c.strokeRect(x-s,y-s,2*s,2*s); }
   // soldiers
   const r=Math.max(1.2,1.5*dpr);
-  for(const team of [0,1,2]){ c.fillStyle=team===2?'#d8c08a':team?'#ff6b7d':'#ffd25e';
+  for(const team of [0,1,2]){ c.fillStyle=team===2?'#d8c08a':PAL.dot[team];
     for(const u of units){ if(!u.alive||u.team!==team||!u.isUnit||u.fowH) continue; const rr=u.s>1.5?r*1.9:r; c.fillRect(mmX(u.pos.x,w)-rr,mmZ(u.pos.z,h)-rr,rr*2,rr*2); } }
   for(const sr of selRegs){ c.strokeStyle='#ffffff'; c.lineWidth=dpr; for(const u of sr.units){ if(!u.alive) continue; c.strokeRect(mmX(u.pos.x,w)-r*1.8,mmZ(u.pos.z,h)-r*1.8,r*3.6,r*3.6); } }
   // camera footprint
@@ -45,6 +45,7 @@ function drawMinimap(){
   c.fillStyle='rgba(255,255,255,.1)'; c.fill(); c.strokeStyle='rgba(255,255,255,.75)'; c.lineWidth=1.2*dpr; c.stroke(); c.restore();
   c.fillStyle='rgba(255,255,255,.9)'; c.beginPath(); c.arc(mmX(cam.target.x,w),mmZ(cam.target.z,h),1.8*dpr,0,TAU); c.fill();
   if(MAP.id!=='classic') rlMinimapZones(c,w,h,dpr);
+  minimapExtras(c,w,h,dpr);   // order paths, fights, pings (41b)
 }
 function mmJump(e){ const r=mmEl.getBoundingClientRect(); const fx=(e.clientX-r.left)/r.width, fz=(e.clientY-r.top)/r.height;
   if(cam.follow){ cam.follow=null; updateFollowUI(); }

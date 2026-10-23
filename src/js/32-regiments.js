@@ -8,7 +8,8 @@ const ROMAN=n=>{const r=[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];let s='';fo
 const TYPE_PL={sword:'Swordsmen',spear:'Spartans',archer:'Archers',giant:'Giants'};
 function assignRegiment(u){
   if(!REG_SIZE[u.type]||game.mode!=='battle') return;
-  let r=regs.find(r=>r.team===u.team&&r.type===u.type&&r.units.filter(x=>x.alive).length<REG_SIZE[u.type]);
+  if(u.hero){ const r={id:++uid,team:u.team,type:u.type,units:[u],num:0,hero:true,order:{kind:'army'}}; regs.push(r); makeBanner(r); u.reg=r; return; }   // the general leads a regiment of his own (37g)
+  let r=regs.find(r=>r.team===u.team&&r.type===u.type&&!r.hero&&r.units.filter(x=>x.alive).length<REG_SIZE[u.type]);
   if(!r){ r={id:u.T.chaos?-(++chaosReg):++uid,team:u.team,type:u.type,units:[],num:++regNum[u.team],order:{kind:'army'}}; regs.push(r); makeBanner(r); }   // Chaos packs number apart, so they never shift the army's ids
   r.units.push(u); u.reg=r;
 }
@@ -21,7 +22,7 @@ function makeBanner(r){
   const c=document.createElement('canvas'), ctx=c.getContext&&c.getContext('2d');
   if(ctx){ c.width=96; c.height=64; ctx.fillStyle=r.team?'#5a1c66':'#c9971f'; ctx.fillRect(0,0,96,64);
     ctx.fillStyle=r.team?'#e8473f':'#8f1016'; ctx.fillRect(0,0,96,8); ctx.fillRect(0,56,96,8);
-    ctx.fillStyle='#fff6e0'; ctx.font='bold 34px Georgia, serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(ROMAN(r.num),48,34);
+    ctx.fillStyle='#fff6e0'; ctx.font='bold 34px Georgia, serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(r.hero?'★':ROMAN(r.num),48,34);
     mat=new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(c),side:THREE.DoubleSide}); }
   const flag=new THREE.Mesh(GEO_FLAG,mat); flag.position.set(-.27,1.3,0); flag.castShadow=true;
   g.add(pole,flag); r.banner=g; r.flag=flag;
@@ -38,6 +39,7 @@ function cleanRegs(){
     if(!r.units.length){ if(r.banner) dropRoot(r.banner); if(selRegs.includes(r)) setSelection(selRegs.filter(x=>x!==r)); regs.splice(i,1); continue; }
     const o=r.order;
     if(o.kind==='attack'&&!(o.target&&regAlive(o.target).length)&&!(o.unit&&o.unit.alive)){ const c=regCenter(r); r.order={kind:'hold',x:c.x,z:c.z,a:r.team?-Math.PI/2:Math.PI/2}; }
+    if(o.kind==='move'&&o.q&&o.q.length){ const c=regCenter(r); if(Math.hypot(c.x-o.x,c.z-o.z)<4.5){ const q=o.q, nx=q.shift(); orderMove(r,nx,true); r.order.q=q; continue; } }   // the next waypoint (Shift+right-click)
     if(o.kind==='move'){ const a=regAlive(r); if(a.every(u=>{const s=regSlot(r,u); return Math.hypot(s.x-u.pos.x,s.z-u.pos.z)<1.3;})) o.kind='hold'; }
   }
 }
@@ -99,12 +101,14 @@ function setSelection(list){
   if(on) updateRegbar();
   $('#hint').textContent=hintText(on);
   $('#hint').style.opacity=1;
+  if(typeof requestAnimationFrame==='function') requestAnimationFrame(()=>{ if(typeof layoutTop==='function') layoutTop(); });   // the dock changed height: the command bars above it follow
 }
 function updateRegbar(){
   if(!selReg) return; const n=regAlive(selReg).length, o=selReg.order.kind;
   const ST={army:'following army orders',move:'marching',hold:'holding',attack:'attacking',charge:'charging'};
   if(selRegs.length>1){ const k={}; let tot=0; for(const r of selRegs){ const m=regAlive(r).length; tot+=m; k[r.type]=(k[r.type]||0)+m; }
     $('#rgTitle').textContent=selRegs.length+' regiments'; $('#rgSub').textContent=tot+' soldiers · '+Object.keys(k).map(t=>k[t]+' '+(TYPE_PL[t]||t)).join(', '); }
+  else if(selReg.hero){ const h=regAlive(selReg)[0]; $('#rgTitle').textContent=heroDef(selReg.team).name+' · level '+(h&&h.heroLv||1); $('#rgSub').textContent=(h?Math.ceil(h.hp)+' / '+h.maxHp+' health · ':'')+ST[o]; }
   else { $('#rgTitle').textContent='Regiment '+ROMAN(selReg.num)+(selReg.rank?' '+'★'.repeat(selReg.rank):''); $('#rgSub').textContent=n+' '+TYPE_PL[selReg.type]+' · '+ST[o]+(regAlive(selReg).some(u=>u.noSupply)?' · out of supply':''); }
   const fb=$('#rgForm'); if(fb) fb.textContent=FORM_NAME[selReg.form||'line'];
   const cb=$('#rgCapture'); if(cb){ const Z=MAP.id==='classic'?null:rlCaptureTarget(selReg); cb.hidden=!Z; if(Z) cb.textContent='Capture '+Z.id; }

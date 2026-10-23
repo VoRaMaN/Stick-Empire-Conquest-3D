@@ -3,9 +3,9 @@ const bodyEl=document.body;
 const setBodyClass=(c,on)=>{ if(bodyEl&&bodyEl.classList) bodyEl.classList[on?'add':'remove'](c); };
 
 // battle statistics for the results screen
-function statsReset(){ game.stats={t0:game.time,kills:[0,0],losses:[0,0],fins:[0,0],arrows:[0,0],gold:[0,0],peak:[0,0],bought:0}; }
+function statsReset(){ game.stats={t0:game.time,kills:[0,0],losses:[0,0],fins:[0,0],arrows:[0,0],gold:[0,0],peak:[0,0],bought:0,dmg:[0,0],series:[],regK:{}}; }
 statsReset();
-function onKill(t){ if(t.lastHitBy&&t.lastHitBy.team!==t.team) vetKill(t.lastHitBy); if(t.camp){ rlCampDeath(t); return; } if(RL.on) rlOnDeath(t); if(!t.isUnit||!game.stats) return; game.stats.losses[t.team]++; game.stats.kills[1-t.team]++; }
+function onKill(t){ if(t.lastHitBy&&t.lastHitBy.team!==t.team){ vetKill(t.lastHitBy); heroKill(t.lastHitBy); recordKill(t); } if(t.camp){ rlCampDeath(t); return; } if(RL.on) rlOnDeath(t); if(!t.isUnit||!game.stats) return; game.stats.losses[t.team]++; game.stats.kills[1-t.team]++; }
 function onFinisher(u){ if(game.stats) game.stats.fins[u.team]++; }
 function onArrow(u){ if(game.stats&&u&&u.team!==undefined) game.stats.arrows[u.team]++; }
 function onGold(team,n){ if(game.stats) game.stats.gold[team]+=n; }
@@ -136,6 +136,7 @@ function showResults(){
     f?campName(f.id)+(win?' is won':' is lost')+' after '+time+'.':(win?'The '+teamName(1)+' statue fell after '+time+'.':'Your statue fell after '+time+'.');
   const rows=[['Enemies slain',S.kills[0]],['Soldiers lost',S.losses[0]],['Finishers',S.fins[0]],['Arrows loosed',S.arrows[0]],['Gold mined',Math.round(S.gold[0])],['Largest army',S.peak[0]]];
   $('#resStats').innerHTML=rows.map(r=>'<dt>'+r[0]+'</dt><dd>'+Number(r[1]).toLocaleString()+'</dd>').join('');
+  resultsReport(0);   // charts and the regiment of the battle (41b)
   $('#rAgain').innerHTML='<span>'+(tut?'Play a skirmish':f?'Back to the map':'Play again')+'</span>';
   musicStinger(win); settings.played=(settings.played||0)+1;
   if(tut&&win){ settings.tutorialDone=true; } saveSettings();

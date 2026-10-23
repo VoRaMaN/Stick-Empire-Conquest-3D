@@ -20,6 +20,7 @@ function resetBattle(opt){
   // each side's opening army: the faction's eight (Normal), or its regiments in ranks (Large, Epic)
   const start=t=>game.classicMix?(n<=8?['miner','miner','sword','sword','sword','archer','archer','spear']:armyMix(n)):factionStart(t,n);
   for(let t=0;t<2;t++) for(const ty of start(t)) spawn(ty,t);
+  heroReset();   // each army's general (37g; not in the classic battle, the demo or the training)
   const extra=facOf(1)==='chaos'?['dread','crawler','harvester','crawler']:['spear','sword','archer','giant']; for(let k=0;k<(opt.enemyExtra||0);k++) spawn(extra[k%4],1);
   game.stance=['defend','defend']; game.aiT=4; game.bt=0; setStance(0,'defend'); setStance(1,'defend');
   if(n>8) for(const u of units) if(u.slot&&u.isUnit&&!u.T.worker){ placeUnit(u,u.slot.x,u.slot.z,u.team?-Math.PI/2:Math.PI/2); }

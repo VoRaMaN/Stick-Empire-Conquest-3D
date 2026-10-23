@@ -44,14 +44,14 @@ function netFlushEvents(t){
 const ORD={army:0,move:1,hold:2,attack:3,charge:4}, ORDN=['army','move','hold','attack','charge'];
 function unitFlags(u){ const S=u.st||{};
   return (u.routing?1:0)|(u.inCastle?2:0)|(u.state==='stunned'?4:0)|(S.burn?8:0)|(S.poison?16:0)|(S.rend?32:0)|(u.rage>0?64:0)|(u.cloak?128:0)
-    |(u.fl&&u.fl.air?256:0)|(u.emerge?512:0)|(u.carry?1024:0)|(u.mining?2048:0); }
+    |(u.fl&&u.fl.air?256:0)|(u.emerge?512:0)|(u.carry?1024:0)|(u.mining?2048:0)|(u.hero?4096:0)|(u.rider?8192:0)|((u.heroLv||0)<<14); }
 function netSnapshot(){
   const t=hostNow(), U=[], R=[];
   for(const u of units){ if(!u.alive||!u.isUnit) continue;
     U.push([u.id,NTI[u.type],u.team,r2(u.pos.x),r2(u.pos.z),r3(wrapA(u.face)),Math.max(1,Math.round(u.hp)),Math.round(u.maxHp),unitFlags(u),u.reg?u.reg.id:0,
       Math.abs(u.s-u.T.s)>1e-3?r2(u.s):0,u.chg?u.chg.i+1:0]); }
   for(const r of regs){ if(!regAlive(r).length) continue; const o=r.order||{kind:'army'};
-    R.push([r.id,r.team,NTI[r.type],r.num,ORD[o.kind]||0,o.x!==undefined?r2(o.x):0,o.z!==undefined?r2(o.z):0,o.a!==undefined?r3(o.a):0,o.target?o.target.id:0,o.unit&&o.unit.alive?o.unit.id:0,r.rank||0,FORMS.indexOf(r.form||'line')]); }
+    R.push([r.id,r.team,NTI[r.type],r.num,ORD[o.kind]||0,o.x!==undefined?r2(o.x):0,o.z!==undefined?r2(o.z):0,o.a!==undefined?r3(o.a):0,o.target?o.target.id:0,o.unit&&o.unit.alive?o.unit.id:0,r.rank||0,FORMS.indexOf(r.form||'line'),o.q&&o.q.length?o.q.flatMap(w=>[r2(w.x),r2(w.z)]):0,r.hero?1:0]); }
   const C=CASTLES.map(Cs=>{ if(!Cs) return null; const b={};
     for(const B of [...Cs.list,Cs.keep]){ const tr=B.train, rs=B.res;
       if(!(B.q&&B.q.length)&&!tr&&!(B.exitQ&&B.exitQ.length)&&!rs) continue;
@@ -77,7 +77,7 @@ function issue(type,p){
   if(NET.guest){ netSendCmd(type,p); return true; }
   return false;
 }
-const CMD_TYPES={buy:1,res:1,stance:1,reg:1,auto:1,surrender:1};
+const CMD_TYPES={buy:1,res:1,stance:1,reg:1,auto:1,surrender:1,hero:1,ab:1,ping:1};
 function applyCmd(team,type,p,local){
   if(!CMD_TYPES[type]) return 'unknown_command';
   if(!p||typeof p!=='object'||Array.isArray(p)) return 'bad_payload';
@@ -90,7 +90,9 @@ function applyCmd(team,type,p,local){
     case 'stance': if(!['defend','hold','charge'].includes(p.st)) return 'bad_payload'; armyOrder(p.st,team); return true;
     case 'reg':{ const r=regs.find(x=>x.id===p.r); if(!r||r.team!==team) return 'not_your_regiment'; if(!regAlive(r).length) return 'regiment_gone';
       const quiet=!local;
-      if(p.k==='move'){ const x=+p.x, z=+p.z; if(!isFinite(x)||!isFinite(z)||Math.abs(x)>Math.max(80,MAP.fx1+4)||Math.abs(z)>Math.max(40,MAP.fz1+4)) return 'bad_payload'; orderMove(r,{x,z},quiet); return true; }
+      if(p.k==='move'){ const x=+p.x, z=+p.z; if(!isFinite(x)||!isFinite(z)||Math.abs(x)>Math.max(80,MAP.fx1+4)||Math.abs(z)>Math.max(40,MAP.fz1+4)) return 'bad_payload';
+        if(p.q&&r.order.kind==='move'){ const q=r.order.q||(r.order.q=[]); if(q.length<12) q.push({x:clamp(x,MAP.fx0+2,MAP.fx1-2),z:clamp(z,MAP.fz0+1,MAP.fz1-1)}); return true; }   // Shift: a waypoint after the current march
+        orderMove(r,{x,z},quiet); return true; }
       if(p.k==='hold'){ orderHold(r,quiet); return true; }
       if(p.k==='charge'){ r.order={kind:'charge'}; return true; }
       if(p.k==='army'){ r.order={kind:'army'}; return true; }
@@ -102,6 +104,10 @@ function applyCmd(team,type,p,local){
       return 'bad_payload'; }
     case 'auto': game.auto[team]=!!p.on; if(team===myTeam()) syncBattleButtons(); return true;
     case 'surrender': if(!NET.on) return 'not_active'; netEndMatch(1-team,'surrender'); return true;
+    case 'hero': return typeof p.ab==='string'?heroCast(team,p.ab):'bad_payload';
+    case 'ab':{ const r=regs.find(x=>x.id===p.r); if(!r||r.team!==team) return 'not_your_regiment'; return typeof p.ab==='string'?regAbility(team,r,p.ab):'bad_payload'; }
+    case 'ping':{ const x=+p.x, z=+p.z; if(!isFinite(x)||!isFinite(z)||Math.abs(x)>200||Math.abs(z)>200) return 'bad_payload';
+      if(NET.host) netCapEvent(['pg',team,Math.round(x*100),Math.round(z*100)]); if(team===myTeam()) pingAt(x,z,team,local?'You':'Teammate'); return true; }
   }
   return 'unknown_command';
 }
@@ -198,10 +204,10 @@ function netApplyTick(s){
   s.sh.forEach((h,i)=>{ const st=statues[i]; if(st){ st.hp=h[0]; st.max=h[1]; } });
   // regiments first (units point at them)
   const seenR=new Set();
-  for(const R of s.r){ const [id,team,ti,num,ok,ox,oz,oa,tr,tu,rk,fm]=R; seenR.add(id); let r=regById(id);
-    if(!r){ r={id,team,type:NTYPES[ti],units:[],num,order:{kind:'army'}}; regs.push(r); makeBanner(r); if(team===0) regNum[0]=Math.max(regNum[0],num); else regNum[1]=Math.max(regNum[1],num); }
+  for(const R of s.r){ const [id,team,ti,num,ok,ox,oz,oa,tr,tu,rk,fm,wq,hr]=R; seenR.add(id); let r=regById(id);
+    if(!r){ r={id,team,type:NTYPES[ti],units:[],num,hero:!!hr,order:{kind:'army'}}; regs.push(r); makeBanner(r); if(team===0) regNum[0]=Math.max(regNum[0],num); else regNum[1]=Math.max(regNum[1],num); }
     r.rank=rk||0; r.form=FORMS[fm]||'line'; const k=ORDN[ok]||'army';
-    r.order=k==='move'||k==='hold'?{kind:k,x:ox/100,z:oz/100,a:oa/1000}:k==='attack'?{kind:'attack',target:tr?regById(tr):null,unit:tu?NETG.byId.get(tu)||null:null}:{kind:k}; }
+    r.order=k==='move'||k==='hold'?{kind:k,x:ox/100,z:oz/100,a:oa/1000,q:Array.isArray(wq)?wq.reduce((a,v,i)=>(i%2?a[a.length-1].z=v/100:a.push({x:v/100,z:0}),a),[]):null}:k==='attack'?{kind:'attack',target:tr?regById(tr):null,unit:tu?NETG.byId.get(tu)||null:null}:{kind:k}; }
   for(let i=regs.length-1;i>=0;i--){ const r=regs[i]; if(!seenR.has(r.id)){ if(r.banner) dropRoot(r.banner); if(selRegs.includes(r)) setSelection(selRegs.filter(x=>x!==r)); regs.splice(i,1); } }
   for(const r of regs) r.units.length=0;
   // units: create the newcomers, update everyone, retire the ones the host no longer has
@@ -258,6 +264,7 @@ function netUpdatePuppet(u,rec){
   S.rend=fl&32?{t:.6,src:null}:null;
   if(fl&128){ if(!u.cloak) startCloak(u); u.cloak.t=8; } else if(u.cloak) endCloak(u);
   u.rage=fl&64?1:0; u.carry=!!(fl&1024); u.mining=!!(fl&2048);
+  if((fl&8192)&&!u.rider) mountRider(u); if(fl&4096) heroPuppet(u,(fl>>14)&7);
   if(u.fl&&(fl&256)&&!u.fl.air&&u.fl.mode==='ground'&&!u.inCastle) u.fl.takeT=Math.min(u.fl.takeT,.05);
   u.chg=rec[11]?{i:rec[11]-1}:null;
   if(u.G&&u.G.b&&u.type==='miner') u.G.b.visible=u.carry;
@@ -321,6 +328,9 @@ function netApplyEvent(e){
   if(k==='rs'){ const t=e[2], C=CASTLES[t]; if(!C) return true; C.res[e[3]]=e[4]; const R=RES_BY_ID[e[3]];
     if(e[3]==='resilience'){} if(t===myTeam()&&R){ sfx('research',null,.9); narrate('researchDone',0); showBanner(rName(R,t)+(R.lv>1?' '+['I','II','III'][e[4]-1]:''),'research complete',1.4); if(panelB) refreshPanel(); }
     return true; }
+  if(k==='hc'){ heroCastFx(e[2],e[3],e[4]/100,e[5]/100); return true; }
+  if(k==='ab'){ const r=regs.find(x=>x.id===e[2]), A=UNIT_AB[e[3]]; if(r&&A){ (r.abT||(r.abT={}))[e[3]]=game.time+A.cd; const b=regAlive(r)[0]; if(b) callout(b,A.name+'!','#ffd36a'); } return true; }
+  if(k==='pg'){ if(e[2]===myTeam()) pingAt(e[3]/100,e[4]/100,e[2],'Teammate'); return true; }
   if(k==='o'){ netGuestOver({w:e[2]<0?null:e[2],r:e[3],stats:e[4]}); return true; }
   return true;
 }
@@ -490,6 +500,7 @@ function netShowResults(){
   const st=S||netStatsSummary();
   const rows=[['Enemies slain',st.kills[me]],['Soldiers lost',st.losses[me]],['Finishers',st.fins[me]],['Largest army',st.peak[me]]];
   $('#resStats').innerHTML=rows.map(r=>'<dt>'+r[0]+'</dt><dd>'+Number(r[1]||0).toLocaleString()+'</dd>').join('');
+  resultsReport(me);
   $('#rAgain').innerHTML='<span>Online menu</span>'; musicStinger(w===me);
   NET.after=true;
   const room=NETC.room; netShutdown(); NET.after=true;

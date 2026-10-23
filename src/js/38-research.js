@@ -27,7 +27,8 @@ const RESEARCH={
   prison:[{id:'growth',name:'Giant Growth',lv:2,cost:[[600,200],[900,300]],t:[24,32],desc:'Giants grow 12% bigger and 30% tougher'}],
   // Chaos (prices in souls)
   quarry:[{id:'soulSiphon',name:'Soul Siphon',lv:1,cost:[[120,0]],t:[16],desc:'Thralls dig faster and haul more crystals a trip',native:1}],
-  pit:[{id:'magmaClaws',name:'Magma Claws',lv:1,cost:[[170,100]],t:[20],desc:'Hellcrawler claws set their prey on fire',native:1}],
+  pit:[{id:'magmaClaws',name:'Magma Claws',lv:1,cost:[[170,100]],t:[20],desc:'Hellcrawler claws set their prey on fire',native:1},
+    {id:'cerbRider',name:'Hell Riders',lv:1,cost:[[240,180]],t:[28],desc:'An armoured rider with a lance mounts every Cerberus: +150 health, 15% less damage, lance thrusts of its own',native:1}],
   forge:[{id:'hellCleave',name:'Hellforged Cleave',lv:1,cost:[[200,120]],t:[22],desc:'Dreadguards sweep a white-hot cleave that breaks a line and its shield wall',native:1},
     {id:'infernalPlate',name:'Infernal Plate',lv:1,cost:[[210,80]],t:[22],desc:'Dreadguards take 20% less damage',native:1}],
   spire:[{id:'soulRend',name:'Soul Rend',lv:1,cost:[[170,150]],t:[20],desc:'Soul fragments curse what they hit: it takes 25% more damage for 5 s',native:1}],
@@ -39,7 +40,7 @@ const unitMana=t=>castleOn()?(MANA_COST[t]||0):0;
 function resLvl(team,id){ if(game.mode==='duel') return RES_BY_ID[id]?RES_BY_ID[id].lv:1; if(game.classicMix||!CASTLES[team]) return 0; return CASTLES[team].res[id]||0; }
 const hasRes=(team,id)=>resLvl(team,id)>0;
 function researchScale(team,type){ return type==='giant'?1+.12*resLvl(team,'growth'):1; }
-function researchApplyUnit(u){ if(u.type==='giant'){ const k=1+.3*resLvl(u.team,'growth'); if(k!==1){ u.hp*=k; u.maxHp*=k; } } }
+function researchApplyUnit(u){ if(u.type==='cerberus'&&game.mode==='battle'&&hasRes(u.team,'cerbRider')) mountRider(u); if(u.type==='giant'){ const k=1+.3*resLvl(u.team,'growth'); if(k!==1){ u.hp*=k; u.maxHp*=k; } } }
 function researchTrainMul(){ return 1; }
 // damage modifiers: the attacker's upgrades and the target's (called from damage())
 function resDamageMul(t,src){
@@ -49,6 +50,7 @@ function resDamageMul(t,src){
   if(t.type==='spear'&&hasRes(t.team,'shieldWall')&&t.spd<1.2&&game.stance[t.team]!=='charge'&&!(t.brokeT>game.time)) k*=src&&src.T&&src.T.ranged?.5:.65;
   if(t.st&&t.st.rend) k*=1.25;                                         // Soul Rend
   if(t.type==='dread'&&hasRes(t.team,'infernalPlate')) k*=.8;
+  k*=cavMul(t,src);
   return k;
 }
 // swordsmen with Rage: a red-eyed burst of speed and fury when the enemy is close
@@ -76,10 +78,11 @@ function startResearch(team,id){
 function finishResearch(C,b){
   const r=b.res, t=C.team; b.res=null; C.res[r.id]=r.lvl;
   if(r.id==='castleArchers') syncGarrison(C);
+  if(r.id==='cerbRider') for(const u of units) if(u.alive&&u.team===t&&u.type==='cerberus') mountRider(u);
   if(r.id==='resilience'){ const st=statues[t]; if(st){ const add=st.max*.4; st.max+=add; st.hp+=add; } }
   if(NET.host) netCapEvent(['rs',t,r.id,r.lvl]);
   if(t===myTeam()){ sfx('research',null,.9); narrate(r.id==='castleArchers'?'castleArchers':(C.nDone=(C.nDone||0)+1)%2?'researchDone':'upgradeDone',0);
-    const R=RES_BY_ID[r.id]; showBanner(rName(R,t)+(R.lv>1?' '+['I','II','III'][r.lvl-1]:''),'research complete',1.4); refreshPanel(); }
+    const R=RES_BY_ID[r.id]; alertPush('Research complete: '+rName(R,t),'good',undefined,undefined); showBanner(rName(R,t)+(R.lv>1?' '+['I','II','III'][r.lvl-1]:''),'research complete',1.4); refreshPanel(); }
 }
 function updateResearch(C,dt){
   for(const b of [...C.list,C.keep]) if(b.res){ b.res.t-=dt; if(b.res.t<=0) finishResearch(C,b); }
@@ -96,7 +99,7 @@ function aiResearch(team){
     return; }
   if(Math.random()<.55||game.time<(aiSave['n'+team]||0)) return;
   const have={}; for(const u of units) if(u.alive&&u.team===team&&u.isUnit) have[u.type]=1;
-  const want=facOf(team)==='chaos'?['income','castleArchers','soulSiphon','soulRend','hellCleave','magmaClaws','infernalPlate','resilience','income','castleArchers']
+  const want=facOf(team)==='chaos'?['income','castleArchers','soulSiphon','soulRend','hellCleave','magmaClaws','infernalPlate','cerbRider','resilience','income','castleArchers']
     :['income','castleArchers','hustle','volley','rage','shieldWall','fireArrows','growth','resilience','cure','shinobi','poison','ewall','blazing','income','castleArchers'];
   const UNIT_OF={hustle:'miner',rage:'sword',shieldWall:'spear',fireArrows:'archer',volley:'archer',growth:'giant',cure:'cleric',shinobi:'ninja',poison:'wizard',ewall:'wizard',blazing:'wing',
     soulSiphon:'thrall',magmaClaws:'crawler',hellCleave:'dread',infernalPlate:'dread',soulRend:'harvester'};

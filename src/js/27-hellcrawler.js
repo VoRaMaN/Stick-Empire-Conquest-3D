@@ -447,6 +447,7 @@ function crawlerTick(u,dt){
     if(Math.random()<dt*14) puff(_cd1.set(u.pos.x+rand(-.8,.8),E.yg+.1,u.pos.z+rand(-.8,.8)),1,.25,1.6,Math.random()<.5?'#ff7a2a':'#3a302a');
     if(k>=1){ delete u.gy; u.emerge=null; u.emerging=false; for(const l of crLimbs(u)){ l.pos.y=groundAt(u,l.pos.x,l.pos.z); l.t=-1; }
       if(u.script) u.script.speed=u.T.speed*.85; } }
+  if(u.T.horse||u.rider){ riderTick(u,dt); if(u.T.horse) return; }
   u.hissT=(u.hissT===undefined?rand(4,14):u.hissT)-dt;
   if(u.hissT<=0){ u.hissT=rand(6,16); if(u.target&&Math.random()<.6) crSfx(Math.random()<.5?'crHiss':'crScreech',null,u.j.head,.45); }
 }
@@ -466,7 +467,8 @@ function crPrep(u){
 // the eyes burn through the dark
 const _ce=new V3();
 function drawCrawlerFx(u){
-  if(!u.alive||!u.cr) return;
+  if(u.T.horse||u.rider) drawRider(u);
+  if(!u.alive||!u.cr||u.T.horse) return;
   const cr=u.cr, s=u.s, hr=_cm2.crossVectors(cr.hd,cr.hu).normalize();
   const k=CR_HEAD*s; for(const sd of [-1,1]){ _ce.copy(u.j.neck).addScaledVector(cr.hd,.16*k).addScaledVector(cr.hu,.058*k).addScaledVector(hr,sd*.075*k); glowAt(_ce,.032*k,u.crHot?'#ffb040':'#ff8a2a'); }
   if(u.T.hound) houndFx(u);

@@ -148,7 +148,7 @@ function moraleTick(u,dt){
   const resist=u.type==='giant'?.3:u.type==='spear'?.75:1;
   let dm=0;
   if(foes>2*(friends+1)) dm-=7; if(giantNear&&u.type!=='giant') dm-=5;
-  if(!foes) dm+=5; if(u.noSupply) dm-=6.5; if(Math.abs(u.pos.x-BASE_X[u.team])<9) dm+=10; if(game.stance[u.team]==='charge'&&friends>=3) dm+=1.5;
+  if(!foes) dm+=5; if(u.noSupply) dm-=6.5; if(Math.abs(u.pos.x-BASE_X[u.team])<9) dm+=10; if(game.stance[u.team]==='charge'&&friends>=3) dm+=1.5; if(u.auraT>game.time) dm+=4; if(u.hero) dm=Math.max(dm,0);
   u.morale=clamp(u.morale+(dm<0?dm*resist:dm)*step,0,100);
   if(!u.routing&&u.morale<22&&u.type!=='giant'){ u.routing=true; u.target=null; if(cam.follow===u) showBanner('Routing!','morale broke',1.2); }
   else if(u.routing&&(u.morale>55||Math.abs(u.pos.x-BASE_X[u.team])<7)){ u.routing=false; u.morale=Math.max(u.morale,60); }
@@ -156,5 +156,5 @@ function moraleTick(u,dt){
 function shakeMorale(dead){
   if(game.mode!=='battle') return;
   for(const o of units){ if(!o.alive||o.team!==dead.team||o===dead) continue; const d=Math.hypot(o.pos.x-dead.pos.x,o.pos.z-dead.pos.z);
-    if(d<7) o.morale=Math.max(0,o.morale-(dead.type==='giant'?24:9)*(o.type==='giant'?.3:1)); }
+    if(d<(dead.hero?14:7)) o.morale=Math.max(0,o.morale-(dead.hero?30:dead.type==='giant'?24:9)*(o.type==='giant'?.3:1)); }
 }

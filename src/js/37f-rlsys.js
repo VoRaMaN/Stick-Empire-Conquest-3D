@@ -115,7 +115,7 @@ function rlCampBrain(u,dt){
 function rlCampDeath(t){
   const C=t.camp; if(!C||C.cleared) return; if(C.units.some(u=>u.alive&&u!==t)) return;
   C.cleared=true; C.respawn=game.time+180; const w=t.lastHitTeam;
-  if(w===0||w===1){ game.gold[w]+=C.gold; if(game.mode==='battle'&&!game.demo){ if(w===myTeam()){ sfx('coin',t.pos,1); toast('Camp cleared · +'+C.gold+' '+money(w)); } else toast(teamName(w)+' cleared a '+(C.kind==='ogres'?'ogre den':'bandit camp')); } }
+  if(w===0||w===1){ game.gold[w]+=C.gold; if(game.mode==='battle'&&!game.demo){ if(w===myTeam()){ sfx('coin',t.pos,1); toast('Camp cleared · +'+C.gold+' '+money(w)); alertPush('Camp cleared · +'+C.gold+' '+money(w),'good',t.pos.x,t.pos.z); } else toast(teamName(w)+' cleared a '+(C.kind==='ogres'?'ogre den':'bandit camp')); } }
 }
 function rlCampsStep(){ if(NET.guest) return; for(const C of RL_NCAMPS) if(C.cleared&&C.respawn&&game.time>C.respawn) rlCampFill(C); }
 

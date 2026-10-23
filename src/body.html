@@ -53,6 +53,14 @@
   </div>
 
   <div id="selBox" hidden></div>
+  <!-- command HUD (41b): alerts, the build queue, control groups, the ability bar, tooltips, the phone's radial menu -->
+  <div id="alerts" class="alerts" hidden aria-live="polite"></div>
+  <div id="qPanel" class="qpanel" hidden aria-label="Training and research"></div>
+  <div id="grpBar" class="grpbar" hidden aria-label="Control groups"></div>
+  <div id="abBar" class="abbar" hidden aria-label="Abilities"></div>
+  <button id="pingB" class="pingb" hidden aria-pressed="false" title="Ping the map for your team (P)">◉ Ping</button>
+  <div id="utip" class="utip" hidden role="tooltip"></div>
+  <div id="radial" class="radial" hidden></div>
   <footer class="dock" id="dock">
     <div class="hint" id="hint">Drag to move the camera · pinch to zoom · twist two fingers to turn · tap your soldiers to command them</div>
     <div class="chips" id="chips"></div>
@@ -217,6 +225,7 @@
       <h2 id="resH" class="card-h big">Victory</h2>
       <p class="card-sub" id="resSub"></p>
       <dl class="stats" id="resStats"></dl>
+      <div class="rcharts" id="resCharts" hidden></div>
       <div class="stack">
         <button id="rAgain" class="mm primary"><span>Play again</span></button>
         <button id="rMenu" class="mm small">Main menu</button>
@@ -236,6 +245,10 @@
       </div>
       <small class="opt-note">PC: full-size panels for a mouse and a big screen. Mobile: a compact layout for touch screens that keeps the battlefield clear, in portrait and landscape.</small>
       <label class="tg tg-n" for="sRts"><span>RTS controls<small>PC: drag a box to select regiments, right-click to order, WASD or the screen edges to scroll, Ctrl/Shift+1–9 for groups. Phones: Box and All buttons.</small></span><input id="sRts" type="checkbox" checked></label>
+      <div class="sl"><label for="sUiScale">Interface size</label><output id="oUiScale">100%</output><input id="sUiScale" type="range" min="0.8" max="1.5" step="0.05" value="1"><small>Scales the battle panels, the dock and the command bars.</small></div>
+      <label class="tg" for="sBigText">Larger text <input id="sBigText" type="checkbox"></label>
+      <label class="tg tg-n" for="sCblind"><span>Colour-blind colours<small>Blue against orange for the two armies on the map, the health bars, the zones and the battle report.</small></span><input id="sCblind" type="checkbox"></label>
+      <label class="tg tg-n" for="sCalm"><span>Calm mode<small>No screen shake, no flashes and no freeze-frames on heavy blows.</small></span><input id="sCalm" type="checkbox"></label>
     </section>
     <section class="set-sec">
       <h3>Graphics</h3>
@@ -277,6 +290,7 @@
         </div>
       </div>
       <label class="tg" for="sAuto">Auto-spawn soldiers for my army <input id="sAuto" type="checkbox" checked></label>
+      <label class="tg tg-n" for="sHeroes"><span>Generals<small>Each army fields a hero who levels up, inspires the troops around him and has two abilities (T and Y).</small></span><input id="sHeroes" type="checkbox" checked></label>
     </section>
     <section class="set-sec">
       <h3>More</h3>
@@ -313,8 +327,13 @@
         <li><b>Cleric</b> heals the wounded and cures poison and fire. Keep him behind the line.</li>
         <li><b>Wizard</b> throws exploding blasts, calls lightning, raises an Electric Wall and sprays poison. Fragile up close.</li>
         <li><b>Wing Archer</b> flies over the battle on mechanical wings and shoots crossbow bolts, some of them burning. Swords and spears can't reach him; only archers, wizards and other wing archers can.</li>
+        <li><b>Knight</b> rides a barded warhorse with a couched lance. The fastest Order unit: runs down archers and casters, but Spartans stop his charge cold.</li>
         <li><b>Giant</b> smashes whole groups. Slow and expensive.</li>
       </ul>
+      <h3>Your general</h3>
+      <p>Each army takes the field with a hero: the Order <b>General</b> or the Chaos <b>Warlord</b>. Kills level him up to level 5. Soldiers near him hit harder and keep their nerve. His two abilities sit in the bar above the dock (keys T and Y): Rally Cry heals and rallies the troops around him, Shield Wall cuts the damage they take, the Warlord's Meteor smashes the thickest enemy crowd. If he falls he is back 90 seconds later.</p>
+      <h3>Commands</h3>
+      <p>Shift + right-click queues waypoints: a dotted path shows the march on the ground and on the map. U and I use the selected regiments' specials (Rage, Vanish, Mass Heal, Spur). Ctrl + 1–9 makes a control group; the group bar at the bottom left picks them. Alerts on the right show what happened where: click one (or press L) to look. P pings the map for a 2v2 teammate. Hover over a soldier to see his health, armour and what he is strong and weak against. On a phone, hold a finger on the field for a radial menu of orders.</p>
       <h3>Orders</h3>
       <p><b>Defend</b> forms ranks by your statue. <b>Hold line</b> forms them where the army stands. <b>Charge</b> sends everyone at the enemy; soldiers who sprint in hit harder.</p>
       <p>Tap one of your soldiers to command his whole regiment: tap the ground to march there, tap an enemy to attack, or use the buttons that appear.</p>

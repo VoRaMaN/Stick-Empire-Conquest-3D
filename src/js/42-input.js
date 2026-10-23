@@ -42,7 +42,7 @@ function endPtr(e){
   if(p.boxing){ const b=$('#selBox'); if(b) b.hidden=true; if(e.type==='pointerup') rtsBoxEnd(p,e.shiftKey); return; }
   if(!tap||e.type!=='pointerup') return;
   // RTS with a mouse: left click selects, right click gives the order
-  if(p.mouse&&rtsOn()&&game.mode==='battle'&&uiMode()==='pc'){ if(p.btn===2) rtsOrderAt(e.clientX,e.clientY); else if(p.btn===0) rtsClick(e.clientX,e.clientY,e.shiftKey); return; }
+  if(p.mouse&&rtsOn()&&game.mode==='battle'&&uiMode()==='pc'){ if(p.btn===2) rtsOrderAt(e.clientX,e.clientY,e.shiftKey); else if(p.btn===0) rtsClick(e.clientX,e.clientY,e.shiftKey); return; }
   if(lastTap&&now-lastTap.t<320&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<40&&!selReg&&game.mode==='battle'){ lastTap=null; zoomAt(e.clientX,e.clientY); return; }
   lastTap={x:e.clientX,y:e.clientY,t:now};
   pick(e.clientX,e.clientY);

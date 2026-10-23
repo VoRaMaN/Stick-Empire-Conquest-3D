@@ -34,20 +34,21 @@ function damage(t,amt,src,dirW,kb,up,blocked,at){
   react(t,dirW,kb||1); if(t.fl) t.fl.vy-=Math.min(3,(kb||1)*.45);
   if(!blocked&&!t.action&&t.state!=='stunned'&&Math.random()<.5){ play(t,'flinch'); t.fwdScale=1; }
   if(!blocked&&amt>0) bleed(at||_tmp.copy(t.j.chest).lerp(t.j.neck,Math.random()).clone(),dirW.clone().setY(.25).normalize(),clamp(Math.round(amt/6),2,9),2.4,.55);
-  if(!blocked&&amt>0&&t.T.crawler) puff(at||t.j.chest,3,.09,2.6,'#ff7a2a');   // magma spills from a wounded Hellcrawler
+  if(!blocked&&amt>0&&t.T.crawler&&!t.T.horse) puff(at||t.j.chest,3,.09,2.6,'#ff7a2a');   // magma spills from a wounded Hellcrawler
   if(t.invuln||NET.guest) return;   // online guest: health only ever comes from the host
   if(amt>0) t.hurtAt=game.time;   // Chaos regeneration waits for the wounds to stop
   if(src&&src.team!==undefined&&src.team<2){ t.lastHitTeam=src.team; t.lastHitBy=src; }
-  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)*vetDealt(src)*vetTaken(t)*formTaken(t,src))*(RL.on?rlDmgMul(src)*rlSysMul(t,src):1); if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
+  t.hp-=amt*(1-(t.T.armor||0))*(game.classicMix?1:resDamageMul(t,src)*vetDealt(src)*vetTaken(t)*formTaken(t,src))*(RL.on?rlDmgMul(src)*rlSysMul(t,src):1)*(game.classicMix?1:heroMul(t,src)); if(game.mode==='battle'&&!game.classicMix){ alertHit(t,src); fightMark(t); if(src&&src.team<2&&game.stats&&game.stats.dmg) game.stats.dmg[src.team]+=amt; } if(game.mode==='battle') t.morale=Math.max(0,t.morale-amt/t.maxHp*40);
   if(t.hp<=0){ kill(t,dirW.clone().multiplyScalar(2.5*(kb||1)).add(new V3(0,1.8+(kb||1)*.6+(up||0),0)),{}); }
 }
 function kill(t,impWorld,opt){
   if(!t.alive||(NET.guest&&!NET.allowKill)) return;
   shakeMorale(t); onKill(t);
-  if(t.isUnit){ if(t.type==='giant') sfx('roar',t.j.head,.9,{rate:.8}); else if(t.T.crawler) crSfx('crDie','roar',t.j.head,.85); else if(Math.random()<.75) sfx('death',t.j.head,.9,{rate:t.type==='miner'?1.08:1}); }
+  if(t.isUnit){ if(t.type==='giant') sfx('roar',t.j.head,.9,{rate:.8}); else if(t.T.horse) sfx('roar',t.j.head,.6,{rate:1.6}); else if(t.T.crawler) crSfx('crDie','roar',t.j.head,.85); else if(Math.random()<.75) sfx('death',t.j.head,.9,{rate:t.type==='miner'?1.08:1}); }
   if(t.fin&&t.fin.rag) releaseRag(t.fin.rag,new V3(0,0,0));
   if(t.fin&&t.fin.victim&&t.fin.victim.alive){ unstun(t.fin.victim); }
   t.fin=null; t.target=null;
+  if(t.cr&&(t.T.horse||t.rider)) throwRider(t,impWorld);
   toRagdoll(t,impWorld,opt);
 }
 function unstun(v){ v.state='ok'; v.invuln=false; v.action=null; v.stunBy=null; }

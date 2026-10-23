@@ -210,6 +210,16 @@ the table's edge, each with its own flickering light, and one warm key light cas
 - The flat map is still there as a fallback where WebGL isn't available. Old saves carry on: the eight original
   territories keep their ids and the new regions are added.
 
+## Generals, cavalry and the Hell Riders
+
+**Generals.** Every army takes the field with a hero in a regiment of his own (★ banner): the Order **General** (a swordsman) or the Chaos **Warlord** (a Dreadguard), 28% bigger and about 3.5× as tough, hitting 1.5× as hard. Kills level him up to level 5 (more health and damage, a wider aura). Allies within his aura (11–15 m) hit 10–18% harder and keep their nerve. Two abilities on a cooldown: **Rally Cry / War Howl** (heal 20%, rally the routing, +25% damage and speed for 8 s), **Shield Wall** (allies take 40% less damage for 8 s) and the Warlord's **Meteor** (up to 95 damage and fire on the thickest enemy crowd within 30 m). Nothing can be cast in the first 20 s of a battle. A fallen general returns at the castle 90 s later at his level. The enemy general uses his abilities himself; yours wait for you (or for Auto-spawn). Settings → Battle → Generals turns them off.
+
+**Knights.** Order heavy cavalry from the Barracks (320 gold): an armoured rider with plume, kite shield and pennoned lance on a barded warhorse (the Hellcrawler rig with a horse's build; five coats). Fastest Order unit; the rider thrusts his lance between the horse's own moves (lance strike, couched lance, hoof strike, rear and stomp, trample). Knights deal ×1.6 to archers and casters and hunt them on a charge. Spartans deal ×1.8 to cavalry, and a spear that hits a charging knight stops the charge (**Braced!**). When a mount dies its rider is thrown and falls as a body of his own.
+
+**Hell Riders** (Hellpit research, 240 souls + 180 mana): an armoured Chaos rider in black spiked plate with a horned helm, burning eyes and a black lance mounts every Cerberus: +150 health, 15% less damage taken and lance thrusts of his own between the beast's bites.
+
+**Unit abilities.** A selected regiment can use its special now from the ability bar: Swordsmen **Rage** (with the research), Ninjas **Vanish** (with Shinobi), Clerics **Mass Heal**, mounts and beasts **Spur** (+40% speed for 5 s).
+
 ## Castles and research
 
 Behind each statue stands a castle: a crenellated curtain wall with a gatehouse and iron portcullis, corner
@@ -450,7 +460,7 @@ and guests in separate processes exchanging the real snapshots and commands: rep
 recruitment, deaths, victory, 2v2 shared armies, disconnection), Riverlands (`rivertest`: a five-minute battle on the big map in
 which zones change hands and pay out, banners rise and fall, miners work both corner mines, nobody leaves the field
 or stands inside a tree, house, tent or wall; a zone taken, contested and lost step by step; the classic field
-restored afterwards) and a simulation cost report.
+restored afterwards), cavalry and generals (`cavtest`: castle battles with Knights, Hell Riders and both generals: lance thrusts land, riders are thrown, generals level up and use their abilities, the Warlord's meteor falls; every Knight finisher, move, idle and charge in the Lab) and a simulation cost report.
 
 Two more test sets need network access to the Supabase project and are run by hand:
 
@@ -500,3 +510,21 @@ device (Mobile on a touch screen, PC with a mouse). The choice is remembered and
 | Pause | Pause button | Esc |
 
 Settings → Controls has a **Screen shake** slider (0–200 %); 0 turns camera shake off.
+
+### Commands in battle
+
+| Action | Touch | Mouse / keyboard |
+| --- | --- | --- |
+| Queue a waypoint | | Shift + right-click (dotted path on the ground and the map) |
+| General's abilities | Ability bar | T, Y |
+| Selected regiments' specials | Ability bar | U, I |
+| Make / pick a control group | Group bar (+) | Ctrl + 1–9 / 1–9 (twice: look) |
+| Look at the latest alert | Tap the alert | Click it, or L |
+| Ping the map for a teammate | Ping button, then tap | P, then click |
+| Radial menu of orders | Hold a finger on the field | |
+
+Hover over a soldier (PC) for his health, armour, morale, status and what he is strong and weak against; hover over a unit card for its cost and stats.
+
+### Accessibility
+
+Settings → Interface: **Interface size** (80–150 %), **Larger text**, **Colour-blind colours** (blue against orange on the map, the health bars, the zones and the battle report) and **Calm mode** (no screen shake, flashes or freeze-frames).

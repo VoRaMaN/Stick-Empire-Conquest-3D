@@ -4,6 +4,8 @@
    enemy to attack, right-drag to turn the camera, middle-drag / WASD / arrow keys / the screen edges to scroll.
    Keys: Ctrl+A all · Shift or Ctrl + 1–9 makes a group, 1–9 picks it (twice: look at it) · H hold · C charge ·
    X rejoin the army · Z capture a zone · Space looks at the selection · Esc lets go. Right-click the map to march there.
+   Shift+right-click queues waypoints (a dotted path on the ground and the map). T Y your general's abilities,
+   U I the selection's specials, P ping, L the latest alert (41b). Phone: hold a finger on the field for the radial menu.
    Phone: tap to select and to order as before; Box turns the next drag into a selection box; All takes every regiment. */
 const RTS={boxMode:false,groups:{},lastG:null,lastGT:0,mx:-1,my:-1,over:false,lastClick:{t:0,type:null}};
 const rtsOn=()=>settings.rts!==false&&!game.tutorial;   // the training battle keeps the plain drag-to-look controls it teaches
@@ -34,21 +36,21 @@ function rtsClick(x,y,shift){
   cam.follow=u||null; if(u) cam.dGoal=Math.min(cam.dGoal,u.s>1.5?14:9); updateFollowUI();
 }
 // right click (PC) / tap with a selection (phone): march, attack or storm the statue
-function rtsOrderAt(x,y){
+function rtsOrderAt(x,y,shift){
   if(game.mode!=='battle'||game.paused||!selRegs.length) return false;
   const me=myTeam(), foe=1-me, hit=unitAt(x,y,40), u=hit&&hit.u;
   if(u&&u.team===foe){ for(const r of selRegs) issue('reg',{r:r.id,k:'attack',tr:u.reg?u.reg.id:0,tu:u.id}); sfx('order'); updateRegbar(); return true; }
   const gp=groundPoint(x,y); if(!gp) return false;
   if(Math.hypot(gp.x-BASE_X[foe],gp.z)<5){ for(const r of selRegs) issue('reg',{r:r.id,k:'charge'}); marker.at(BASE_X[foe]-DIRX[foe]*3,0,'#ff5a4f'); sfx('order'); updateRegbar(); return true; }
-  rtsMoveMany(selRegs,gp.x,gp.z); marker.at(gp.x,gp.z,'#ffd36b'); sfx('order'); updateRegbar(); return true;   // one marker, where you clicked
+  rtsMoveMany(selRegs,gp.x,gp.z,shift); marker.at(gp.x,gp.z,shift?'#9fe0ff':'#ffd36b'); sfx('order'); updateRegbar(); return true;   // one marker, where you clicked; Shift queues a waypoint
 }
 // several regiments marching to one point stand side by side across the way they are going, in the order they
 // already stand, instead of all piling onto the same spot
-function rtsMoveMany(list,gx,gz){
+function rtsMoveMany(list,gx,gz,queue){
   const L=list.filter(r=>regAlive(r).length); if(!L.length) return;
-  const mv=(r,x,z)=>issue('reg',{r:r.id,k:'move',x:+x.toFixed(2),z:+z.toFixed(2)});
+  const mv=(r,x,z)=>issue('reg',queue?{r:r.id,k:'move',x:+x.toFixed(2),z:+z.toFixed(2),q:1}:{r:r.id,k:'move',x:+x.toFixed(2),z:+z.toFixed(2)});
   if(L.length===1){ mv(L[0],gx,gz); return; }
-  let cx=0,cz=0; const C=L.map(r=>regCenter(r)); for(const c of C){ cx+=c.x; cz+=c.z; } cx/=L.length; cz/=L.length;
+  let cx=0,cz=0; const C=L.map(r=>{ const o=r.order, w=queue&&o.kind==='move'?(o.q&&o.q.length?o.q[o.q.length-1]:o):null; return w?new V3(w.x,0,w.z):regCenter(r); });   // a waypoint lines up from the last one for(const c of C){ cx+=c.x; cz+=c.z; } cx/=L.length; cz/=L.length;
   let fx=gx-cx, fz=gz-cz; const l=Math.hypot(fx,fz); if(l<1){ fx=myTeam()?-1:1; fz=0; } else { fx/=l; fz/=l; }
   const px=fz, pz=-fx, W=r=>{ const F=FORM[r.type]||{cols:5,gap:1.4}; return (Math.min(regAlive(r).length,F.cols)-1)*F.gap+2.6; };
   const idx=L.map((r,i)=>i).sort((a,b)=>(C[a].x*px+C[a].z*pz)-(C[b].x*px+C[b].z*pz));

@@ -13,6 +13,7 @@ function updateUnit(u,dt){
     if(u.idleT<=0){ u.idleT=rand(4,10); if(!nearestEnemy(u,9)&&!(game.mode==='duel'&&game.duel&&game.duel.q)){ const L=IDLES[u.type]; play(u,L[Math.floor(Math.random()*L.length)]); u.fwdScale=0; } }
   }
   if(u.type==='sword'&&!game.classicMix&&game.mode==='battle'&&!NET.guest) rageTick(u,dt);
+  if(u.spurT>game.time) u.desired.multiplyScalar(1.4); else if(u.rallyT>game.time) u.desired.multiplyScalar(1.12);
   if(u.T.crawler) crawlerTick(u,dt);   // Rage research (never in the classic battle)
   if(u.T.chaos) chaosTick(u,dt);       // Infernal Regeneration, glows
   const acc=u.T.acc||(u.type==='giant'?3:9);

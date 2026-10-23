@@ -11,7 +11,7 @@ function step(rdt){
   game.ts=lerp(game.ts,slow,1-Math.exp(-rdt*8));
   let dt=Math.min(rdt*game.ts*tune.speed,1/30);
   if(!(dt>0)) return;   // no time passed (the first frame): velocities divided by dt would be NaN
-  if(game.hitstop>0){ game.hitstop-=rdt; if(!NET.on) dt*=.08; } // brief freeze-frame on heavy blows (not online: it would slow the host's battle for everyone)
+  if(game.hitstop>0){ game.hitstop-=rdt; if(!NET.on&&!settings.calm) dt*=.08; } // brief freeze-frame on heavy blows (not online: it would slow the host's battle for everyone)
   game.time+=dt;
 
   if(game.mode==='battle'){
@@ -49,6 +49,7 @@ function step(rdt){
   game.regT=(game.regT||0)-dt; if(game.regT<=0){ game.regT=.4; if(!NET.guest) cleanRegs(); if(selReg) updateRegbar(); }
   if(game.mode==='battle'){ updateCastles(dt); castleIncome(dt); } else if(castleReady) updateCastles(dt);
   if(MAP.id!=='classic') rlStep(dt);   // capture zones, the windmills, the river (37d)
+  battleExtras(dt);   // heroes, meteors, the battle record (37g)
   if(panelB) panelTick(rdt);
   updateArrows(dt); updateSpells(dt); updateChaos(dt); updateFire(dt); updateBlood(dt); updateLoose(dt);
   { const half=capes.length>24; game.capeF=(game.capeF||0)+1; for(let i=0;i<capes.length;i++) if(!half||((i+game.capeF)&1)===0) stepCape(capes[i],half?dt*2:dt); }
@@ -84,7 +85,7 @@ function draw(){
       hudEls.cA.textContent=count(0)+' units · '+SN[game.stance[0]]+ZN(0); hudEls.cB.textContent=count(1)+' units · '+SN[game.stance[1]]+ZN(1);
       const me=myTeam(); for(const t of FAC(me).roster){ const el=document.getElementById('chip-'+t); if(el){ el.style.opacity=game.gold[me]>=TYPES[t].cost&&game.mana[me]>=unitMana(t)?1:.55; const q=el.querySelector&&el.querySelector('.qn'); if(q){ const n=castleOn()?queuedType(me,t):0; q.textContent=n?'×'+n:''; } } } }
   }
-  drawArrows(); drawBlood(); updateBanners(); drawSelection(1/60); updateCallouts(1/60);
+  drawArrows(); drawBlood(); updateBanners(); drawSelection(1/60); drawOrderPaths(); updateCallouts(1/60);
   drawMinimap();
   // the sun's shadow box follows the camera along the field, so the castles get shadows when you look at them
   // (snapped to whole shadow texels so edges don't crawl; a longer shadow distance also backs the sun off so the box stays in front of it)
@@ -104,11 +105,11 @@ function frame(now){
   if(CW3.on){ cwFrame(rdt); return; }   // the campaign war table replaces the battle while it is open (33b)
   if(NET.on) netBeforeStep(rdt);
   step(rdt); if(NET.on) netAfterStep(rdt);
-  if(game.demo&&!game.paused) demoCamera(rdt); rtsFrame(rdt); updateCamera(rdt); updateAudio();
+  if(game.demo&&!game.paused) demoCamera(rdt); rtsFrame(rdt); hud3Tick(rdt); updateCamera(rdt); updateAudio();
   if(!window.SE3D_NO_DRAW) draw();   // automated multi-browser tests switch rendering off to share a small CPU
 }
 // debug and test hooks (used by tests/ and the browser checks)
-window.__SE3D={THREE,sun,setDistance,applyDistances,closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
+window.__SE3D={THREE,VW,resetViewer,issue,setSelection,regAlive,HEROS,heroCast,heroOn,mountRider,ALERTS,alertPush,abEntries,abUse,regAbility,PINGS,pingSend,METEORS,RTS,FIGHT,resultsReport,applyAccess,CASTLES,startResearch,riderPose,RJ,throwRider,sun,setDistance,applyDistances,closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
   renderer,sceneRef:scene,sunScreen,applyQuality,GFX_PRESETS,GFX_DEF,post,GFX:()=>GFX,CASTLES,recruit,buyUnit,startResearch,resLvl,hasRes,openPanel,closePanel,pickBuilding,setHover,queued,ICONS,makeUnitIcons,VOX,narrate,loadAssets,BUILDINGS,
   NET,applyCmd,buyFor,netSnapshot,netApplyTick,netBeforeStep,netAfterStep,hitStatue,netTest:()=>NETT,uiMode,setUiMode,uiSuggest,layoutTop,selectReg,
   RLD:()=>({rlRiverD,RL_FORESTS,rlInCastle,rlInCamp,RL_MINE,RL_VIL,RL_TOWERS,RL_RUINS,rlRoadD}),setTerrain,startSkirmish,CW3,CW,CW_REGIONS,openCampaign,closeCampaign,getCamp:()=>camp,campCanAttack,renderCampaign,campSelect,RL,MAP,BASE_X,setFactions,rlCaptureTarget,regAlive,regCenter,issue};

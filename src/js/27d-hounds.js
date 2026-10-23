@@ -67,6 +67,7 @@ function houndInit(){
 }
 // the canine parts swap in for the Hellcrawler's; Cerberus gets its own body, two more heads on necks of their own
 function buildHound(u,G){
+  if(u.T.horse){ buildHorse(u,G); return; }
   houndInit(); const s=u.s;
   if(u.T.heads===3){ const F=CRM.fur;
     G.c_pel=crPart('cbpel',s,1,F); G.c_abd=crPart('cbabd',s,1,F); G.c_tor=crPart('cbtor',s,1,F); G.c_nek=crPart('cbnek',s,1,F);
@@ -111,7 +112,7 @@ function houndFx(u){
   if(u.T.heads!==3){ if(Math.random()<.18) emitFire(cr.tailTip,1,.07*s,0,.6,0,.15,.45); return; }
   const t=game.time, j=u.j;
   // a mane of fire down the back
-  if(u.alive) for(let m=0;m<2;m++){ const k=Math.random(); _hd1.copy(cr.M).lerp(j.neck,k).addScaledVector(cr.n,(.26+.06*Math.sin(k*9))*s).addScaledVector(cr.rc,(Math.random()-.5)*.18*s);
+  if(u.alive) for(let m=0;m<2;m++){ const k=u.rider?.4+.6*Math.random():Math.random(); _hd1.copy(cr.M).lerp(j.neck,k).addScaledVector(cr.n,(.26+.06*Math.sin(k*9))*s).addScaledVector(cr.rc,(Math.random()-.5)*.18*s);
     emitFire(_hd1,1,(.13+.07*(1-Math.abs(k-.6)))*s,0,1.2,0,.25,.5); }
   // embers dripping from the open jaws; the eyes of the side heads
   const hr=_hd2.crossVectors(cr.hd,cr.hu).normalize(), k=CR_HEAD*.92*s;

@@ -23,7 +23,7 @@ function ring(pos,size,color){
   m.position.copy(pos); m.position.y=H(pos.x,pos.z)+.06; rings.push({m,age:0,life:.55,size});
 }
 const cam={yaw:0,pitch:.36,dist:31,target:new V3(0,1.2,0),goal:new V3(0,1.2,0),follow:null,shake:0,dGoal:31};
-function shakeAt(pos,amt){const k=settings.shake===undefined?1:settings.shake; if(!(k>0)) return; const d=pos.distanceTo(cam.target); cam.shake=Math.max(cam.shake,amt*k*clamp(1.2-d/(cam.dist*1.2),0,1));}
+function shakeAt(pos,amt){const k=settings.calm?0:settings.shake===undefined?1:settings.shake; if(!(k>0)) return; const d=pos.distanceTo(cam.target); cam.shake=Math.max(cam.shake,amt*k*clamp(1.2-d/(cam.dist*1.2),0,1));}
 
 /* ---------------- blood ---------------- */
 const MAXDROP=700, MAXSPLAT=460;

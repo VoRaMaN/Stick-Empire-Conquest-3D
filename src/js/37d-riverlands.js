@@ -326,10 +326,11 @@ function rlZonesStep(dt){
 }
 function rlZoneTaken(Z,t){ Z.owner=t; Z.s=t?1:-1; const me=myTeam();
   if(game.demo) return;
+  alertPush(t===me?'Zone '+Z.id+' captured':teamName(t)+' took '+rlZoneName(Z),t===me?'good':'danger',Z.x,Z.z);
   if(t===me){ sfx('horn',new V3(Z.x,Z.h,Z.z),.8); const K=rlKind(Z); toast('Zone '+Z.id+' captured · '+K.name+': '+K.txt.replace('gold',money(me))+' · heals and reveals'); }
   else { sfx('hornEnemy',new V3(Z.x,Z.h,Z.z),.8); toast(teamName(t)+' took '+rlZoneName(Z)); }
 }
-function rlZoneLost(Z,t){ if(game.demo) return; if(t===myTeam()) toast('Your banner fell at '+rlZoneName(Z)); }
+function rlZoneLost(Z,t){ if(game.demo) return; if(t===myTeam()){ toast('Your banner fell at '+rlZoneName(Z)); alertPush('Your banner fell at '+rlZoneName(Z),'danger',Z.x,Z.z); } }
 // banner height, waving cloth, ring colours: every frame
 function rlZonesDraw(){
   const T=game.time;
@@ -633,7 +634,7 @@ function rlMinimapBg(c,w,h,dpr){
 }
 function rlMinimapZones(c,w,h,dpr){
   for(const Z of RL.zones){ const x=mmX(Z.x,w), y=mmZ(Z.z,h), r=Math.max(5*dpr,RL_ZR/(MM.x1-MM.x0)*w*1.25), own=Z.owner;
-    c.fillStyle=own<0?'rgba(30,24,18,.75)':own?'rgba(150,40,60,.9)':'rgba(190,140,40,.92)'; c.beginPath(); c.arc(x,y,r,0,TAU); c.fill();
+    c.fillStyle=own<0?'rgba(30,24,18,.75)':PAL.zone[own]; c.beginPath(); c.arc(x,y,r,0,TAU); c.fill();
     c.strokeStyle=Z.contest?'#ffffff':'rgba(245,236,217,.8)'; c.lineWidth=dpr*(Z.contest?1.6:1); c.stroke();
     if(Math.abs(Z.s)>.02&&Math.abs(Z.s)<.999){ c.strokeStyle=RL_TEAMC[Z.s<0?0:1]; c.lineWidth=2*dpr; c.beginPath(); c.arc(x,y,r+2*dpr,-Math.PI/2,-Math.PI/2+Math.abs(Z.s)*TAU); c.stroke(); }
     c.fillStyle='#fff6e0'; c.font='700 '+Math.round(r*1.2)+'px sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(Z.id,x,y+.5*dpr); }

@@ -425,7 +425,7 @@ function updateSpells(dt){
 const _dp=new V3(),_dq=new V3();
 function drawSpells(){
   for(const O of orbs) if(fowVisP(O.p)) drawOrb(O);   // each caster's shot has its own look (26c)
-  for(const f of flashes){ if(!fowVisP(f.p)) continue; const k=f.t/f.life, r=lerp(f.r0,f.r1,EASE.o(k)); _s.setScalar(r); _m.compose(f.p,_qi,_s); _pc.copy(scol(f.col)).multiplyScalar(.55*Math.pow(1-k,1.6)); put(glowIM,_pc); }   // additive: keep it soft so it reads as light, not a ball
+  for(const f of flashes){ if(!fowVisP(f.p)||settings.calm) continue; const k=f.t/f.life, r=lerp(f.r0,f.r1,EASE.o(k)); _s.setScalar(r); _m.compose(f.p,_qi,_s); _pc.copy(scol(f.col)).multiplyScalar(.55*Math.pow(1-k,1.6)); put(glowIM,_pc); }   // additive: keep it soft so it reads as light, not a ball
   for(const z of zaps){ if(!fowVisP(z.a)&&!fowVisP(z.b)) continue; const n=z.seg||8, k=1-z.t/z.life; _pc.copy(scol(z.col)).multiplyScalar(.4+.6*k); let prev=z.a;
     for(let i=1;i<=n;i++){ const f=i/n, q=_dq.copy(z.a).lerp(z.b,f); if(i<n){ const j=z.a.distanceTo(z.b)*.06; q.x+=rand(-j,j); q.y+=rand(-j,j); q.z+=rand(-j,j); }
       cyl(prev,q,z.w*(.6+.4*k),_pc,boltIM); prev=q.clone(); }
@@ -450,6 +450,9 @@ function drawUnit(u){
     if(S.healF>0){ tc.copy(col).lerp(scol('#fff3a8'),Math.min(1,S.healF*2)); col=tc; } }
   drawFigure(u.j,u.s,col,u.thick,u.fwdW,u.cloak&&u.alive?GHOST:null,!!u.T.robe,!!u.T.skel);
   if(u.T.plateLimbs) drawPlateLimbs(u);
+  if(u.riderK) drawRiderArmor(u.j,u.s,u.riderK,u.team,null,null,null);
+  if(u.hero&&u.alive&&!u.cloak) drawHeroFx(u);
+  if((u.wallT>game.time||u.rallyT>game.time)&&u.alive&&!u.cloak) drawBuffFx(u);
 }
 
 /* ---------- brains ---------- */

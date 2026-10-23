@@ -85,7 +85,7 @@ Kit.prototype.build=function(parent,team,small){
 const WALL_H=8, TOWER_H=12;
 // buildings: front row faces the road (front at z=+3), back row stands behind it (front at z=-6)
 const BUILDINGS=[
-  {id:'barracks',name:'Barracks',emb:1,x:-6.5,row:0,w:5.6,d:6,trains:['sword','spear'],desc:'Swordsmen and Spartans'},
+  {id:'barracks',name:'Barracks',emb:1,x:-6.5,row:0,w:5.6,d:6,trains:['sword','spear','knight'],desc:'Swordsmen, Spartans and Knights'},
   {id:'range',name:'Archery Range',emb:3,x:-13.5,row:0,w:5.6,d:6,trains:['archer'],desc:'Archers'},
   {id:'dojo',name:'Shadow Dojo',emb:2,x:-20.5,row:0,w:5.6,d:6,trains:['ninja'],desc:'Ninjas'},
   {id:'prison',name:"Giant's Prison",emb:7,x:-28,row:0,w:7,d:6,trains:['giant'],desc:'Giants, chained until the gate rises'},
@@ -334,7 +334,7 @@ function castleGround(){ if(!castleReady) return; for(const C of CASTLES){ if(!C
 loadAssets().then(A=>{ if(A) applyCastleTextures(A); });   // (the castles themselves are raised at the end of 37c)
 
 /* ---------- castle state: training queues, doors, garrison ---------- */
-const TRAIN_T={miner:2.2,sword:2.4,spear:3.4,archer:2.8,ninja:3.2,cleric:3.6,wizard:4.4,wing:4.4,giant:7,crawler:1.1};
+const TRAIN_T={knight:5.5,miner:2.2,sword:2.4,spear:3.4,archer:2.8,ninja:3.2,cleric:3.6,wizard:4.4,wing:4.4,giant:7,crawler:1.1};
 // castles only run in a real skirmish/campaign battle; the classic regression mix and the Lab keep the old spawn
 const castleOn=()=>game.mode==='battle'&&!game.classicMix;
 function resetCastles(){
@@ -381,6 +381,7 @@ function emerge(b,type){
   const s=researchScale(team,type); if(s!==1) opt.s=TYPES[type].s*s;
   const u=makeUnit(type,team,cwx(team,lx),z,opt); u.isUnit=true; u.inCastle=true; units.push(u); assignRegiment(u);
   researchApplyUnit(u);
+  if(team===myTeam()&&!game.classicMix&&({knight:1,giant:1,cerberus:1,hades:1})[type]) alertPush(TYPES[type].name+' ready','good',u.pos.x,u.pos.z,'tr'+u.id);
   u.face=u.faceGoal=b.id==='aerie'?(team?-Math.PI/2:Math.PI/2):0;
   const pts=exitPath(b,team,u), sp=u.T.speed*(type==='giant'?1.15:.92); u.bornT=game.time;
   u.script={pts,i:0,speed:sp,then:leaveCastle};

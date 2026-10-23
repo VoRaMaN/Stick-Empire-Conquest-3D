@@ -3,7 +3,7 @@
    render target, keyed out to transparency and kept as a PNG data URL for the dock chips and building panel. */
 const ICONS={};
 const ICON_POSE={sword:{R:[.22,-.05,.32],wR:[.1,.9,.3],L:[-.24,-.3,.18],wL:[0,1,0],lean:.06,crouch:.04},
-  spear:null,archer:null,miner:null,giant:null,wizard:null,cleric:null,ninja:null,wing:null,crawler:{lean:-.3,draw:.8,crouch:.04,look:-.25},hound:{lean:-.3,draw:.8,crouch:.04,look:-.25},cerberus:{lean:-.3,draw:.8,crouch:.04,look:-.25},
+  spear:null,archer:null,miner:null,giant:null,wizard:null,cleric:null,ninja:null,wing:null,crawler:{lean:-.3,draw:.8,crouch:.04,look:-.25},hound:{lean:-.3,draw:.8,crouch:.04,look:-.25},cerberus:{lean:-.3,draw:.8,crouch:.04,look:-.25},knight:{lean:-.04,crouch:0},
   thrall:{R:[.18,-.1,.3],wR:[.05,.8,-.6],L:[-.12,-.05,.36],lean:.25,crouch:.05},dread:{R:[.22,.12,.1],wR:[.08,.35,-.93],L:[-.24,-.4,.2],lean:.08},
   harvester:{R:[.24,-.2,.22],wR:[.05,1,.15],L:[-.2,-.3,.25],lean:.04},
   boner:{R:[.24,-.05,.32],wR:[.15,.75,.6],L:[-.24,-.05,.32],wL:[-.15,.75,.6],lean:.08,crouch:.06},bomber:{R:[.22,.05,.3],wR:[0,1,0],L:[-.2,-.3,.2],lean:.15},
