@@ -3,6 +3,7 @@ function enemyCommander(dt){
   if(game.tutorial||NET.on) return;   // online, both armies are commanded by people
   game.aiT-=dt; if(game.aiT>0) return; game.aiT=2;
   aiResearch(1); if(game.demo) aiResearch(0);
+  aiEcoTick(1); if(game.demo||game.auto[0]) aiEcoTick(0);   // the enemy's make-up, a pressed castle, raided miners (34b)
   if(game.mission&&game.mission.D.passive) return;   // a story mission's enemy that stays behind its walls (40c)
   const power=t=>units.filter(u=>u.alive&&u.team===t&&u.isUnit&&!u.T.worker&&!u.routing).reduce((a,u)=>a+u.T.cost/econ(t),0);
   const mine=power(1), theirs=power(0), st=game.stance[1];
@@ -103,6 +104,7 @@ function fightBrain(u,t,dx,dz,d){
   u.desired.set(bx+px*side*strafe,0,bz+pz*side*strafe);
 }
 function minerLogic(u,dt){
+  if(minerFlee(u,dt)) return;   // raided: run for the keep (34b)
   const m=MAP.id==='classic'?MINE[u.team]:rlMineOf(u);
   if(u.mstate==='toMine'){
     const mr=m.r||1.7; _goal.set(m.x+Math.cos(u.slot)*mr,0,m.z+Math.sin(u.slot)*mr);

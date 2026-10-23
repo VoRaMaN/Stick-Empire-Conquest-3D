@@ -61,9 +61,9 @@ function autoSpend(team){
   if(count(team)>=POP_CAP) return;
   let pick;
   const cq=castleOn(), wk=FAC(team).worker;
-  if(count(team,wk)+(cq?queuedType(team,wk):0)<rlWorkerTarget(team)) pick=wk;   // Riverlands: more miners as the battle goes on, for both mines
+  if(count(team,wk)+(cq?queuedType(team,wk):0)<aiWorkerTarget(team)) pick=wk;   // workers to a target that moves with the battle (34b)
   else if(game.classicMix){ const r=Math.random(); pick=r<.38?'sword':r<.62?'archer':r<.82?'spear':'giant'; }   // the original four-type army (regression tests)
-  else pick=factionPick(team);   // Hellcrawlers come up out of their pit in packs (below)
+  else pick=aiPick(team);   // the faction's mix, weighted against what the enemy fields (34b); Hellcrawlers come up out of their pit in packs (below)
   const cost=TYPES[pick].cost;
   if(cq&&pick!==wk&&aiSaving(team)) return;   // saving up for research
   if(cq&&pick==='crawler'){ const n=Math.min(3,Math.floor(game.gold[team]/cost),POP_CAP-count(team)-queued(team)); if(n>0&&queuedType(team,pick)<4){ game.gold[team]-=cost*n; for(let i=0;i<n;i++) recruit(pick,team); } }

@@ -39,7 +39,7 @@ function cleanRegs(){
   for(let i=regs.length-1;i>=0;i--){ const r=regs[i]; r.units=r.units.filter(u=>u.alive);
     if(!r.units.length){ if(r.banner) dropRoot(r.banner); if(selRegs.includes(r)) setSelection(selRegs.filter(x=>x!==r)); regs.splice(i,1); continue; }
     const o=r.order;
-    if(o.kind==='attack'&&!(o.target&&regAlive(o.target).length)&&!(o.unit&&o.unit.alive)){ const c=regCenter(r); r.order={kind:'hold',x:c.x,z:c.z,a:r.team?-Math.PI/2:Math.PI/2}; }
+    if(o.kind==='attack'&&!(o.target&&regAlive(o.target).length)&&!(o.unit&&o.unit.alive)){ if(o.aiHelp){ r.order={kind:'army'}; continue; } const c=regCenter(r); r.order={kind:'hold',x:c.x,z:c.z,a:r.team?-Math.PI/2:Math.PI/2}; }
     if(o.kind==='move'&&o.q&&o.q.length){ const c=regCenter(r); if(Math.hypot(c.x-o.x,c.z-o.z)<4.5){ const q=o.q, nx=q.shift(); orderMove(r,nx,true); r.order.q=q; continue; } }   // the next waypoint (Shift+right-click)
     if(o.kind==='move'){ const a=regAlive(r); if(a.every(u=>{const s=regSlot(r,u); return Math.hypot(s.x-u.pos.x,s.z-u.pos.z)<1.3;})) o.kind='hold'; }
   }
