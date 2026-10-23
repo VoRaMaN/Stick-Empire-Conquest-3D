@@ -40,7 +40,7 @@ function rtsOrderAt(x,y){
   if(u&&u.team===foe){ for(const r of selRegs) issue('reg',{r:r.id,k:'attack',tr:u.reg?u.reg.id:0,tu:u.id}); sfx('order'); updateRegbar(); return true; }
   const gp=groundPoint(x,y); if(!gp) return false;
   if(Math.hypot(gp.x-BASE_X[foe],gp.z)<5){ for(const r of selRegs) issue('reg',{r:r.id,k:'charge'}); marker.at(BASE_X[foe]-DIRX[foe]*3,0,'#ff5a4f'); sfx('order'); updateRegbar(); return true; }
-  rtsMoveMany(selRegs,gp.x,gp.z); sfx('order'); updateRegbar(); return true;
+  rtsMoveMany(selRegs,gp.x,gp.z); marker.at(gp.x,gp.z,'#ffd36b'); sfx('order'); updateRegbar(); return true;   // one marker, where you clicked
 }
 // several regiments marching to one point stand side by side across the way they are going, in the order they
 // already stand, instead of all piling onto the same spot
@@ -60,7 +60,7 @@ function rtsMoveMany(list,gx,gz){
 // the regiment bar's buttons and the hotkeys act on the whole selection
 function rtsCmd(k){
   if(!selRegs.length) return;
-  if(k==='capture'){ const Z=rlCaptureTarget(selReg); if(!Z) return; sfx('order'); rtsMoveMany(selRegs,Z.x,Z.z); updateRegbar(); return; }
+  if(k==='capture'){ const Z=rlCaptureTarget(selReg); if(!Z) return; sfx('order'); rtsMoveMany(selRegs,Z.x,Z.z); marker.at(Z.x,Z.z,'#ffd36b'); updateRegbar(); return; }
   for(const r of selRegs) issue('reg',{r:r.id,k}); sfx(k==='charge'?'horn':'order'); updateRegbar();
 }
 // the selection box

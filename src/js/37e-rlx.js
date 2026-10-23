@@ -19,11 +19,11 @@ function rlRoute(u,dt){
   const d=u.desired, sp=Math.hypot(d.x,d.z), px=u.pos.x, pz=u.pos.z, rx=rlRiverX(pz), side=px<rx?-1:1;
   let X=u.rlX;
   if(sp<.15) return;
-  const fx=d.x/sp, fz=d.z/sp;
+  const G=rlGoal(u); if(!G){ u.rlX=null; return; }
+  const gside=G.x<rlRiverX(G.z)?-1:1;                               // which bank he is really going to
   if(!X){
-    if(rlDeck(px,pz)>-1e8) return;                                   // already on a bridge
-    if(Math.abs(px-rx)-rlRiverW(pz)>9||fx*side>-.2) return;         // not walking into the water
-    const gx=px+fx*60, gz=pz+fz*60;                                  // somewhere beyond it, the way he was heading
+    if(rlDeck(px,pz)>-1e8||gside===side) return;                     // on a bridge already, or no need to cross
+    const gx=G.x, gz=G.z;
     let best=0, bc=1e9;
     RL_BRIDGES.forEach((B,i)=>{ const A=side<0?B.w:B.e, E=side<0?B.e:B.w, c=Math.hypot(A[0]-px,A[1]-pz)+Math.hypot(gx-E[0],gz-E[1]); if(c<bc){ bc=c; best=i; } });
     X=u.rlX={b:best,side,ph:0,t:0};
@@ -32,12 +32,22 @@ function rlRoute(u,dt){
   const B=RL_BRIDGES[X.b], s=X.side, A0x=(s<0?B.w[0]:B.e[0])+B.ax*s*2.5, A0z=(s<0?B.w[1]:B.e[1])+B.az*s*2.5,
     A1x=(s<0?B.e[0]:B.w[0])-B.ax*s*2.5, A1z=(s<0?B.e[1]:B.w[1])-B.az*s*2.5;
   if(X.ph===0){
-    if(fx*s>.25){ u.rlX=null; return; }                              // changed his mind: his way no longer crosses
+    if(gside===s){ u.rlX=null; return; }                             // changed his mind: his goal is on this bank now
     if(Math.hypot(A0x-px,A0z-pz)<1.8) X.ph=1;
   }
   const wx=X.ph?A1x:A0x, wz=X.ph?A1z:A0z, dx=wx-px, dz=wz-pz, dd=Math.hypot(dx,dz)||1;
   if(X.ph&&(dd<1.8||(side!==s&&rlDeck(px,pz)<-1e8&&Math.abs(px-rx)>rlRiverW(pz)+1.5))){ u.rlX=null; return; }
   const v=Math.max(sp,u.T.speed*.75); d.x=dx/dd*v; d.z=dz/dd*v; if(!u.action) u.faceGoal=Math.atan2(dx,dz);
+}
+// where a soldier is really going: his regiment's place, the enemy he is after, his place in the army, or the enemy statue
+function rlGoal(u){
+  const ro=u.reg&&game.mode==='battle'?u.reg.order:null;
+  if(ro&&(ro.kind==='move'||ro.kind==='hold')) return regSlot(u.reg,u);
+  if(u.target&&u.target.alive&&u.target.pos) return u.target.pos;
+  if(ro&&ro.kind==='attack'){ const t=ro.unit&&ro.unit.alive?ro.unit:(ro.target?regAlive(ro.target)[0]:null); if(t) return t.pos; }
+  if(u.T.worker) return null;
+  if(u.slot&&typeof u.slot==='object'&&game.stance[u.team]!=='charge') return u.slot;
+  const st=statues[1-u.team]; return st&&st.pos?st.pos:null;
 }
 // no wading: a soldier who steps into the river is put back on the bank (or the bridge) he came from
 function rlRiverCollide(u){
@@ -125,6 +135,10 @@ function fowSees(team,o){
   if(!FOW.on||o.team===team||team===undefined||team>1) return true;
   const N=FOW.N, i=Math.floor((o.pos.x-FOW.X0)/FOW.S), j=Math.floor((o.pos.z-FOW.X0)/FOW.S);
   if(i<0||j<0||i>=N||j>=N) return true; return FOW.vis[team][j*N+i]===1; }
+// can this screen see that spot? (glows, sparks, smoke, fire, blood, arrows and spells in the fog aren't drawn)
+function fowVisXZ(x,z){ if(!FOW.on||FOW.reveal||!FOW.vis[0]) return true; const N=FOW.N, i=Math.floor((x-FOW.X0)/FOW.S), j=Math.floor((z-FOW.X0)/FOW.S);
+  if(i<0||j<0||i>=N||j>=N) return true; return FOW.vis[myTeam()][j*N+i]===1; }
+const fowVisP=p=>!FOW.on||fowVisXZ(p.x,p.z);
 // hidden on this screen
 const fowHidden=u=>FOW.on&&!FOW.reveal&&u.team!==myTeam()&&!fowSees(myTeam(),u);
 // darken the valley's ground, trees, houses and walls by the fog texture (a few lines added to their own shaders)

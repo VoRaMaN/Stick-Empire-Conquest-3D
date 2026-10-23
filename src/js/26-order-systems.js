@@ -273,7 +273,8 @@ for(const im of [glowIM,boltIM,GHOST.limb,GHOST.torso,GHOST.sph,GHOST.joint]){ i
   im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); im.frustumCulled=false; scene.add(im); CNT.set(im,0); }
 glowIM.renderOrder=4; boltIM.renderOrder=4;
 const SC={}; const scol=c=>SC[c]||(SC[c]=new THREE.Color(c));
-function glowAt(p,r,c){ _s.set(r,r,r); _m.compose(p,_qi,_s); put(glowIM,scol(c)); }
+function glowAt(p,r,c){ if(FOW.on&&!fowVisP(p)) return;   // fog of war: no glow from where you can't see
+  _s.set(r,r,r); _m.compose(p,_qi,_s); put(glowIM,scol(c)); }
 function staffTip(u,out){ return out.copy(u.j.hR).addScaledVector(u.wRw,.7*u.s); }
 function puffDir(p,dir,n,speed,spread,col,size,life){
   if(isFireCol(col)){ for(let k=0;k<n;k++){ const s=speed*rand(.6,1.1); emitFire(p,2,size*1.4,dir.x*s,dir.y*s,dir.z*s,spread*.8,(life||1)*.75); } return; }
@@ -423,14 +424,14 @@ function updateSpells(dt){
 /* ---------- drawing ---------- */
 const _dp=new V3(),_dq=new V3();
 function drawSpells(){
-  for(const O of orbs){ glowAt(O.p,O.big?.32:.2,O.col); glowAt(O.p,O.big?.55:.34,'#5a2a7a'); }
-  for(const f of flashes){ const k=f.t/f.life, r=lerp(f.r0,f.r1,EASE.o(k)); _s.setScalar(r); _m.compose(f.p,_qi,_s); _pc.copy(scol(f.col)).multiplyScalar(.55*Math.pow(1-k,1.6)); put(glowIM,_pc); }   // additive: keep it soft so it reads as light, not a ball
-  for(const z of zaps){ const n=z.seg||8, k=1-z.t/z.life; _pc.copy(scol(z.col)).multiplyScalar(.4+.6*k); let prev=z.a;
+  for(const O of orbs) if(fowVisP(O.p)) drawOrb(O);   // each caster's shot has its own look (26c)
+  for(const f of flashes){ if(!fowVisP(f.p)) continue; const k=f.t/f.life, r=lerp(f.r0,f.r1,EASE.o(k)); _s.setScalar(r); _m.compose(f.p,_qi,_s); _pc.copy(scol(f.col)).multiplyScalar(.55*Math.pow(1-k,1.6)); put(glowIM,_pc); }   // additive: keep it soft so it reads as light, not a ball
+  for(const z of zaps){ if(!fowVisP(z.a)&&!fowVisP(z.b)) continue; const n=z.seg||8, k=1-z.t/z.life; _pc.copy(scol(z.col)).multiplyScalar(.4+.6*k); let prev=z.a;
     for(let i=1;i<=n;i++){ const f=i/n, q=_dq.copy(z.a).lerp(z.b,f); if(i<n){ const j=z.a.distanceTo(z.b)*.06; q.x+=rand(-j,j); q.y+=rand(-j,j); q.z+=rand(-j,j); }
       cyl(prev,q,z.w*(.6+.4*k),_pc,boltIM); prev=q.clone(); }
     glowAt(z.b,.25*k+.1,z.col); }
-  for(const b of beams){ const k=1-b.age/b.life, a=b.u.T.staff?staffTip(b.u,_dp):b.u.j.hL; _pc.copy(scol(b.col)).multiplyScalar(k); cyl(a,b.t.j.chest,.035*k+.01,_pc,boltIM); glowAt(b.t.j.chest,.3*k,b.col); }
-  for(const W of walls){ const fade=Math.min(1,W.t/.5); _pc.copy(scol('#bfe8ff')).multiplyScalar(fade);
+  for(const b of beams){ if(!fowVisP(b.t.pos)&&!fowVisP(b.u.pos)) continue; const k=1-b.age/b.life, a=b.u.T.staff?staffTip(b.u,_dp):b.u.j.hL; _pc.copy(scol(b.col)).multiplyScalar(k); cyl(a,b.t.j.chest,.035*k+.01,_pc,boltIM); glowAt(b.t.j.chest,.3*k,b.col); }
+  for(const W of walls){ if(!fowVisP(W.a)&&!fowVisP(W.b)) continue; const fade=Math.min(1,W.t/.5); _pc.copy(scol('#bfe8ff')).multiplyScalar(fade);
     for(const end of [W.a,W.b]) for(const h of [.35,1.25,2.2]){ _dp.copy(end); _dp.y+=h; glowAt(_dp,.13,'#cfeeff'); }
     for(const pts of W.arcs) for(let i=1;i<pts.length;i++) cyl(pts[i-1],pts[i],.028,_pc,boltIM);
     _dp.copy(W.a); cyl(_dp,_dq.copy(W.a).setY(W.a.y+2.4),.04,_pc,boltIM); cyl(W.b,_dq.copy(W.b).setY(W.b.y+2.4),.04,_pc,boltIM); }

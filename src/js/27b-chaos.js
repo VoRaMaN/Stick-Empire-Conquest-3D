@@ -269,7 +269,7 @@ function updateChaos(dt){
 }
 const _cd2=new V3();
 function drawChaos(){
-  for(const S of souls){ glowAt(S.p,S.big?.24:.15,S.col||'#d7a6ff'); glowAt(S.p,S.big?.42:.28,S.col2||'#4a1a6a'); }
+  for(const S of souls) if(fowVisP(S.p)) drawSoul(S);   // harvester souls and oracle spirit orbs (26c)
   for(const W of wisps) if(W.t>=0) glowAt(W.p,.09,W.col);
   const ct=cam.target, tt=game.time;
   for(const L of [units,CASTLES[0]?CASTLES[0].garrison:[],CASTLES[1]?CASTLES[1].garrison:[]]) for(const u of L){

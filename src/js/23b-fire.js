@@ -44,7 +44,7 @@ const _fcA=new THREE.Color(), _fcB=new THREE.Color(), _fsz=new V3();
 function fireCol(out,h){ const x=Math.min(Math.max(h,0)*4,3.999), i=Math.floor(x); return out.copy(FIRE_GRAD[i]).lerp(FIRE_GRAD[i+1],x-i); }
 function drawFire(){
   if(!flames.length) return; const q=camera.quaternion, t=game.time;
-  for(const f of flames){ const k=f.age/f.life, fl=.8+.2*Math.sin(t*31+f.ph*5), grow=k<.18?.5+k*2.8:1-(k-.18)*.75, r=f.size*grow*fl;
+  for(const f of flames){ if(!fowVisP(f.p)) continue; const k=f.age/f.life, fl=.8+.2*Math.sin(t*31+f.ph*5), grow=k<.18?.5+k*2.8:1-(k-.18)*.75, r=f.size*grow*fl;
     fireCol(_fcA,Math.min(1,k*.95+.05)); const bs=r*(1-k*k); _fsz.set(bs*1.35,bs*1.9,1); _m.compose(f.p,q,_fsz); put(fireBodyIM,_fcA);
     fireCol(_fcA,Math.min(1,k*1.1+.18)).multiplyScalar((1-k)*(.5+.25*fl)); _fsz.set(r*2,r*2.7,1); _m.compose(f.p,q,_fsz); put(fireIM,_fcA);
     fireCol(_fcB,k*.85).multiplyScalar(Math.pow(1-k,1.2)*1.15); _fsz.set(r*.9,r*1.3,1); _m.compose(f.p,q,_fsz); put(fireIM,_fcB); }

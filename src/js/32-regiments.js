@@ -54,8 +54,8 @@ function regBrain(u,o){
     for(const e of pool){ if(e.state==='stunned'||!canTarget(u,e)) continue; const d=Math.hypot(e.pos.x-u.pos.x,e.pos.z-u.pos.z); if(d<bd){bd=d;t=e;} }
     if(!t) return false; u.target=t; const dx=t.pos.x-u.pos.x,dz=t.pos.z-u.pos.z; fightBrain(u,t,dx,dz,Math.hypot(dx,dz)||1e-3); return true;
   }
-  const sl=regSlot(u.reg,u), moving=o.kind==='move';
-  const ranged=u.T.ranged, guard=ranged?u.T.range:(moving?2.5:7)*sightK(), leash=ranged?3:(moving?4:10)*sightK();
+  const sl=regSlot(u.reg,u), moving=o.kind==='move', rk=sightK()>1?1.6:1;   // a regiment you placed stays near its place (Riverlands: a little further)
+  const ranged=u.T.ranged, guard=ranged?u.T.range:(moving?2.5:7)*rk, leash=ranged?3:(moving?4:10)*rk;
   u.rfT=(u.rfT||0)-1/60; if(u.rfT<=0||u.rFoe&&!u.rFoe.alive){ u.rfT=.25+Math.random()*.1; u.rFoe=nearestFoe(u.pos.x,u.pos.z,u.team,Math.max(guard,u.T.range)+.5,u); }
   const foe=u.rFoe&&u.rFoe.alive&&u.rFoe.state!=='stunned'?u.rFoe:null, fd=foe?Math.hypot(foe.pos.x-u.pos.x,foe.pos.z-u.pos.z):1e9;
   const fromSlot=Math.hypot(u.pos.x-sl.x,u.pos.z-sl.z);

@@ -6,7 +6,7 @@ for(let i=0;i<MAXPUFF;i++) puffIM.setColorAt(i,WHITE);
 puffIM.instanceMatrix.setUsage(THREE.DynamicDrawUsage); puffIM.frustumCulled=false; puffIM.count=0; puffIM.renderOrder=2; scene.add(puffIM);
 const _pc=new THREE.Color();
 function drawPuffs(){ let n=0;
-  for(const q of puffs){ const t=q.age/q.life; if(t>=1) continue; _s.setScalar(q.size*(.4+t*.9)); _m.compose(q.p,_qi,_s); puffIM.setMatrixAt(n,_m);
+  for(const q of puffs){ const t=q.age/q.life; if(t>=1||!fowVisP(q.p)) continue; _s.setScalar(q.size*(.4+t*.9)); _m.compose(q.p,_qi,_s); puffIM.setMatrixAt(n,_m);
     _pc.copy(q.c).lerp(HORIZON,t*.9); puffIM.setColorAt(n,_pc); n++; }
   puffIM.count=n; puffIM.instanceMatrix.needsUpdate=true; if(puffIM.instanceColor) puffIM.instanceColor.needsUpdate=true; }
 function puff(pos,n,size,speed,color){
@@ -51,9 +51,9 @@ function updateBlood(dt){
   for(let i=splats.length-1;i>=0;i--){ const s=splats[i]; s.age+=dt; if(s.age>45) splats.splice(i,1); }
 }
 function drawBlood(){
-  let n=0; for(const d of drops){ _s.set(d.r,d.r*1.3,d.r); _m.compose(d.p,_qi,_s); dropIM.setMatrixAt(n++,_m); }
+  let n=0; for(const d of drops){ if(!fowVisP(d.p)) continue; _s.set(d.r,d.r*1.3,d.r); _m.compose(d.p,_qi,_s); dropIM.setMatrixAt(n++,_m); }
   dropIM.count=n; dropIM.instanceMatrix.needsUpdate=true;
-  n=0; for(const s of splats){ const k=Math.min(1,s.age/s.grow)*(s.age>41?Math.max(0,(45-s.age)/4):1), r=s.r*(.35+.65*k);
+  n=0; for(const s of splats){ if(FOW.on&&!fowVisXZ(s.x,s.z)) continue; const k=Math.min(1,s.age/s.grow)*(s.age>41?Math.max(0,(45-s.age)/4):1), r=s.r*(.35+.65*k);
     _p.set(s.x,s.y+.012,s.z); _s.set(r,1,r); _m.compose(_p,s.q,_s); splatIM.setMatrixAt(n++,_m); }
   splatIM.count=n; splatIM.instanceMatrix.needsUpdate=true;
 }

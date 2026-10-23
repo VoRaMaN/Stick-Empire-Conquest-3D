@@ -243,7 +243,7 @@ function updateChaos2(dt){
 }
 const _dc2=new V3();
 function drawChaos2(){
-  for(const B of bombs){ glowAt(B.p,.11,'#ff9a3a'); }
+  for(const B of bombs) if(fowVisP(B.p)) drawBomb(B);   // a fizzing bomb (26c)
   const ct=cam.target, tt=game.time;
   for(const u of units){
     if(!u.alive||!CHAOS2.includes(u.type)) continue;

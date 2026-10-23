@@ -57,5 +57,5 @@ if(mmEl&&mmEl.addEventListener){
 // the battlefield map: right-click marches the selection there
 if(mmEl&&mmEl.addEventListener){
   mmEl.addEventListener('contextmenu',e=>{ e.preventDefault(); e.stopPropagation(); if(!selRegs.length) return; const r=mmEl.getBoundingClientRect(), fx=(e.clientX-r.left)/r.width, fz=(e.clientY-r.top)/r.height;
-    rtsMoveMany(selRegs,MM.x0+fx*(MM.x1-MM.x0),MM.z0+fz*(MM.z1-MM.z0)); sfx('order'); updateRegbar(); });
+    const gx=MM.x0+fx*(MM.x1-MM.x0), gz=MM.z0+fz*(MM.z1-MM.z0); rtsMoveMany(selRegs,gx,gz); marker.at(gx,gz,'#ffd36b'); sfx('order'); updateRegbar(); });
 }

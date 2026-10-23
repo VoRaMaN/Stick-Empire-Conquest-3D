@@ -105,7 +105,7 @@ function drawArrows(){
   if(arrows.length>arCap&&arCap<MAXAR) growArrows(Math.min(MAXAR,Math.max(arCap*2,1<<Math.ceil(Math.log2(arrows.length)))));
   let n=0; const shields=new Set();
   // two passes: arrows in the air first, so they always get a slot, then the ones stuck in bodies, shields and ground
-  for(let pass=0;pass<2;pass++) for(const a of arrows){ if((a.mode==='fly')!==(pass===0)) continue; if(n>=arCap) break;
+  for(let pass=0;pass<2;pass++) for(const a of arrows){ if((a.mode==='fly')!==(pass===0)) continue; if(n>=arCap) break; if(FOW.on&&!fowVisP(a.p)) continue;
     if(a.mode==='shield'){ if(!shields.has(a.g)){ a.g.updateMatrixWorld(); shields.add(a.g); } placeArrow(a); }
     else if(a.mode==='body') placeArrow(a);
     const k=a.mode==='fixed'&&a.ttl?clamp((a.ttl-a.age)/2,0,1):1, sc=a.s*k; if(sc<.01) continue;
