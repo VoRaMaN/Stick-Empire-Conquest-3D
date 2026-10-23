@@ -24,7 +24,7 @@ function resetBattle(opt){
   heroReset();   // each army's general (37g; not in the classic battle, the demo or the training)
   const extra=facOf(1)==='chaos'?['dread','crawler','harvester','crawler']:['spear','sword','archer','giant']; for(let k=0;k<(opt.enemyExtra||0);k++) spawn(extra[k%4],1);
   game.stance=['defend','defend']; game.aiT=4; game.bt=0; setStance(0,'defend'); setStance(1,'defend');
-  if(n>8) for(const u of units) if(u.slot&&u.isUnit&&!u.T.worker){ placeUnit(u,u.slot.x,u.slot.z,u.team?-Math.PI/2:Math.PI/2); }
+  if(n>8) for(const u of units) if(u.slot&&typeof u.slot==='object'&&u.team<2&&u.isUnit&&!u.T.worker){   /* a neutral camp's soldiers keep their posts */ placeUnit(u,u.slot.x,u.slot.z,u.team?-Math.PI/2:Math.PI/2); }
   frameBattle();
   replayStart();   // offline battles are recorded for "Watch replay" (49d)
   if(!game.demo&&!game.classicMix) setTimeout(()=>{ if(!game.demo&&game.mode==='battle'&&game.over<=0){ narrate('prepare'); if(!VOX.said.destroy){ VOX.said.destroy=1; setTimeout(()=>{ if(!game.demo&&game.mode==='battle') narrate('destroyStatue'); },3200); } } },700);

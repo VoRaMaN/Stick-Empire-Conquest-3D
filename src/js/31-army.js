@@ -74,7 +74,7 @@ function autoSpend(team){
 let GC=3, GX0=-48, GZ0=-21, GNX=32, GNZ=14, gridCells=Array.from({length:GNX*GNZ},()=>[]);
 // a bigger map needs a bigger grid (the classic one keeps its exact cells, so its battles replay identically)
 function setGrid(x0,z0,nx,nz,c){ c=c||3; if(GX0===x0&&GZ0===z0&&GNX===nx&&GNZ===nz&&GC===c) return; GC=c; GX0=x0; GZ0=z0; GNX=nx; GNZ=nz; gridCells=Array.from({length:GNX*GNZ},()=>[]); }
-const gI=x=>{ const i=Math.floor((x-GX0)/GC); return i<0?0:i>=GNX?GNX-1:i; }, gJ=z=>{ const j=Math.floor((z-GZ0)/GC); return j<0?0:j>=GNZ?GNZ-1:j; };
+const gI=x=>{ const i=Math.floor((x-GX0)/GC); return i>0?(i>=GNX?GNX-1:i):0; }, gJ=z=>{ const j=Math.floor((z-GZ0)/GC); return j>0?(j>=GNZ?GNZ-1:j):0; };   /* a bad position lands in a corner cell instead of stopping the game */
 function gridBuild(){ for(const c of gridCells) c.length=0; for(const u of units) if(u.alive) gridCells[gJ(u.pos.z)*GNX+gI(u.pos.x)].push(u); }
 // calls fn(o) for every unit in the cells overlapping the square of radius r (fn returns false to stop)
 function gridEach(x,z,r,fn){ const i0=gI(x-r),i1=gI(x+r),j0=gJ(z-r),j1=gJ(z+r);
