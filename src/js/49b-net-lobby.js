@@ -28,7 +28,7 @@ async function livePing(){
   liveRender();
 }
 function liveStop(){ ON.liveOn=false; if(NETC.user&&!NETC.room) netRpc('se3d_presence_leave',{}).catch(()=>{}); }
-setInterval(livePing,20000);
+{ const iv=setInterval(livePing,20000); if(iv&&iv.unref) iv.unref(); }   // (unref: never keeps a test run alive)
 const onBody=()=>$('#onBody');
 function onMsg(t,err){ const m=$('#onMsg'); if(!m) return; m.textContent=t||''; m.classList.toggle('err',!!err); }
 function onlineConnUI(){

@@ -101,6 +101,7 @@ function frame(now){
   const ms=now-last, rdt=Math.min(.05,Math.max(0,ms/1000)); last=now;
   perfTick(ms);
   if(window.innerWidth!==vpW||window.innerHeight!==vpH||!isFinite(camera.aspect)) resize();   // a resize event can be missed when the page is hidden and shown again
+  if(CW3.on){ cwFrame(rdt); return; }   // the campaign war table replaces the battle while it is open (33b)
   if(NET.on) netBeforeStep(rdt);
   step(rdt); if(NET.on) netAfterStep(rdt);
   if(game.demo&&!game.paused) demoCamera(rdt); rtsFrame(rdt); updateCamera(rdt); updateAudio();
@@ -110,7 +111,7 @@ function frame(now){
 window.__SE3D={THREE,sun,setDistance,applyDistances,closeMenu,openMenu,startTutorial,audio,settings,showResults,pauseGame,openSheet,setStance,units,corpses,game,step,setMode,duelDo,statues,regs,camera,cam,resetBattle,assignSlots,formLines,CHG,arrows,getAr:()=>arIM,CNT,draw,spawn,clearAll,setupStatues,H,placeUnit,play,EXTRA_EV,FINS,FIN,IDLES,TYPES,CLIPS,startAttack,startFinisher,spells:()=>({orbs,walls,clouds,zaps,beams,flashes,souls,wisps}),FACTIONS,setFactions,facOf,econ,ensureCastles,
   renderer,sceneRef:scene,sunScreen,applyQuality,GFX_PRESETS,GFX_DEF,post,GFX:()=>GFX,CASTLES,recruit,buyUnit,startResearch,resLvl,hasRes,openPanel,closePanel,pickBuilding,setHover,queued,ICONS,makeUnitIcons,VOX,narrate,loadAssets,BUILDINGS,
   NET,applyCmd,buyFor,netSnapshot,netApplyTick,netBeforeStep,netAfterStep,hitStatue,netTest:()=>NETT,uiMode,setUiMode,uiSuggest,layoutTop,selectReg,
-  setTerrain,startSkirmish,RL,MAP,BASE_X,setFactions,rlCaptureTarget,regAlive,regCenter,issue};
+  setTerrain,startSkirmish,CW3,CW,CW_REGIONS,openCampaign,closeCampaign,getCamp:()=>camp,campCanAttack,renderCampaign,campSelect,RL,MAP,BASE_X,setFactions,rlCaptureTarget,regAlive,regCenter,issue};
 // start: apply saved settings, then open on the title screen with a battle playing behind it
 game.finMode=settings.finMode; game.auto[0]=settings.auto; game.size=settings.size; tune.blood=settings.blood;
 applyUiMode(); syncBattleButtons(); syncSettingsUI(); syncMinimap(); applyQuality();

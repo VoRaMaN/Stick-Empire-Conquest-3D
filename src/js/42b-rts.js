@@ -81,7 +81,7 @@ function rtsToolsSync(){ for(const id of ['#oBox','#rgBox']){ const b=$(id); if(
 for(const id of ['#oBox','#rgBox']){ const b=$(id); if(b) b.onclick=()=>{ sfx('ui'); RTS.boxMode=!RTS.boxMode; rtsToolsSync(); if(RTS.boxMode) toast('Drag across your soldiers to select them'); }; }
 for(const id of ['#oAll','#rgAll']){ const b=$(id); if(b) b.onclick=()=>selectAllMine(); }
 window.addEventListener('keydown',e=>{
-  if(game.mode!=='battle'||game.paused||(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT'))) return;
+  if(CW3.on||game.mode!=='battle'||game.paused||(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT'))) return;
   const k=(e.key||'').toLowerCase(), code=e.code||'', dig=/^Digit[1-9]$/.test(code)?code.slice(5):(/^[1-9]$/.test(e.key)?e.key:null);
   if(k==='escape'&&selRegs.length){ setSelection([]); return; }
   if((e.ctrlKey||e.metaKey)&&k==='a'){ e.preventDefault(); selectAllMine(); return; }

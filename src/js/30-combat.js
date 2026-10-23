@@ -88,7 +88,7 @@ function startAttack(u,t,forced){
     u.fwdScale=fwd>0?clamp((d-(T.reach+(tUnit.s-1)*.35))/fwd,0,2.4):1;
     planDefense(tUnit,u,c); if(RL.on&&T.ranged&&!(T.meleeSet&&T.meleeSet.has(name))) rlProjDefense(tUnit,u,c); }
   if(c.aim&&t){ const d=Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z); u.aimPitch=clamp(d*.018,0,.3);
-    if(d>18){ const Tf=arrowT(d), up=.5*14*Tf/(d/Tf); u.aimPitch=clamp(up*.9,.3,1.05); } }   // a far shot: the bow points up into the sky
+    if(RL.on&&d>18){ const Tf=arrowT(d), up=.5*14*Tf/(d/Tf); u.aimPitch=clamp(up*.9,.3,1.05); } }   // a far shot: the bow points up into the sky
   u.cdT=T.cd*rand(.85,1.15)*(c.dur>1.2?1.12:1);
   if(T.swarm&&tUnit&&u.action) packFrenzy(u,tUnit);
 }
@@ -196,7 +196,7 @@ function handleEvent0(u,e){
       if(T.bolt){ fireBolts(u,e); break; }
       const t=u.atkTarget; if(!t) break;
       let aim;
-      if(t.isUnit){ if(!t.alive) break; const dd=u.pos.distanceTo(t.pos); aim=t.j.chest.clone().addScaledVector(t.av,dd>18?arrowT(dd,e):clamp(dd/24,.16,1));   /* lead the target by the arrow's time in the air */ if(RL.on&&dd>15){ aim.x+=rand(-1,1)*dd*.012; aim.z+=rand(-1,1)*dd*.012; } }
+      if(t.isUnit){ if(!t.alive) break; const dd=u.pos.distanceTo(t.pos); aim=t.j.chest.clone().addScaledVector(t.av,RL.on&&dd>18?arrowT(dd,e):clamp(dd/24,.16,1));   /* lead the target by the arrow's time in the air */ if(RL.on&&dd>15){ aim.x+=rand(-1,1)*dd*.012; aim.z+=rand(-1,1)*dd*.012; } }
       else aim=new V3(t.pos.x,t.pos.y+3.5,t.pos.z);
       const n=e.n||1, fireA=u.type==='archer'&&!game.classicMix&&hasRes(u.team,'fireArrows');
       for(let i=0;i<n;i++){ const off=(i-(n-1)/2)*(e.spread||0), dx=aim.x-u.pos.x, dz=aim.z-u.pos.z, c=Math.cos(off), sn=Math.sin(off);

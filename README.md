@@ -146,6 +146,43 @@ times the classic map's 168 × 64 m. The castles move out to the edges of the va
 
 Online matches are played on the classic field for now.
 
+## Campaign: the war table
+
+The campaign map is a miniature 3D continent on a walnut war table in a dark, candle-lit chamber. Five candles stand at
+the table's edge, each with its own flickering light, and one warm key light casts the shadows.
+
+**The world:**
+- 49 regions in three empires: the Order Empire (green west), the Chaos Dominion (burning east) and the Wildlands
+  Confederacy (deep forests and swamps in the south). The free holds of the snowy north and the central badlands
+  belong to none of them.
+- 18 biomes: grassland, farmland, forest, hills, mountains, snowfields, snowy forest, lakes, river valleys, desert,
+  rocky badlands, swamp, volcanic land, ash plains, corrupted forest, dark rock, wild forest and highlands.
+- Three rivers, four lakes (one frozen), a northern range, the western ridge with Bronze Pass, smoking volcanoes,
+  roads between neighbouring regions, and several thousand trees.
+- Every region has a village, fort, castle, watchtower, war camp, dark fortress or timber hold, with a banner in its
+  owner's colour. The three capitals are larger.
+
+**How it is built:**
+- Everything is deterministic. The terrain, region shapes, trees and settlement positions are the same on every
+  load, and they never use the battle's random numbers.
+- Regions are data (`32z-campaign-data.js`). Shapes, heights and neighbours are generated from that data
+  (`33a-cwgen.js`), and the table is built once (`33b-cwmap.js`).
+- Selecting a region or capturing one only updates a small colour texture, the labels and the banners.
+
+**Playing it:**
+- Drag to pan, right-drag or Q/E to turn, mouse wheel or pinch to zoom, WASD to scroll.
+- Click a region's ground, its castle or its name label to select it; double-click to fly there.
+- The card shows the region's owner, territory, biome, settlement, strategic role, garrison, tribute and
+  neighbours.
+- Regions you can attack (next to land you hold) pulse; a region under threat has a flashing red border.
+- **March** fights the real campaign battle. River crossings are fought on Riverlands; other regions use the ground
+  of their biome.
+- Winning hands the region over and the table reopens in your colours. After each battle the rival empire and the
+  Wildlands may swallow a free hold or strike at your border.
+- You win by taking the rival empire's capital.
+- The flat map is still there as a fallback where WebGL isn't available. Old saves carry on: the eight original
+  territories keep their ids and the new regions are added.
+
 ## Castles and research
 
 Behind each statue stands a castle: a crenellated curtain wall with a gatehouse and iron portcullis, corner

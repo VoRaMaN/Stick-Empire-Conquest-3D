@@ -55,7 +55,7 @@ function hitShield(a,t,prev){
 // ~18 m the archer looses it high, like a real volley, so it climbs and drops onto the target (75 m: about 3.4 s
 // in the air and 20 m up at the top of the arc). Lobbed shots go at least that high; power shots stay flatter.
 function arrowT(dist,opt){ opt=opt||{};
-  const far=dist>18?Math.min(3.8,.75+(dist-18)*.047):0;
+  const far=RL.on&&dist>18?Math.min(3.8,.75+(dist-18)*.047):0;   // Riverlands' long bows; the classic field keeps its flat shots exactly
   if(opt.lob) return Math.max(clamp(dist/11,.5,1.7),far);
   if(opt.power) return far?Math.max(clamp(dist/40,.1,.6),far*.6):clamp(dist/40,.1,.6);
   return far||clamp(dist/24,.16,1.05); }

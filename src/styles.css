@@ -540,3 +540,24 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .on-live .st{width:7px;height:7px;border-radius:50%;background:#4fd16b}
 .on-live .st.lobby{background:#e4b23a}.on-live .st.battle{background:#e2554f}
 .on-map button{font-size:20px}
+
+/* campaign war table (3D): the map is the battlefield canvas; the campaign card floats over it */
+.cw-on #hudBattle,.cw-on .dock,.cw-on #minimap,.cw-on #follow,.cw-on #callouts,.cw-on .top,.cw-on #banner{display:none!important}
+.camp-help{display:none;margin:0;font-size:12px;color:var(--muted)}
+.camp.c3d{z-index:8;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;pointer-events:none;align-items:flex-start;justify-content:flex-end;padding:12px}
+.camp.c3d .campbox{pointer-events:auto;max-width:360px;max-height:calc(100% - 24px);background:rgba(24,17,11,.9);box-shadow:0 10px 40px rgba(0,0,0,.55)}
+.camp.c3d #cMap{display:none}
+.camp.c3d .camp-help{display:block}
+.camp-msg small{color:var(--muted)}
+.cnbs{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.cnb{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid;background:rgba(255,255,255,.04)}
+.ui-mobile .camp.c3d{align-items:flex-end;justify-content:center;padding:8px}
+.ui-mobile .camp.c3d .campbox{max-width:none;max-height:46vh}
+.cw-labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cwl{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;white-space:nowrap;font-family:var(--display);font-size:17px;letter-spacing:.05em;color:#f5ecd9;
+  text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.8);padding:1px 6px 2px;border-bottom:2px solid #9a8c76;background:rgba(14,10,6,.38);border-radius:4px 4px 0 0;transform-origin:50% 100%}
+.cwl i{font-style:normal;margin-left:4px;color:#ffd36b}
+.cwl.cap{font-size:21px} .cwl.mine{color:#ffe7a6} .cwl.can{background:rgba(70,40,10,.55)}
+.cwl.sel{background:rgba(255,211,107,.9);color:#1c140c;text-shadow:none}
+.cw-tip{position:fixed;left:0;top:0;z-index:6;pointer-events:none;background:rgba(14,10,6,.9);border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-size:12px;display:flex;flex-direction:column;gap:1px}
+.cw-tip em{color:#ffd36b;font-style:normal}

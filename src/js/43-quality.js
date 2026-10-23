@@ -51,7 +51,7 @@ $('#setTune').onclick=()=>{ sfx('ui'); openSheet('tune','settings'); };
 function setPills(box,attr,val){ if(!box||!box.querySelectorAll) return; box.querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset[attr]===String(val)))); }
 function syncSettingsUI(){
   setPills($('#qPills'),'q',settings.quality); setPills($('#dragPills'),'drag',settings.drag); setPills($('#uiPills'),'ui',uiMode()); setPills($('#finPills'),'fin',game.finMode);
-  $('#sFps').checked=settings.fps; if($('#sVoice')) $('#sVoice').checked=settings.voice!==false; $('#sBlood').checked=tune.blood; $('#sMini').checked=settings.minimap; if($('#sRts')) $('#sRts').checked=settings.rts!==false; document.body.classList.toggle('no-rts',settings.rts===false); $('#sAuto').checked=game.auto[0];
+  $('#sFps').checked=settings.fps; if($('#sVoice')) $('#sVoice').checked=settings.voice!==false; $('#sBlood').checked=tune.blood; $('#sMini').checked=settings.minimap; if($('#sRts')) $('#sRts').checked=settings.rts!==false; setBodyClass('no-rts',settings.rts===false); $('#sAuto').checked=game.auto[0];
   for(const [id,k] of [['Master','master'],['Music','music'],['Sfx','sfx']]){ $('#s'+id).value=settings[k]; $('#o'+id).textContent=Math.round(settings[k]*100)+'%'; }
   if($('#sShake')){ const k=settings.shake===undefined?1:settings.shake; $('#sShake').value=k; $('#oShake').textContent=Math.round(k*100)+'%'; }
   if($('#sView')&&typeof viewK==='function'){ $('#sView').value=viewK(); $('#oView').textContent=Math.round(FOG0.far*viewK())+' m'; $('#sShadowD').value=shadowM(); $('#oShadowD').textContent=Math.round(shadowM())+' m'; }

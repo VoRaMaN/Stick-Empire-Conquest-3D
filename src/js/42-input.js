@@ -10,6 +10,7 @@ function clampGoal(){ cam.goal.x=clamp(cam.goal.x,-MAP.cx,MAP.cx); cam.goal.z=cl
 const orbitDrag=p=>{ const o=game.mode==='duel'||game.mode==='viewer'||settings.drag==='orbit'; return p.alt?!o:o; };
 function twoFinger(){ const [a,b]=[...ptrs.values()]; return {d:Math.hypot(a.x-b.x,a.y-b.y),mx:(a.x+b.x)/2,my:(a.y+b.y)/2,ang:Math.atan2(b.y-a.y,b.x-a.x)}; }
 canvas.addEventListener('pointerdown',e=>{
+  if(CW3.on) return;   // the campaign war table has its own controls (33b)
   canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId);
   // RTS (42b): with a mouse the left button drags a selection box and the middle one pans; on a phone, Box does the same for one drag
   const mouse=e.pointerType==='mouse', rts=rtsOn()&&game.mode==='battle'&&!game.paused, bx=rts&&((mouse&&e.button===0&&uiMode()==='pc')||(!mouse&&RTS.boxMode&&!ptrs.size));
@@ -17,6 +18,7 @@ canvas.addEventListener('pointerdown',e=>{
   if(ptrs.size===2) pinch=twoFinger();
 });
 canvas.addEventListener('pointermove',e=>{
+  if(CW3.on) return;
   const p=ptrs.get(e.pointerId); if(!p) return;
   const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY;
   if(ptrs.size===1){ if(p.box){ if(Math.hypot(p.x-p.sx,p.y-p.sy)>6){ p.boxing=true; rtsBoxDraw(p); } } else if(p.panB) pan(dx,dy); else if(orbitDrag(p)) orbit(dx,dy); else pan(dx,dy); }
@@ -33,6 +35,7 @@ function zoomAt(x,y){ const gp=groundPoint(x,y);
   if(gp){ if(cam.follow){ cam.follow=null; updateFollowUI(); } cam.goal.set(gp.x,0,gp.z); clampGoal(); cam.dGoal=Math.max(7,cam.dGoal*.55); }
   else cam.dGoal=Math.min(60,cam.dGoal*1.7); }
 function endPtr(e){
+  if(CW3.on){ ptrs.clear(); pinch=null; return; }
   const p=ptrs.get(e.pointerId); if(!p) return;
   const now=performance.now(), tap=ptrs.size===1&&Math.hypot(e.clientX-p.sx,e.clientY-p.sy)<9&&now-p.t<(p.mouse?800:350);
   ptrs.delete(e.pointerId); if(ptrs.size<2) pinch=null; else pinch=twoFinger();
@@ -45,13 +48,13 @@ function endPtr(e){
   pick(e.clientX,e.clientY);
 }
 canvas.addEventListener('pointerup',endPtr); canvas.addEventListener('pointercancel',endPtr);
-canvas.addEventListener('wheel',e=>{ e.preventDefault(); cam.dGoal=clamp(cam.dGoal*Math.exp(e.deltaY*.0012),3.5,MAP.zmax||70); },{passive:false});
+canvas.addEventListener('wheel',e=>{ if(CW3.on) return; e.preventDefault(); cam.dGoal=clamp(cam.dGoal*Math.exp(e.deltaY*.0012),3.5,MAP.zmax||70); },{passive:false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('gesturestart',e=>e.preventDefault()); document.addEventListener('gesturechange',e=>e.preventDefault());
 document.addEventListener('touchmove',e=>{ if(e.target===canvas) e.preventDefault(); },{passive:false});
 document.addEventListener('dblclick',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{ const k=e.key.toLowerCase(), s=cam.dist*.03;
-  if(e.target&&(e.target.tagName==='INPUT')) return;
+  if(CW3.on||e.target&&(e.target.tagName==='INPUT')) return;
   if(k==='w'||k==='arrowup') pan(0,-60*s); if(k==='s'||k==='arrowdown') pan(0,60*s); if(k==='a'||k==='arrowleft') pan(60*s,0); if(k==='d'||k==='arrowright') pan(-60*s,0);
   if(k==='q') orbit(-24,0); if(k==='e') orbit(24,0); if(k==='r') orbit(0,-16); if(k==='f') orbit(0,16);
   if(k==='+'||k==='=') cam.dGoal=clamp(cam.dGoal*.85,3.5,MAP.zmax||70); if(k==='-') cam.dGoal=clamp(cam.dGoal*1.18,3.5,MAP.zmax||70); });
