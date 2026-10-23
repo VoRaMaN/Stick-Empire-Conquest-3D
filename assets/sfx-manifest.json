@@ -1,0 +1,634 @@
+{
+ "version": 1,
+ "provider": "elevenlabs",
+ "endpoint": "https://api.elevenlabs.io/v1/sound-generation",
+ "prompt_influence": 0.45,
+ "note": "Every sound the game plays. tools/sfx-generate.mjs generates the missing recordings into assets/sfx/<id>_<n>.mp3 with ELEVENLABS_API_KEY from the environment (never committed); the build embeds them and they replace the synthesized or aliased sound. Never called at play time.",
+ "sounds": {
+  "apocalypse": {
+   "cat": "magic",
+   "prompt": "Pillars of hellfire crashing down from the sky, apocalyptic rumble",
+   "dur": 3.0,
+   "n": 2,
+   "alias": {
+    "to": "thunder",
+    "rate": 0.8
+   }
+  },
+  "armoryEquip": {
+   "cat": "ui",
+   "prompt": "Armour piece being fitted, leather straps and metal clink",
+   "dur": 0.6,
+   "n": 2,
+   "alias": {
+    "to": "clang",
+    "rate": 1.2,
+    "vol": 0.6
+   }
+  },
+  "armoryForge": {
+   "cat": "world",
+   "prompt": "A blacksmith hammer striking an anvil in a forge",
+   "dur": 0.7,
+   "n": 2,
+   "alias": {
+    "to": "clang",
+    "rate": 0.8
+   }
+  },
+  "arrowGround": {
+   "cat": "combat",
+   "prompt": "An arrow thudding into packed earth, short, dry",
+   "dur": 0.6,
+   "n": 2
+  },
+  "arrowHit": {
+   "cat": "combat",
+   "prompt": "An arrow striking flesh and leather armour, short impact",
+   "dur": 0.5,
+   "n": 2
+  },
+  "arrowShield": {
+   "cat": "combat",
+   "prompt": "An arrow cracking into a wooden shield, sharp knock",
+   "dur": 0.5,
+   "n": 2
+  },
+  "blast": {
+   "cat": "magic",
+   "prompt": "A magical explosion, deep boom with crackle, battlefield",
+   "dur": 1.2,
+   "n": 2
+  },
+  "blunt": {
+   "cat": "combat",
+   "prompt": "A heavy blunt weapon hitting a body, thud",
+   "dur": 0.5,
+   "n": 2
+  },
+  "boneRattle": {
+   "cat": "creature",
+   "prompt": "A skeleton rattling its bones",
+   "dur": 0.6,
+   "n": 2,
+   "alias": {
+    "to": "clang",
+    "rate": 1.5,
+    "vol": 0.4
+   }
+  },
+  "boneSoul": {
+   "cat": "magic",
+   "prompt": "Soul fire flaring inside a skeleton, crackling hiss",
+   "dur": 0.8,
+   "n": 2,
+   "alias": {
+    "to": "crHiss",
+    "rate": 1.2
+   }
+  },
+  "boom": {
+   "cat": "magic",
+   "prompt": "An explosion",
+   "dur": 1.0,
+   "n": 2,
+   "alias": {
+    "to": "blast"
+   }
+  },
+  "bow": {
+   "cat": "combat",
+   "prompt": "A longbow string released, twang and whoosh",
+   "dur": 0.6,
+   "n": 2
+  },
+  "buy": {
+   "cat": "ui",
+   "prompt": "A coin purse jingle, purchase confirmation",
+   "dur": 0.5,
+   "n": 2
+  },
+  "cast": {
+   "cat": "magic",
+   "prompt": "A spell being cast, rising shimmer and whoosh",
+   "dur": 0.9,
+   "n": 2
+  },
+  "cerberusRage": {
+   "cat": "creature",
+   "prompt": "Three hellhounds snarling and howling at once",
+   "dur": 1.6,
+   "n": 2,
+   "alias": {
+    "to": "crScreech",
+    "rate": 0.8
+   }
+  },
+  "clang": {
+   "cat": "combat",
+   "prompt": "Two steel swords clashing, bright metallic clang",
+   "dur": 0.6,
+   "n": 2
+  },
+  "cloak": {
+   "cat": "magic",
+   "prompt": "A ninja vanishing in a puff of smoke, soft whoosh",
+   "dur": 0.7,
+   "n": 2
+  },
+  "coin": {
+   "cat": "ui",
+   "prompt": "A single gold coin dropped into a pile",
+   "dur": 0.4,
+   "n": 2
+  },
+  "crBite": {
+   "cat": "creature",
+   "prompt": "A monster bite, jaws snapping",
+   "dur": 0.5,
+   "n": 2
+  },
+  "crClaw": {
+   "cat": "creature",
+   "prompt": "Claws raking armour",
+   "dur": 0.5,
+   "n": 2
+  },
+  "crDie": {
+   "cat": "creature",
+   "prompt": "A demonic beast dying, gurgling roar",
+   "dur": 1.2,
+   "n": 2
+  },
+  "crHiss": {
+   "cat": "creature",
+   "prompt": "A demonic creature hiss",
+   "dur": 0.8,
+   "n": 2
+  },
+  "crScreech": {
+   "cat": "creature",
+   "prompt": "A demon screech",
+   "dur": 1.0,
+   "n": 2
+  },
+  "crTail": {
+   "cat": "creature",
+   "prompt": "A tail whip crack",
+   "dur": 0.4,
+   "n": 2
+  },
+  "crossbow": {
+   "cat": "combat",
+   "prompt": "A crossbow firing, mechanical clack and bolt whoosh",
+   "dur": 0.6,
+   "n": 2
+  },
+  "crumble": {
+   "cat": "world",
+   "prompt": "Stone wall crumbling, rubble falling",
+   "dur": 1.5,
+   "n": 2
+  },
+  "cure": {
+   "cat": "magic",
+   "prompt": "A gentle holy healing chime",
+   "dur": 0.8,
+   "n": 2
+  },
+  "death": {
+   "cat": "combat",
+   "prompt": "A soldier's short pained death cry",
+   "dur": 0.8,
+   "n": 2
+  },
+  "defeat": {
+   "cat": "ui",
+   "prompt": "A sombre low horn, defeat sting",
+   "dur": 2.5,
+   "n": 2
+  },
+  "deny": {
+   "cat": "ui",
+   "prompt": "A soft wooden error knock for a game interface",
+   "dur": 0.3,
+   "n": 2
+  },
+  "door": {
+   "cat": "world",
+   "prompt": "A heavy wooden castle door opening",
+   "dur": 1.5,
+   "n": 2
+  },
+  "drum": {
+   "cat": "ui",
+   "prompt": "A single war drum hit",
+   "dur": 0.6,
+   "n": 2
+  },
+  "elfWhisper": {
+   "cat": "magic",
+   "prompt": "A soft elven wind chime and leaves rustling",
+   "dur": 0.9,
+   "n": 2,
+   "alias": {
+    "to": "cure",
+    "rate": 0.9
+   }
+  },
+  "finisher": {
+   "cat": "combat",
+   "prompt": "A brutal finishing blow, heavy impact with a crunch",
+   "dur": 0.8,
+   "n": 2
+  },
+  "flap": {
+   "cat": "creature",
+   "prompt": "Large leathery wings flapping once",
+   "dur": 0.6,
+   "n": 2
+  },
+  "flash": {
+   "cat": "magic",
+   "prompt": "A blinding holy flash, bright shimmer burst",
+   "dur": 0.8,
+   "n": 2
+  },
+  "gate": {
+   "cat": "world",
+   "prompt": "A castle portcullis raising, chains and wood",
+   "dur": 2.5,
+   "n": 2
+  },
+  "giantStep": {
+   "cat": "creature",
+   "prompt": "A giant footstep shaking the ground, deep thud",
+   "dur": 0.7,
+   "n": 2
+  },
+  "hatch": {
+   "cat": "world",
+   "prompt": "A wooden roof hatch flipping open",
+   "dur": 0.8,
+   "n": 2
+  },
+  "heal": {
+   "cat": "magic",
+   "prompt": "A warm healing magic glow sound",
+   "dur": 0.9,
+   "n": 2
+  },
+  "heavy": {
+   "cat": "combat",
+   "prompt": "A heavy two-handed weapon impact on armour",
+   "dur": 0.6,
+   "n": 2
+  },
+  "hellPillar": {
+   "cat": "magic",
+   "prompt": "A single pillar of fire slamming into the ground",
+   "dur": 1.0,
+   "n": 2,
+   "alias": {
+    "to": "ignite"
+   }
+  },
+  "horn": {
+   "cat": "ui",
+   "prompt": "A war horn blast, medieval army",
+   "dur": 2.0,
+   "n": 2
+  },
+  "ignite": {
+   "cat": "magic",
+   "prompt": "Fire igniting with a whoosh",
+   "dur": 0.8,
+   "n": 2
+  },
+  "infernalStrike": {
+   "cat": "magic",
+   "prompt": "A fiery explosion as a demon lord slams his weapon down",
+   "dur": 1.2,
+   "n": 2,
+   "alias": {
+    "to": "blast"
+   }
+  },
+  "lanceCharge": {
+   "cat": "combat",
+   "prompt": "A war horn and thundering charge of a mounted knight",
+   "dur": 1.5,
+   "n": 2,
+   "alias": {
+    "to": "hornEnemy"
+   }
+  },
+  "lanceRaise": {
+   "cat": "combat",
+   "prompt": "A knight raising a steel lance, metal ring",
+   "dur": 0.6,
+   "n": 2,
+   "alias": {
+    "to": "swing",
+    "rate": 0.8
+   }
+  },
+  "land": {
+   "cat": "creature",
+   "prompt": "A heavy creature landing on dirt",
+   "dur": 0.5,
+   "n": 2
+  },
+  "mine": {
+   "cat": "world",
+   "prompt": "A pickaxe striking rock",
+   "dur": 0.4,
+   "n": 2
+  },
+  "ninjaSwish": {
+   "cat": "combat",
+   "prompt": "A katana flashing through the air, very fast swish",
+   "dur": 0.3,
+   "n": 2,
+   "alias": {
+    "to": "swing",
+    "rate": 1.3
+   }
+  },
+  "orbWhoosh": {
+   "cat": "magic",
+   "prompt": "A glowing magic orb flying past, whoosh",
+   "dur": 0.7,
+   "n": 2
+  },
+  "order": {
+   "cat": "ui",
+   "prompt": "A short confirmation drum tap for a strategy game command",
+   "dur": 0.3,
+   "n": 2
+  },
+  "parry": {
+   "cat": "combat",
+   "prompt": "A sword parry, sharp ring of steel",
+   "dur": 0.5,
+   "n": 2
+  },
+  "pitRise": {
+   "cat": "world",
+   "prompt": "A demon climbing out of a lava pit, rumble and sizzle",
+   "dur": 1.5,
+   "n": 2
+  },
+  "poison": {
+   "cat": "magic",
+   "prompt": "A bubbling poison hiss",
+   "dur": 0.8,
+   "n": 2
+  },
+  "punch": {
+   "cat": "combat",
+   "prompt": "A punch landing on a body",
+   "dur": 0.3,
+   "n": 2
+  },
+  "rage": {
+   "cat": "combat",
+   "prompt": "An enraged soldier's battle shout",
+   "dur": 0.8,
+   "n": 2
+  },
+  "reload": {
+   "cat": "combat",
+   "prompt": "A crossbow being cranked and loaded",
+   "dur": 0.8,
+   "n": 2
+  },
+  "research": {
+   "cat": "ui",
+   "prompt": "A magical discovery chime",
+   "dur": 1.2,
+   "n": 2
+  },
+  "roar": {
+   "cat": "creature",
+   "prompt": "A large beast roaring",
+   "dur": 1.5,
+   "n": 2
+  },
+  "royalShield": {
+   "cat": "magic",
+   "prompt": "A royal golden shield of light shimmering into place",
+   "dur": 1.0,
+   "n": 2,
+   "alias": {
+    "to": "shield",
+    "rate": 0.8
+   }
+  },
+  "shadowStep": {
+   "cat": "magic",
+   "prompt": "A dark teleport, shadowy whoosh and pop",
+   "dur": 0.7,
+   "n": 2,
+   "alias": {
+    "to": "cloak",
+    "rate": 0.8
+   }
+  },
+  "shield": {
+   "cat": "combat",
+   "prompt": "A sword hitting a metal shield, dull clang",
+   "dur": 0.5,
+   "n": 2
+  },
+  "shieldWall": {
+   "cat": "combat",
+   "prompt": "Shields locking together in a wall, wood and bronze",
+   "dur": 0.8,
+   "n": 2
+  },
+  "shurikenThrow": {
+   "cat": "combat",
+   "prompt": "Shuriken thrown, metallic whirring",
+   "dur": 0.5,
+   "n": 2,
+   "alias": {
+    "to": "swing",
+    "rate": 1.6
+   }
+  },
+  "slash": {
+   "cat": "combat",
+   "prompt": "A blade slicing through cloth and flesh",
+   "dur": 0.4,
+   "n": 2
+  },
+  "smite": {
+   "cat": "magic",
+   "prompt": "Holy lightning smiting the ground",
+   "dur": 1.0,
+   "n": 2
+  },
+  "smokeBomb": {
+   "cat": "magic",
+   "prompt": "A ninja smoke bomb bursting, soft pop and hiss",
+   "dur": 0.8,
+   "n": 2,
+   "alias": {
+    "to": "cloak"
+   }
+  },
+  "soul": {
+   "cat": "magic",
+   "prompt": "A soul whoosh",
+   "dur": 0.8,
+   "n": 2,
+   "alias": {
+    "to": "cast",
+    "rate": 0.7
+   }
+  },
+  "soulDrain": {
+   "cat": "magic",
+   "prompt": "Ghostly souls being sucked away, eerie wailing whoosh",
+   "dur": 1.5,
+   "n": 2,
+   "alias": {
+    "to": "cast",
+    "rate": 0.7
+   }
+  },
+  "stab": {
+   "cat": "combat",
+   "prompt": "A spear stab into armour",
+   "dur": 0.4,
+   "n": 2
+  },
+  "stone": {
+   "cat": "world",
+   "prompt": "Stone blocks grinding",
+   "dur": 0.8,
+   "n": 2
+  },
+  "swing": {
+   "cat": "combat",
+   "prompt": "A sword swung through the air, whoosh",
+   "dur": 0.4,
+   "n": 2
+  },
+  "swingHeavy": {
+   "cat": "combat",
+   "prompt": "A huge weapon swung through the air, heavy whoosh",
+   "dur": 0.6,
+   "n": 2
+  },
+  "swish": {
+   "cat": "combat",
+   "prompt": "A blade whoosh",
+   "dur": 0.3,
+   "n": 2,
+   "alias": {
+    "to": "swing",
+    "rate": 1.3
+   }
+  },
+  "swordDraw": {
+   "cat": "combat",
+   "prompt": "A sword drawn from its sheath",
+   "dur": 0.6,
+   "n": 2,
+   "alias": {
+    "to": "swing"
+   }
+  },
+  "thunder": {
+   "cat": "magic",
+   "prompt": "A thunderclap from a lightning spell",
+   "dur": 1.8,
+   "n": 2
+  },
+  "ui": {
+   "cat": "ui",
+   "prompt": "A soft click for a game menu button",
+   "dur": 0.2,
+   "n": 2
+  },
+  "victory": {
+   "cat": "ui",
+   "prompt": "A triumphant brass fanfare sting",
+   "dur": 3.0,
+   "n": 2
+  },
+  "warcry": {
+   "cat": "combat",
+   "prompt": "An army war cry, many voices",
+   "dur": 2.0,
+   "n": 2
+  },
+  "wyvernBreath": {
+   "cat": "magic",
+   "prompt": "A dragon breathing a stream of fire, roaring flames",
+   "dur": 2.0,
+   "n": 2,
+   "alias": {
+    "to": "ignite",
+    "rate": 0.8
+   }
+  },
+  "wyvernFlap": {
+   "cat": "creature",
+   "prompt": "A wyvern beating its huge leathery wings once, powerful downstroke",
+   "dur": 0.7,
+   "n": 2,
+   "alias": {
+    "to": "flap",
+    "rate": 0.55
+   }
+  },
+  "wyvernLand": {
+   "cat": "creature",
+   "prompt": "A wyvern landing heavily on the ground, thud and dust",
+   "dur": 0.8,
+   "n": 2,
+   "alias": {
+    "to": "giantStep"
+   }
+  },
+  "wyvernRoar": {
+   "cat": "creature",
+   "prompt": "A huge wyvern roaring, reptilian, deep and rasping",
+   "dur": 1.8,
+   "n": 2,
+   "alias": {
+    "to": "roar",
+    "rate": 0.72
+   }
+  },
+  "wyvernScreech": {
+   "cat": "creature",
+   "prompt": "A wyvern's piercing predator screech that echoes",
+   "dur": 2.0,
+   "n": 2,
+   "alias": {
+    "to": "roar",
+    "rate": 0.6
+   }
+  },
+  "wyvernTakeoff": {
+   "cat": "creature",
+   "prompt": "A wyvern leaping into the air with a burst of wingbeats",
+   "dur": 1.2,
+   "n": 2,
+   "alias": {
+    "to": "flap",
+    "rate": 0.5
+   }
+  },
+  "zap": {
+   "cat": "magic",
+   "prompt": "An electric zap",
+   "dur": 0.5,
+   "n": 2
+  }
+ }
+}
