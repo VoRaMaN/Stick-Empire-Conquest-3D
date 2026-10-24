@@ -446,6 +446,7 @@ function drawSpells(){
 }
 function drawUnit(u){
   if(u.T.crawler){ if(crForce) crPrep(u); if(u.crVis) drawCrawlerFx(u); return; }   // a Hellcrawler is all model (posed in crPrep before the gear is batched)
+  if(u.T.bat&&cgPose(u)){ if(u.hero&&u.alive) drawHeroFx(u); if((u.wallT>game.time||u.rallyT>game.time||u.rootT>game.time||u.bloomT>game.time)&&u.alive) drawBuffFx(u); return; }   // the skinned Devil Bat (27l)
   let col=u.col; const S=u.st;
   if(S&&u.alive){ const tc=u.tc||(u.tc=new THREE.Color());
     if(S.poison){ tc.copy(u.col).lerp(scol('#57c447'),.35+.15*Math.sin(game.time*7+u.id)); col=tc; }

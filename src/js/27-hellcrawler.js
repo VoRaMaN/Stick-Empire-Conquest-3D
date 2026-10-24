@@ -165,8 +165,8 @@ function crPlace(u){
 function computeCrawlPose(u){
   const P=POSES.crawler, sp=clamp(u.spd/u.T.speed,0,1);
   let p=lerpPose(P.idle,P.move,smooth(sp));
-  if(u.chg&&u.chgW>.002&&!u.action){ const C=CHG.crawler[u.chg.i], k=u.chgW, run=C.anim?Object.assign({},C.run,C.anim(game.time+u.id*.37,C.run)):C.run;
-    for(const f of ['lean','crouch','draw','alt','side','look','twist']) if(run[f]!==undefined) p[f]+=(run[f]-p[f])*k; }
+  if(u.chg&&u.chgW>.002&&!u.action){ const C=(CHG[u.type]||CHG.crawler)[u.chg.i]||CHG.crawler[0], k=u.chgW, run=C.anim?Object.assign({},C.run,C.anim(game.time+u.id*.37,C.run)):C.run;
+    for(const f of u.T.cAnim?CA_RUN_CR:['lean','crouch','draw','alt','side','look','twist']) if(run[f]!==undefined) p[f]+=(run[f]-p[f])*k; }
   if(u.routing&&!u.action){ p.lean+=.1; p.look=Math.sin(game.time*3+u.id)*.6; }
   const a=u.action; let w=0, cp=null;
   if(a){ cp=evalClip(a.c,a.t); w=a.c.loop?smooth(clamp(a.age/.12,0,1)):smooth(clamp(a.t/.12,0,1))*smooth(clamp((a.c.dur-a.t)/.26,0,1));
@@ -345,8 +345,10 @@ function crDeadRig(u){
 /* ---------- place every part on its bone ---------- */
 const _cm1=new V3(),_cm2=new V3(),_cm3=new V3(),_cm4=new V3();
 function updateCrawlerModel(u){
-  const G=u.G, cr=u.cr, j=u.j, s=u.s; if(!G||!cr||!G.c_pel) return;
+  const G=u.G, cr=u.cr, j=u.j, s=u.s; if(!G||!cr) return;
   if(!u.alive) crDeadRig(u);
+  if(CG_KIND[u.type]&&cgPose(u)) return;   // the skinned Wyvern from Blender (27l) poses itself from this rig
+  if(!G.c_pel) return;
   orient(G.c_pel,j.pelvis,_cm1.subVectors(cr.M,j.pelvis),cr.n);
   orient(G.c_abd,j.pelvis,_cm1,cr.n);
   orient(G.c_tor,cr.M,_cm1.subVectors(j.chest,cr.M),cr.n);
@@ -462,7 +464,7 @@ let crFrustumF=-1, crForce=false;
 function crInView(u){
   if(crForce) return true;
   if(crFrustumF!==draw.frame){ crFrustumF=draw.frame; camera.updateMatrixWorld(); _cpm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse); crFrustum.setFromProjectionMatrix(_cpm); }
-  _csph.center.copy(u.alive?u.pos:u.j.pelvis); _csph.radius=(u.T.wyvern?4.6:2.6)*u.s; return crFrustum.intersectsSphere(_csph);
+  _csph.center.copy(u.alive?u.pos:u.j.pelvis); _csph.radius=(u.T.wyvern?4.6:u.T.bat?3.4:2.6)*u.s; return crFrustum.intersectsSphere(_csph);
 }
 function crPrep(u){
   if(!u.cr||!u.G) return; const vis=crInView(u);

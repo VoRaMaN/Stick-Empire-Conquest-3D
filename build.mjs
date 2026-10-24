@@ -27,8 +27,9 @@ const parts = partFiles.map(f => read('js/' + f)).join('');
 const ASSETS = path.join(ROOT, 'assets');
 // the sound manifest (assets/sfx-manifest.json): the game takes each sound's category, mix and stand-in
 const SFX_MAN = (()=>{ try{ const M=JSON.parse(fs.readFileSync(path.join(ROOT,'assets/sfx-manifest.json'),'utf8')), o={}; for(const k in M.sounds){ const s=M.sounds[k]; o[k]={c:s.cat}; if(s.alias) o[k].a=s.alias; if(s.vol) o[k].v=s.vol; } return JSON.stringify(o); }catch(e){ return '{}'; } })();
-const assetData = { sfx: {}, vox: {}, tex: {} };
-for (const [kind, ext] of [['sfx', '.mp3'], ['vox', '.mp3'], ['tex', '.jpg']]) {
+// glb: the Wyvern's and the Devil Bat's skinned models from Blender (27l-creature-glb.js poses them)
+const assetData = { sfx: {}, vox: {}, tex: {}, glb: {} };
+for (const [kind, ext] of [['sfx', '.mp3'], ['vox', '.mp3'], ['tex', '.jpg'], ['glb', '.glb']]) {
   const dir = path.join(ASSETS, kind); if (!fs.existsSync(dir)) continue;
   for (const f of fs.readdirSync(dir).filter(f => f.endsWith(ext)).sort()) {
     const b64 = fs.readFileSync(path.join(dir, f)).toString('base64'), base = f.slice(0, -ext.length);
@@ -41,7 +42,8 @@ const assetName = `assets.${hash(assetJson)}.json`;
 // three.js r128 post-processing (EffectComposer, bloom, FXAA, SMAA) from node_modules, minified and run before the
 // game parts: each file is a self-contained IIFE that attaches its classes to THREE.
 const FX_FILES = ['postprocessing/EffectComposer.js', 'shaders/CopyShader.js', 'postprocessing/ShaderPass.js', 'postprocessing/RenderPass.js',
-  'shaders/LuminosityHighPassShader.js', 'postprocessing/UnrealBloomPass.js', 'shaders/FXAAShader.js', 'shaders/SMAAShader.js', 'postprocessing/SMAAPass.js'];
+  'shaders/LuminosityHighPassShader.js', 'postprocessing/UnrealBloomPass.js', 'shaders/FXAAShader.js', 'shaders/SMAAShader.js', 'postprocessing/SMAAPass.js',
+  'loaders/GLTFLoader.js'];   // r128's GLTFLoader for the creature models (THREE.GLTFLoader)
 const fxSrc = FX_FILES.map(f => fs.readFileSync(path.join(ROOT, 'node_modules/three/examples/js', f), 'utf8')).join(';\n');
 const fxJs = (await transform(fxSrc, { minify: true, target: 'es2017', legalComments: 'none' })).code;
 const gameJs = (target, assets) => "(function(){\n'use strict';\n" +

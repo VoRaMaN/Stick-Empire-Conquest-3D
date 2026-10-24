@@ -654,3 +654,28 @@ Hover over a soldier (PC) for his health, armour, morale, status and what he is 
 ### Accessibility
 
 Settings → Interface: **Interface size** (80–150 %), **Larger text**, **Colour-blind colours** (blue against orange on the map, the health bars, the zones and the battle report) and **Calm mode** (no screen shake, flashes or freeze-frames).
+
+## Skinned creatures: the Wyvern and the Devil Bat (v0.35)
+
+The Wyvern Knight's mount and the Devil Bat are drawn from rigged Blender models (`assets/glb/wyvern.glb`,
+`assets/glb/devilbat.glb`, embedded by `build.mjs` and loaded with three.js's GLTFLoader). The game's own rigs still
+drive gameplay; `src/js/27l-creature-glb.js` poses the models' bones from them each frame (hybrid procedural animation):
+
+- body, neck and head: the rig's frames retargeted onto the model's rest pose; the neck reaches toward the game's bite point
+- legs: two-bone IK on the model's bones to planted feet, with hips that sink where the model's legs are shorter, and
+  steps of its own when a planted foot falls out of reach; airborne feet follow the rig's legs, retargeted
+- wings and claws: IK to the rig's wrists/hands (retargeted from shoulder to shoulder), wing fingers turned about the
+  wing's hinge; tail: a damped spring chain; jaw from the clip
+- teleports and long off-screen gaps reset the solvers; no allocations per frame
+
+`src/js/13m-creature-anims.js` registers 100 variations — 10 each of idle, attack, finisher, ability and charge per
+creature, named `creature.category.variant` (`caList`, `caPlay`), 67 new clips and 33 existing ones mapped in. All are
+procedural (keyframed pose clips); the GLB files carry no animation clips. Attacks carry phases (anticipation, wind-up,
+execution, impact, recovery) with the blow inside execution → impact; finishers go through the finisher system; the
+Wyvern's abilities through the regiment ability system; the Devil Bat's ability clips are visual only. Idles are
+weighted, on cooldowns, never repeated, with a rare signature idle. Priorities: idle < flight/reaction < charge/attack <
+ability < finisher. The Lab's "Next ability" button cycles the abilities. F9 in development mode shows the models' bones
+and IK targets.
+
+Tests: `npm run test:creatures` (Node: models, 100 variations, IK metrics, state rules, battle, cost) and
+`npm run test:creatures:browser` (Playwright).

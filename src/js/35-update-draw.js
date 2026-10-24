@@ -3,14 +3,14 @@ function updateUnit(u,dt){
   if(!u.desired) u.desired=new V3();
   u.cdT-=dt; if(!NET.guest) moraleTick(u,dt); if(u.st) updateStatus(u,dt); if(!u.alive) return;
   if(u.defQ){ u.defQ.t-=dt; if(u.defQ.t<=0){ const q=u.defQ; u.defQ=null;
-      if((!u.action||u.action.c.idle)&&u.state!=='stunned'&&q.from.alive){ play(u,q.kind); u.fwdScale=1; u.atkTarget=q.from; u.faceGoal=Math.atan2(q.from.pos.x-u.pos.x,q.from.pos.z-u.pos.z); } } }
+      if((!u.action||u.action.c.idle)&&u.state!=='stunned'&&q.from.alive){ play(u,q.kind); u.fwdScale=1; u.atkTarget=q.from; u.defT=game.time; u.faceGoal=Math.atan2(q.from.pos.x-u.pos.x,q.from.pos.z-u.pos.z); } } }
   if(u.state==='stunned'){ u.desired.set(0,0,0); if(u.stunBy) u.faceGoal=Math.atan2(u.stunBy.pos.x-u.pos.x,u.stunBy.pos.z-u.pos.z); if(!u.stunBy||!u.stunBy.alive||!u.stunBy.fin) unstun(u); }
   else if(!u.action) brain(u,dt);
   else if(u.action.c.idle){ const keep=u.action; u.action=null; brain(u,dt); if(!u.action&&Math.hypot(u.desired.x,u.desired.z)<.35) u.action=keep; }
   else { u.desired.set(0,0,0); if(u.atkTarget&&u.atkTarget.isUnit&&u.atkTarget.alive&&!u.fin) u.faceGoal=Math.atan2(u.atkTarget.pos.x-u.pos.x,u.atkTarget.pos.z-u.pos.z); }
   if(!u.action&&u.state==='ok'&&!u.routing&&!u.defQ&&!u.script&&!u.fin&&u.spd<.15&&Math.hypot(u.desired.x,u.desired.z)<.1&&u.isUnit){
     u.idleT=(u.idleT===undefined?rand(1.5,6):u.idleT)-dt;
-    if(u.idleT<=0){ u.idleT=rand(4,10); if(!nearestEnemy(u,9)&&!(game.mode==='duel'&&game.duel&&game.duel.q)){ const L=(u.T.wild&&IDLES_WILD[u.type])||IDLES[u.type]; play(u,L[Math.floor(Math.random()*L.length)]); u.fwdScale=0; } }
+    if(u.idleT<=0){ u.idleT=rand(4,10); if(!nearestEnemy(u,9)&&!(game.mode==='duel'&&game.duel&&game.duel.q)){ const L=(u.T.wild&&IDLES_WILD[u.type])||IDLES[u.type], n=u.T.cAnim?caPickIdle(u,L):L[Math.floor(Math.random()*L.length)]; if(n){ play(u,n); u.fwdScale=0; } } }
   }
   if(u.type==='sword'&&!game.classicMix&&game.mode==='battle'&&!NET.guest) rageTick(u,dt);
   if(u.rootT>game.time) u.desired.set(0,0,0); else if(u.spurT>game.time) u.desired.multiplyScalar(1.4); else if(u.rallyT>game.time) u.desired.multiplyScalar(1.12);

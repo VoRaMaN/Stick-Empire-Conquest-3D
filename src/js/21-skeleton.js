@@ -76,7 +76,8 @@ function computePose(u){
     const C=CHG[u.type][u.chg.i], k=u.chgW, run=C.anim?Object.assign({},C.run,C.anim(game.time+u.id*.37,C.run)):C.run;
     for(const f of ['R','L','wR','wL']) if(run[f]){ const a=p[f]||run[f], b=run[f]; p[f]=[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]; }
     if(run.pR!==undefined&&k>.5) p.pR=run.pR; if(run.pL!==undefined&&k>.5) p.pL=run.pL;
-    p.lean+=(run.lean||0)*k; p.crouch+=(run.crouch||0)*k; if(run.twist!==undefined) p.twist+=(run.twist-p.twist)*k; }
+    p.lean+=(run.lean||0)*k; p.crouch+=(run.crouch||0)*k; if(run.twist!==undefined) p.twist+=(run.twist-p.twist)*k;
+    if(u.T.cAnim) for(const f of CA_RUN_ST) if(run[f]!==undefined) p[f]+=(run[f]-p[f])*k; }   // a creature's wings, tail and jaw (13m)
   if(u.routing&&!u.action&&!u.fl){ const w=game.time*13+u.id; p.R=[.3,.32+.12*Math.sin(w),.08]; p.L=[-.3,.32+.12*Math.cos(w),.08]; p.lean=.3; }
   const a=u.action;
   if(a){

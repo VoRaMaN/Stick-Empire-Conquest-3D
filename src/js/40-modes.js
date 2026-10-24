@@ -57,7 +57,8 @@ function resetDuel(){
     u.feet.forEach((ft,i)=>{const sd=i?1:-1; ft.pos.set(u.pos.x+r.x*sd*.13*u.s,0,u.pos.z+r.z*sd*.13*u.s); ft.pos.y=H(ft.pos.x,ft.pos.z);}); }
   if(att.fl) flyInstant(att); if(att.cr) crPlace(att);
   game.duel={att,dum,q:null,home:{a:att.pos.clone(),d:dum.pos.clone()}};
-  cam.goal.set(DUEL_X,H(DUEL_X,DUEL_Z)+(ty==='wing'?2.2:1.1),DUEL_Z); cam.dGoal=ty==='giant'?10.5:ty==='wing'?11:ty==='cerberus'?12:TYPES[ty].crawler||ty==='dread'?9:ty==='archer'||ty==='wizard'||ty==='harvester'?8.5:7.5;
+  { const ab=$('#dAbil'); if(ab) ab.hidden=!TYPES[ty].cAnim; }   // the creatures' ability animations (13m)
+  cam.goal.set(DUEL_X,H(DUEL_X,DUEL_Z)+(ty==='wing'?2.2:ty==='bat'?2.6:ty==='knight'?2:1.1),DUEL_Z); cam.dGoal=ty==='bat'?12.5:ty==='knight'?12:ty==='giant'?10.5:ty==='wing'?11:ty==='cerberus'?12:TYPES[ty].crawler||ty==='dread'?9:ty==='archer'||ty==='wizard'||ty==='harvester'?8.5:7.5;
 }
 function duelDo(kind){
   const D=game.duel;
@@ -88,6 +89,12 @@ function duelDo(kind){
     const stop=a.T.ranged?(a.T.chgStop||6):Math.max(a.T.engage+(a.s-1)*.3,1.4);
     a.script={pts:[new V3(dm.pos.x-stop,0,dm.pos.z)],i:0,speed:a.T.speed*1.15,face:dm,then:u=>{ startAttack(u,dm); }};
     showBanner(C.name,TYPES[a.type].name+' charge · '+(game.chgI+1)+' of '+L.length,1.6); return; }
+  if(kind==='abil'){ // a creature's ability animations (13m), one after another; the abilities in play keep their own logic (27f)
+    const cr=TYPES[game.duelSel].cAnim; if(!cr) return; const L=caList(cr,'ability'); if(!L.length) return;
+    if(!D||!D.att.alive||!D.dum.alive) resetDuel();
+    const a=game.duel.att; a.script=null; game.abilI=((game.abilI===undefined?-1:game.abilI)+1)%L.length; const d=CREATURE_ANIMS[L[game.abilI]];
+    caPlay(a,d.id,game.duel.dum); a.fwdScale=0;
+    showBanner(d.name||d.clip,TYPES[a.type].name+' ability · '+(game.abilI+1)+' of '+L.length+(d.ability?'':' · animation'),1.4); return; }
   if(kind==='walk'){
     if(!D||!D.att.alive){ resetDuel(); }
     const att=game.duel.att; att.action=null; const pts=[];

@@ -12,6 +12,10 @@
      · aim: the blow's target (red) and the line from the striking point to it
      · the hip cap: a short bar at the highest the hips may ride over the planted feet
      · ragdolls of the last 3 seconds: particles and constraints (violet)
+     · the skinned creatures (the Wyvern, the Devil Bat — 27l): the model's own bones (white), its IK targets — toe
+       targets with the planted ones ringed green, a toe off its target red, a step the model takes on its own amber,
+       the claws' targets cyan (red when unreached) — the knees' and elbows' bend sides, and how far the hips sank
+       (blue); the label adds the state machine's state and the variation playing (creature.category.variant)
    and a label above each soldier: type, clip and time (or locomotion speed), aim, grip, transition carry, state.
    The overlay costs nothing when off: nothing is allocated in the DOM and no lines are filled. */
 const DEV_MODE=(()=>{ try{ const q=(location.search||'')+(location.hash||''); if(/[?&#](dev|animdebug)\b/i.test(q)) return true; return localStorage.getItem('se3d.dev')==='1'; }catch(e){ return false; } })();
@@ -41,6 +45,7 @@ const BONES=[['pelvis','chest'],['chest','neck'],['neck','head'],['sL','sR'],['s
 function drawDebug(u){
   if(!ADBG.pick||!ADBG.pick.has(u)) return;
   const j=u.j, s=u.s;
+  if(u.cg&&u.cg.root.visible){ cgDebug(u); return; }
   if(u.cr){ sph(u.pos,.08*s,DBG.pole,dbgIM); ADBG.labels.push([u,`${u.type} · beast rig`]); return; }   // Hellcrawlers, hounds, wyverns have their own rigs
   // skeleton
   for(const [a,b] of BONES) if(j[a]&&j[b]) adLine(j[a],j[b],ADC.bone);
@@ -66,6 +71,24 @@ function drawDebug(u){
   const D=u.ikD; if(D&&D.capP<1e5){ _ad1.copy(j.pelvis); _ad1.y=D.capP; _ad2.copy(_ad1).addScaledVector(u.rightW,.15*s); _ad1.addScaledVector(u.rightW,-.15*s); adLine(_ad1,_ad2,ADC.cap); }
   ADBG.labels.push([u,animDbgText(u)]);
 }
+// a skinned creature: the model's bones and its solvers' targets (see the top)
+function cgDebug(u){
+  const I=u.cg, P=I.P, k=I.k;
+  for(let i=0;i<P.B.length;i++){ const pa=P.B[i].parent; if(pa<0||pa===P.root) continue; adLine(I.pw[pa],I.pw[i],ADC.bone); }
+  const stCol=st=>st.limited||st.reach>1.001?ADC.bendLim:st.turned?ADC.bendTurn:ADC.bendOk;
+  P.legs.forEach((L,s)=>{ const T=I.toeT[s], toe=I.pw[L.to], fs=I.fs&&I.fs[s], gi=L.gs==='R'?1:0, ft=u.feet&&u.feet[gi];
+    const off=toe.distanceTo(T)>.03*k, planted=ft&&ft.t<0&&!(fs&&(fs.t>=0||fs.swOn));
+    if(planted){ _ad3.copy(T); _ad3.y=H(T.x,T.z)+.01; adRing(_ad3,.09*k,off?ADC.miss:ADC.plant); } else sph(T,.05*k,off?ADC.miss:ADC.step,dbgIM);
+    if(off) adLine(toe,T,ADC.miss);
+    if(fs&&fs.t>=0){ adLine(fs.from,fs.to,ADC.step); sph(fs.to,.05*k,ADC.step,dbgIM); }
+    sph(I.hock[s],.03*k,ADC.joint,dbgIM);
+    const st=I.ik.l[s]; if(st&&st.ok){ _ad1.copy(I.pw[L.sh]).addScaledVector(st.b,.2*k); adLine(I.pw[L.sh],_ad1,stCol(st)); } });
+  (P.wings||P.arms).forEach((W,s)=>{ const st=I.ik.w[s]; if(st&&st.ok){ _ad1.copy(I.pw[W.fo]).addScaledVector(st.b,.2*k); adLine(I.pw[W.fo],_ad1,stCol(st)); }
+    if(P.arms&&I.armW>.05){ const T=I.handT[s], miss=T.distanceTo(I.pw[W.hd])>.03*k; sph(T,.045*k,miss?ADC.miss:ADC.hand,dbgIM); if(miss) adLine(I.pw[W.hd],T,ADC.miss); } });
+  if(I.dyA>.005){ _ad1.copy(u.j.pelvis); _ad2.copy(I.pw[P.I.pelvis]); adLine(_ad1,_ad2,ADC.cap); }
+  const a=u.action, d=a&&CA_BY_CLIP[u.type]&&CA_BY_CLIP[u.type][a.c.name];
+  ADBG.labels.push([u,`${P.kind} · ${caState(u)}${d?' · '+d.id:a?' · '+a.c.name:''}${a?' '+a.t.toFixed(2)+'/'+a.c.dur.toFixed(2):''}${I.dyA>.005?' · hips -'+(I.dyA*100).toFixed(0)+'cm':''}`]);
+}
 function animDbgText(u){
   const a=u.action, bits=[TYPES[u.type]?TYPES[u.type].name:u.type];
   bits.push(a?`${a.c.name} ${a.t.toFixed(2)}/${a.c.dur.toFixed(2)}${a.c.loop?' loop':''}`:(u.spd>.15?`moving ${u.spd.toFixed(1)} m/s${u.chgW>.3?' · charge':''}`:'idle'));
@@ -83,7 +106,7 @@ function animDbgEnd(){
   adbgGeo.attributes.position.needsUpdate=true; adbgGeo.attributes.color.needsUpdate=true; adbgGeo.setDrawRange(0,ADBG.n*2); adbgLines.visible=ADBG.n>0;
   if(typeof document==='undefined'||!document.body||!document.body.appendChild) return;
   if(!ADBG.root){ const r=ADBG.root=document.createElement('div'); r.id='animDbg'; document.body.appendChild(r);
-    const k=document.createElement('div'); k.className='adbg-key'; k.textContent='Animation debug (F9) — bones white · hand targets cyan · planted feet green, steps amber, unreached red · grip yellow, two-hand magenta · bend green / turning amber / limited red · aim red · hip cap blue · ragdolls violet'; r.appendChild(k); }
+    const k=document.createElement('div'); k.className='adbg-key'; k.textContent='Animation debug (F9) — bones white · hand targets cyan · planted feet green, steps amber, unreached red · grip yellow, two-hand magenta · bend green / turning amber / limited red · aim red · hip cap blue · ragdolls violet · creature models: own steps amber, hips sunk blue'; r.appendChild(k); }
   const R=ADBG.root; R.hidden=false;
   const W=renderer.domElement.clientWidth||window.innerWidth, Hh=renderer.domElement.clientHeight||window.innerHeight;
   let i=0;

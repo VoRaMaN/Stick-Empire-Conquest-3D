@@ -85,7 +85,8 @@ function riderPose(u){
   const A=raTargets(u), tw=A.tw;   // the rider's own move (27i)
   const lean=.08+.22*k+(RM&&RM.m==='charge'?.32*rw:RM&&RM.m==='stand'?.5*rw:0)+A.lean;
   _kvS.copy(_kvU).multiplyScalar(Math.cos(lean)).addScaledVector(_kvF,Math.sin(lean)).lerp(UP,.5).normalize();
-  RJ.pelvis.copy(j.pelvis).lerp(j.chest,R.seatF).addScaledVector(cr.n,R.seatH*s).addScaledVector(_kvU,.03*rs+(RM&&RM.m==='stand'?.16*rs*rw:0));
+  if(u.cg&&u.cg.seatOK) RJ.pelvis.copy(u.cg.seat).addScaledVector(_kvU,.1*rs+(RM&&RM.m==='stand'?.16*rs*rw:0));   // on the skinned wyvern's back (27l)
+  else RJ.pelvis.copy(j.pelvis).lerp(j.chest,R.seatF).addScaledVector(cr.n,R.seatH*s).addScaledVector(_kvU,.03*rs+(RM&&RM.m==='stand'?.16*rs*rw:0));
   RJ.hipL.copy(RJ.pelvis).addScaledVector(_kvR,-.05*rs); RJ.hipR.copy(RJ.pelvis).addScaledVector(_kvR,.05*rs);
   RJ.chest.copy(RJ.pelvis).addScaledVector(_kvS,.54*rs); RJ.neck.copy(RJ.pelvis).addScaledVector(_kvS,.62*rs);
   _kvT.copy(_kvS).addScaledVector(_kvF,.12).normalize(); RJ.head.copy(RJ.neck).addScaledVector(_kvT,.19*rs);

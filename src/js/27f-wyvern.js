@@ -368,7 +368,7 @@ function wyFx(u){
   const F=wyU(u), cr=u.cr, s=u.s; if(!cr) return;
   if(F.vuln){ const k=.5+.5*Math.sin(game.time*14); glowAt(u.j.chest,(.16+.08*k)*s,'#ffd36a'); }   // exposed: a pulse over the heart, for the archers
   _wc.crossVectors(cr.hd,cr.hu).normalize();
-  for(const sd of [-1,1]){ _wf1.copy(F.head).addScaledVector(cr.hd,.2*s*1.15).addScaledVector(cr.hu,.1*s).addScaledVector(_wc,sd*.085*s*1.15); glowAt(_wf1,.03*s,'#ffb43a'); }
+  if(!u.cg) for(const sd of [-1,1]){ _wf1.copy(F.head).addScaledVector(cr.hd,.2*s*1.15).addScaledVector(cr.hu,.1*s).addScaledVector(_wc,sd*.085*s*1.15); glowAt(_wf1,.03*s,'#ffb43a'); }
   if(F.br>0&&u.alive){ const n=settings.calm?1:3, sp=8.5; for(let i=0;i<n;i++){ const dx=F.hd.x+rand(-.12,.12), dy=F.hd.y+rand(-.1,.1), dz=F.hd.z+rand(-.12,.12);
       emitFire(F.mouth,1,.16*s,dx*sp,dy*sp+(F.air?-1:.6),dz*sp,.6,.55); } }
   if(u.crownT>game.time){ const k=.5+.5*Math.sin(game.time*6+u.id); _wf1.copy(u.j.chest).addScaledVector(UP,.25*s); glowAt(_wf1,(.14+.04*k)*s,'#ffd36a'); }

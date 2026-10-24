@@ -72,9 +72,11 @@ function updateCharge(u,dt){
   else if(game.mode==='duel') mode=!!u.chgLab;
   const t=u.target, d=t&&t.isUnit&&t.alive?Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z):99, fast=u.spd>.5*u.T.speed;
   if(NET.guest){ const want=u.chg&&!u.action&&u.spd>.45*u.T.speed?1:0; u.chgW=(u.chgW||0)+(want-(u.chgW||0))*(1-Math.exp(-dt*7)); return; }   // the host picks the charge style
-  if(mode&&!u.chg&&!u.chgCD&&fast&&!u.action&&d>3.5&&d<30&&(!u.T.worker||d<12)&&CHG[u.type]&&CHG[u.type].length) u.chg={i:Math.floor(Math.random()*CHG[u.type].length)};
+  if(mode&&!u.chg&&!u.chgCD&&fast&&!u.action&&d>3.5&&d<30&&(!u.T.worker||d<12)&&CHG[u.type]&&CHG[u.type].length) u.chg={i:u.T.cAnim?caPickCharge(u):Math.floor(Math.random()*CHG[u.type].length)};
+  const had=u.chg;
   if(u.chg&&!mode&&game.mode==='battle') u.chg=null;
   if(u.chg&&!u.action&&u.spd<.2*u.T.speed){ u.chgStop=(u.chgStop||0)+dt; if(u.chgStop>.8&&game.mode==='battle') u.chg=null; } else u.chgStop=0;
+  if(had&&!u.chg&&u.T.cAnim&&(u.chgW||0)>.35) caChargeHalt(u);   // a creature's charge called off: it pulls up (13m)
   const want=u.chg&&!u.action&&u.spd>.45*u.T.speed?1:0;
   u.chgW=(u.chgW||0)+(want-(u.chgW||0))*(1-Math.exp(-dt*7));
 }
@@ -121,6 +123,7 @@ function canFinish(u,t){
 function startFinisher(u,v,forced){
   if(u.team<2){ v.lastHitTeam=u.team; v.lastHitBy=u; }   // the finisher's kill is his (veterans, camp gold)
   const list=FINS[u.type]; let name=forced;
+  if(!name&&u.T.cAnim) name=caPickFin(u,list);   // the creatures: weighted, the rare one seldom (13m)
   if(!name){ let g=0; do{ name=list[Math.floor(Math.random()*list.length)]; }while(name===u.lastFin&&++g<6); }
   u.lastFin=name;
   if(NET.host||NET.rec) netCapFin(u,v,name);
@@ -140,10 +143,12 @@ function startFinisher0(u,v,name,list){
   u.cdT=u.T.cd;
   if(game.mode==='duel'||cam.follow===u||cam.follow===v){ showBanner(def.name,TYPES[u.type].name+' finisher · '+(list.indexOf(name)+1)+' of '+list.length); }
 }
-function play(u,name){ if(NET.guest&&!NET.allowPlay) return; const c=CLIPS[u.type][name]; if(!c) return; u.action={c,t:0,age:0,fired:0,prevFwd:0}; if((NET.host||NET.rec)&&!NET.noCap) netCapPlay(u,name); }
+function play(u,name){ if(NET.guest&&!NET.allowPlay) return; const c=CLIPS[u.type][name]; if(!c) return; if(u.T.cAnim&&!caCanPlay(u,c)) return;   // the creatures' priorities (13m)
+  u.action={c,t:0,age:0,fired:0,prevFwd:0}; if((NET.host||NET.rec)&&!NET.noCap) netCapPlay(u,name); }
 
 function updateAction(u,dt){
   const a=u.action; if(!a) return;
+  if(a.until&&game.time>=a.until){ u.action=null; return; }   // a looping clip shown for a while (the Lab)
   a.t+=dt*(a.sp||1); a.age+=dt;
   const c=a.c;
   // root motion

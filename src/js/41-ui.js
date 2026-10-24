@@ -28,7 +28,7 @@ function syncBattleButtons(){ $('#bAuto').textContent='Auto-spawn: '+(game.auto[
 $('#bAuto').onclick=()=>{ sfx('ui'); setAutoSpawn(!game.auto[myTeam()]); };
 $('#bFin').onclick=()=>{ sfx('ui'); setFinMode((game.finMode+1)%3); };
 $('#dView').onclick=()=>{ sfx('ui'); setMode('viewer'); };
-$('#dChg').onclick=()=>duelDo('charge'); $('#dFin').onclick=()=>duelDo('fin'); $('#dIdle').onclick=()=>duelDo('idle'); $('#dAtk').onclick=()=>duelDo('atk'); $('#dWalk').onclick=()=>duelDo('walk');
+$('#dChg').onclick=()=>duelDo('charge'); $('#dAbil').onclick=()=>duelDo('abil'); $('#dFin').onclick=()=>duelDo('fin'); $('#dIdle').onclick=()=>duelDo('idle'); $('#dAtk').onclick=()=>duelDo('atk'); $('#dWalk').onclick=()=>duelDo('walk');
 $('#dDef').onclick=()=>{ game.duelDefend=!game.duelDefend; $('#dDef').textContent='Defender: '+(game.duelDefend?'On':'Off'); };
 $('#dSlow').onclick=()=>{ game.slow=!game.slow; $('#dSlow').textContent='Slow-mo: '+(game.slow?'On':'Off'); };
 $('#mBattle').onclick=()=>{ const sp=game.spent; closeCampaign(); if(!sp&&(game.mode!=='battle'||game.campFight)){ game.campFight=null; setTerrain('skirmish'); setMode('battle'); } };

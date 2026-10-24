@@ -8,7 +8,7 @@ const TYPES={
 };
 TYPES.archer.ranged=true;   // shoots from range (shared by every ranged unit's AI)
 const ORDER=['miner','sword','spear','archer','giant'];
-const PF=['R','L','wR','wL','pR','pL'], NF=['lean','crouch','twist','side','jump','fwd','draw','yaw','kick','look','alt','hbY','hbP','hbJ','hcY','hcP','hcJ','wing','wup','wsw'];   // hb*/hc*: Cerberus' left/right heads (yaw out, pitch down, jaw); wing/wup/wsw: a wyvern's wings (spread, raised, swept back)
+const PF=['R','L','wR','wL','pR','pL'], NF=['lean','crouch','twist','side','jump','fwd','draw','yaw','kick','look','alt','hbY','hbP','hbJ','hcY','hcP','hcJ','wing','wup','wsw','tsw','tup','neck'];   // hb*/hc*: Cerberus' left/right heads (yaw out, pitch down, jaw); wing/wup/wsw: a wyvern's wings (spread, raised, swept back); tsw/tup: a skinned creature's tail (swept to its right, lifted), neck: its neck raised (+) or thrust low (-) (27l)
 function fillPose(p,base){const o={}; for(const k of PF) o[k]=p[k]!==undefined?p[k]:(base&&base[k]!==undefined?base[k]:null); for(const k of NF) o[k]=p[k]!==undefined?p[k]:(base&&base[k]!==undefined?base[k]:0); return o;}
 function lv(a,b,u){return [a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]+(b[2]-a[2])*u];}
 function lerpPose(a,b,u){const o={}; for(const k of PF){const x=a[k],y=b[k]; o[k]=(x&&y)?lv(x,y,u):(u<.5?x:y)||null;} for(const k of NF) o[k]=a[k]+(b[k]-a[k])*u; return o;}

@@ -68,7 +68,7 @@ function buildGear(u){
   if(G.nock){ G.nock.scale.setScalar(u.s); freezeGear(G.nock); }
   u.G=G;
 }
-function destroyGear(u){const G=u.G; if(u.arrows) for(const a of u.arrows) a.remove=true; if(u.armCape) armCapeDrop(u);
+function destroyGear(u){const G=u.G; if(u.arrows) for(const a of u.arrows) a.remove=true; if(u.armCape) armCapeDrop(u); if(u.cg) cgDrop(u);
   if(u.cape){ freeCape(u.cape); const i=capes.indexOf(u.cape); if(i>=0) capes.splice(i,1); u.cape=null; }
   if(!G)return; for(const k in G){ if(G[k]&&G[k].isObject3D) dropRoot(G[k]); } u.G=null;}
 

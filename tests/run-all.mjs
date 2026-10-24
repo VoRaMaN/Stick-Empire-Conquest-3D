@@ -29,6 +29,7 @@ const TESTS = [
   ['nettest', 'online: replication, commands, 2v2, disconnects (no network)', o => /nettest: \d+ passed, 0 failed/.test(o)],
   ['rivertest', 'Riverlands: zones, banners, mines, obstacles, bounds', o => /rivertest: all passed/.test(o)],
   ['animaudit', 'animation: no limb flips, backward knees, broken grips, skating feet', o => /animaudit: pass/.test(o)],
+  ['creaturetest', 'Wyvern and Devil Bat: models, 100 variations, IK, state rules', o => /creaturetest: pass/.test(o)],
   ['perf', '400-unit simulation cost (report only)', () => true]
 ];
 let fails = 0; const t0 = Date.now();

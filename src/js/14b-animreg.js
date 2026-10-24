@@ -24,7 +24,8 @@ function animBuild(){
       for(let i=1;i<c.ev.length;i++) if(c.ev[i].t<c.ev[i-1].t) ok=false;
       if(!ok) R.bad.push(n); R[animRole(t,n)].push(n); } }
 }
-animBuild();
+for(const id in CREATURE_ANIMS){ const d=CREATURE_ANIMS[id]; if(d.cat==='ability') ANIM_ABIL[d.clip]=1; }   // the creatures' ability animations (13m)
+animBuild(); caFinalize();
 // a line for the Unit Viewer: how many of each a soldier has (common clips every unit shares are not counted)
 function animSummary(t){ const R=ANIM[t]; if(!R) return ''; const own=k=>R[k].filter(n=>!(RAW.common&&RAW.common[n])).length;
   return own('attack')+' attacks · '+own('idle')+' idles · '+own('finisher')+' finishers · '+own('charge')+' charges'+(own('ability')?' · '+own('ability')+' abilities':'')+(own('flight')?' · '+own('flight')+' flight':'')+' · '+own('reaction')+' reactions'; }
