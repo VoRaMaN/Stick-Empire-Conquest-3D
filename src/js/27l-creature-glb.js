@@ -158,7 +158,7 @@ function cgMake(u){
   scene.add(root);
   const st=()=>({b:new V3(),ok:false});
   return {P,root,bones,skel,k:P.k*u.s/(u.T.s||u.s),q:P.B.map(b=>b.q.clone()),qw:P.B.map(()=>new THREE.Quaternion()),pw:P.B.map(()=>new V3()),
-    ik:{l:[st(),st()],w:[st(),st()]},kw:[0,0],curl:[.05,.05],rw:[0,0],armW:0,nr:0,nq:[0,1,2,3].map(()=>new THREE.Quaternion()),nqOK:false,jaw:0,jv:0,wrT:[new V3(),new V3()],wrOK:false,cw:[new V3(0,0,1),new V3(0,0,1)],cwOK:false,dy:0,need:-1e9,fs:[0,1].map(()=>({p:new V3(),from:new V3(),to:new V3(),sw:new V3(),t:-1,own:false,swOn:false,init:false})),lp:null,tail:{d:P.tail.map(()=>new V3()),v:P.tail.map(()=>new V3()),init:false},t:-1,
+    ik:{l:[st(),st()],w:[st(),st()]},kw:[0,0],curl:[.05,.05],rw:[0,0],armW:0,nr:0,nq:[0,1,2,3].map(()=>new THREE.Quaternion()),nqOK:false,jaw:0,jv:0,bw:0,bt:new V3(),aw:0,wrT:[new V3(),new V3()],wrOK:false,cw:[new V3(0,0,1),new V3(0,0,1)],cwOK:false,dy:0,need:-1e9,fs:[0,1].map(()=>({p:new V3(),from:new V3(),to:new V3(),sw:new V3(),t:-1,own:false,swOn:false,init:false})),lp:null,tail:{d:P.tail.map(()=>new V3()),v:P.tail.map(()=>new V3()),init:false},t:-1,
     seat:new V3(),seatOK:false,head:new V3(),hd:new V3(0,0,1),mouth:new V3(),toeT:[new V3(),new V3()],hock:[new V3(),new V3()],handT:[new V3(),new V3()],posed:0,decap:false};
 }
 // a creature model replaces the procedural body: the gear groups of the old body go, the model joins the scene
@@ -319,6 +319,20 @@ const CG_NECKW=[.3,.58,.84];
 // each a little — the curve comes from all of them, never one hinge
 const CG_NECKLIM=[.8,.62,.62,.72];
 const _cgN1=new V3(),_cgN2=new V3(),_cgN3=new V3(),_cgN4=new V3(),_cgN5=new V3(),_cgN6=new V3(),_cgNq1=new THREE.Quaternion(),_cgNq2=new THREE.Quaternion();
+// the bite's target while a bite is on its way in: the victim of a finisher or the struck unit, while it is within the
+// neck's reach, from the clip's start until its first blow or seizure lands (hit, grab, kill…). Sets I.bt.
+const CG_BLOW={hit:1,grab:1,kill:1,knock:1,stabRag:1,jolt:1};
+function cgBiteTarget(u,I){ const a=u.action; if(!u.alive||!a||a.c.idle||!(u.cr.jaw>.06||(I.bw>.3))) return null;
+  const v=u.fin&&u.fin.victim?u.fin.victim:u.atkTarget; if(!v||!v.alive||!v.j||!v.isUnit) return null;
+  const c=a.c; if(c._blowT===undefined){ c._blowT=1e9; for(const e of c.ev||[]) if(CG_BLOW[e.e]&&e.t<c._blowT) c._blowT=e.t; }
+  if(a.t>c._blowT+.04) return null;
+  const P=v.j.neck||v.j.chest||v.pos; I.bt.copy(P); if(!v.j.neck) I.bt.y+=.4*(v.s||1);
+  const nb=I.pw[I.P.neck[0]]; if(nb.distanceTo(I.bt)>4.2*I.k) return null;   // out of the neck's reach: the game's own aim
+  return I.bt; }
+// turn the head (and a little of the neck's top) so its jaws face T, by w
+function cgHeadAim(I,T,w){ const P=I.P, Ix=P.I;
+  for(const [ji,f] of [[P.neck[2],.35],[Ix.head,1]]){ cgDir(I,Ix.head,_cgN2); _cgN3.subVectors(T,I.pw[Ix.head]); if(_cgN3.lengthSq()<1e-6) return; _cgN3.normalize();
+    _cgNq1.setFromUnitVectors(_cgN2,_cgN3); _cgNq2.identity().slerp(_cgNq1,w*f*(ji===Ix.head?1:.5)); _cgNq1.multiplyQuaternions(_cgNq2,I.qw[ji]); cgSetW(I,ji,_cgNq1); if(ji!==Ix.head) cgFK(I,Ix.head); } }
 // keep bone i's local turn within max of its rest (a cone-and-twist limit, as a quaternion angle)
 function cgLimitJ(I,i,max){ const b=I.P.B[i]; _cgNq1.copy(b.q).invert().multiply(I.q[i]); const w=Math.min(1,Math.abs(_cgNq1.w)), ang=2*Math.acos(w);
   if(ang<=max) return; _cgNq2.identity().slerp(_cgNq1,max/ang); _cgNq1.copy(b.q).multiply(_cgNq2);
@@ -328,8 +342,8 @@ function cgNeckLimits(I){ const P=I.P; for(let m=0;m<4;m++){ const ji=m<3?P.neck
 // in r128: from the effector's parent outward, each step's turn capped, each joint then held in its limits) bringing the
 // model's jaws — not its skull's root — to where the game's bite lands (the rig's mouth), so the head pitches with the
 // neck instead of hinging down at its root
-function cgNeckReach(u,I,w){ const P=I.P, Ix=P.I, k=I.k, L=[Ix.head,P.neck[2],P.neck[1],P.neck[0]], lim=[CG_NECKLIM[3],CG_NECKLIM[2],CG_NECKLIM[1],CG_NECKLIM[0]];
-  _cgN1.copy(u.j.head).addScaledVector(u.cr.hd,.55*u.s);
+function cgNeckReach(u,I,w,T){ const P=I.P, Ix=P.I, k=I.k, L=[Ix.head,P.neck[2],P.neck[1],P.neck[0]], lim=[CG_NECKLIM[3],CG_NECKLIM[2],CG_NECKLIM[1],CG_NECKLIM[0]];
+  if(T!==_cgN1) _cgN1.copy(T);
   for(let it=0;it<3;it++) for(let l=0;l<4;l++){ const ji=L[l];
     cgDir(I,Ix.head,_cgN2); _cgN3.copy(I.pw[Ix.head]).addScaledVector(_cgN2,P.snout*.7*k);
     _cgN4.subVectors(_cgN3,I.pw[ji]); _cgN5.subVectors(_cgN1,I.pw[ji]); if(_cgN4.lengthSq()<1e-6||_cgN5.lengthSq()<1e-6) continue;
@@ -364,7 +378,13 @@ function cgPoseWyvern(u){
   // during a strike (and a finisher) the neck reaches toward the rig's head, so a bite lands where the game aims it
   // (eased: a looping clip ends without a blend out)
   I.nr+=((alive?clamp((u.crAW||0)*(u.action&&!u.action.c.idle?1:0),0,1)*.75:0)-I.nr)*(1-Math.exp(-dt*12)); const reach=I.nr;
-  if(reach>.01) cgNeckReach(u,I,reach);
+  // the bite: from the wind-up to the moment it lands, the jaws go for the victim itself (its neck or chest); once the
+  // blow has landed (or the victim is seized) the neck follows the game's choreography again
+  const vt=cgBiteTarget(u,I); I.bw+=((vt?1:0)-I.bw)*(1-Math.exp(-dt*(vt?9:6)));
+  _cgN1.copy(j.head).addScaledVector(cr.hd,.55*u.s); if(I.bw>.005) _cgN1.lerp(I.bt,I.bw);
+  if(reach>.01) cgNeckReach(u,I,reach,_cgN1);
+  // breathing fire: the head turns its jaws to the stream's target
+  I.aw+=((alive&&F&&F.br>0&&F.bT?1:0)-I.aw)*(1-Math.exp(-dt*8)); if(I.aw>.01) cgHeadAim(I,F.bT,I.aw);
   // every neck joint and the head within its range of motion (no joint folded at a right angle: the neck curves)
   cgNeckLimits(I);
   // overlapping action: the neck's base turns first, each segment after it a little later, the head last (a heavy neck
@@ -375,7 +395,9 @@ function cgPoseWyvern(u){
   if(u.decapped&&!alive) I.decap=true;
   // the jaw: a muscle, not a switch — it opens with a little ease, snaps shut fast and the teeth clack (a small bounce),
   // and a wide-open roar trembles
-  { const tgt=clamp(cr.jaw,0,1), opening=tgt>I.jaw, w=opening?16:34, z=opening?1:.55;
+  { let tgt=clamp(cr.jaw,0,1);
+    if(I.bw>.05){ const dm=I.mouth.distanceTo(I.bt); tgt+=(clamp((dm-.15*k)/(.9*k),0,1)*.95-tgt)*I.bw; }
+    const opening=tgt>I.jaw, w=opening?16:34, z=opening?1:.55;
     I.jv+=(w*w*(tgt-I.jaw)-2*z*w*I.jv)*dt; I.jaw+=I.jv*dt; if(I.jaw<-.06){ I.jaw=-.06; I.jv=-I.jv*.35; }
     if(!alive){ I.jaw=tgt; I.jv=0; }
     const tr=I.jaw>.55&&alive?Math.sin(game.time*41+u.id)*.03*(I.jaw-.55)/.45:0;

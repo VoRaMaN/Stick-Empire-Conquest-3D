@@ -382,13 +382,26 @@ function wyModel(u){
 }
 // eyes, the breath, the Crown's glow, the pursued prey's mark
 const _wf1=new V3();
+// where the breath goes: the unit it was loosed at (its feet and body), while ahead of the jaws and in range; else
+// along the head down to the ground (aloft) or ahead (on the ground). F.bT, also used to turn the model's head to it.
+function wyBreathTarget(u,F){ if(!F.bT) F.bT=new V3(); const t=u.atkTarget, s=u.s;
+  if(t&&t.alive&&t.pos&&Math.hypot(t.pos.x-u.pos.x,t.pos.z-u.pos.z)<18&&((t.pos.x-u.pos.x)*u.fwdW.x+(t.pos.z-u.pos.z)*u.fwdW.z)>0){ F.bT.copy(t.pos); F.bT.y=groundAt(t,t.pos.x,t.pos.z)+.5*(t.s||1); return; }
+  F.bT.copy(F.mouth).addScaledVector(F.hd,F.air?11:8);
+  if(F.air) F.bT.y=Math.min(F.bT.y,F.mouth.y-F.alt*.9);
+  const g=H(F.bT.x,F.bT.z)+.3; if(F.bT.y<g) F.bT.y=g; }
 function wyFx(u){
   const F=wyU(u), cr=u.cr, s=u.s; if(!cr) return;
   if(F.vuln){ const k=.5+.5*Math.sin(game.time*14); glowAt(u.j.chest,(.16+.08*k)*s,'#ffd36a'); }   // exposed: a pulse over the heart, for the archers
   _wc.crossVectors(cr.hd,cr.hu).normalize();
   if(!u.cg) for(const sd of [-1,1]){ _wf1.copy(F.head).addScaledVector(cr.hd,.2*s*1.15).addScaledVector(cr.hu,.1*s).addScaledVector(_wc,sd*.085*s*1.15); glowAt(_wf1,.03*s,'#ffb43a'); }
-  if(F.br>0&&u.alive){ const n=settings.calm?1:3, sp=8.5; for(let i=0;i<n;i++){ const dx=F.hd.x+rand(-.12,.12), dy=F.hd.y+rand(-.1,.1), dz=F.hd.z+rand(-.12,.12);
-      emitFire(F.mouth,1,.16*s,dx*sp,dy*sp+(F.air?-1:.6),dz*sp,.6,.55); } }
+  // the breath: a stream thrown fast enough to carry (the flames slow and rise as they go: emitFire drags them at
+  // 2.4/s and lifts them 2.8 m/s²) all the way to its target — from the sky down to the ground — widening as it goes,
+  // and washing out over the ground where it lands
+  wyBreathTarget(u,F);
+  if(F.br>0&&u.alive){ const T=F.bT; _wf1.subVectors(T,F.mouth); const D=Math.max(2,_wf1.length()); _wf1.multiplyScalar(1/D);
+    const v0=clamp(D*2.9,9,34), life=clamp(-Math.log(Math.max(.05,1-D*2.4/v0))/2.4+.22,.5,1.5), n=settings.calm?2:5;
+    for(let i=0;i<n;i++){ const sp=v0*rand(.9,1.06), w=.05*sp; emitFire(F.mouth,1,(.15+.0035*D)*s,_wf1.x*sp+rand(-w,w),_wf1.y*sp+rand(-w,w),_wf1.z*sp+rand(-w,w),.25,life); }
+    if(Math.random()<(settings.calm?.25:.6)){ const g=_wf1.copy(T); g.y=H(g.x,g.z)+.05; for(let i=0;i<2;i++){ const a=Math.random()*TAU, r=rand(1.5,4); emitFire(g,1,.22*s,Math.cos(a)*r,rand(.2,1.2),Math.sin(a)*r,.3,rand(.45,.8)); } } }
   if(u.crownT>game.time){ const k=.5+.5*Math.sin(game.time*6+u.id); _wf1.copy(u.j.chest).addScaledVector(UP,.25*s); glowAt(_wf1,(.14+.04*k)*s,'#ffd36a'); }
   if(F.glow>0){ _wf1.copy(u.j.chest).addScaledVector(UP,1.1*s); glowAt(_wf1,.25*s*Math.min(1,F.glow*2),'#ffe9a8'); }
   if(F.prey&&F.preyT>game.time&&F.prey.alive&&u.team===myTeam()){ const t=F.prey; _wf1.copy(t.j.head).addScaledVector(UP,.55*t.s); glowAt(_wf1,.12+.04*Math.sin(game.time*8),'#ff5a4f'); }
