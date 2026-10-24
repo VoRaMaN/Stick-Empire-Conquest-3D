@@ -318,10 +318,12 @@ function wyBeat(c,d){ c-=Math.floor(c); return c<d?Math.cos(Math.PI*c/d):-Math.c
 function wyFoldUp(c,d){ c-=Math.floor(c); return c<d?0:Math.sin(Math.PI*(c-d)/(1-d)); }
 const _wq1=new V3(),_wq2=new V3(),_wq3=new V3(),_wq4=new V3(),_wq5=new V3(),_wq6=new V3(),_wq7=new V3();
 function wySkel(u,p){
-  const F=wyU(u), cr=u.cr, j=u.j, s=u.s, S=clamp(p.wing||0,0,1), fw=F.sp>.02?F.amp*F.sp:0, c=F.ph/TAU, d=F.dn||.58;
+  const F=wyU(u), cr=u.cr, j=u.j, s=u.s, fw=F.sp>.02?F.amp*F.sp:0, c=F.ph/TAU, d=F.dn||.58;
+  F.mt=(F.mt||0)+(((u.fin&&u.alive&&!F.air)?1:0)-(F.mt||0))*.07;   // mantling over the prey in a finisher
+  const S=Math.max(clamp(p.wing||0,0,1),F.mt*.42);
   // the arm leads, the forearm follows a beat-fraction later, the fingers (the wing's tip) later still: overlap
   const eH=wyBeat(c,d)*fw, eF=wyBeat(c-.06,d)*fw, eT=wyBeat(c-.13,d)*fw, uf=wyFoldUp(c-.03,d)*fw*(1-F.gl);
-  const base=(p.wup||0)*.7+F.gl*.12, sw=(p.wsw||0), elev=base+eH*.95, elevF=base+eF*.95, elevT=base+eT*.95;
+  const base=(p.wup||0)*.7+F.gl*.12+F.mt*.38, sw=(p.wsw||0), elev=base+eH*.95, elevF=base+eF*.95, elevT=base+eT*.95;
   for(const sd of [-1,1]){ const X=sd<0?'L':'R', W=F.W[X], R=cr.rc, U=cr.n, Fw=cr.d2;
     // folded (the rig's knuckle-walking arm) and spread (out to the side, raised by the beat)
     const sh0=j['s'+X], el0=j['e'+X], wr0=j['h'+X];

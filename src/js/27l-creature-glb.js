@@ -315,6 +315,28 @@ const _cgW1=new V3(),_cgW2=new V3(),_cgW3=new V3(),_cgW4=new V3(),_cgW5=new V3()
 
 /* ---------- the Wyvern: posed from the four-limbed rig (27-hellcrawler) and its wings (27f) ---------- */
 const CG_NECKW=[.3,.58,.84];
+// how far each neck joint and the head may turn from the model's rest pose (rad): a long neck bends over many joints,
+// each a little — the curve comes from all of them, never one hinge
+const CG_NECKLIM=[.8,.62,.62,.72];
+const _cgN1=new V3(),_cgN2=new V3(),_cgN3=new V3(),_cgN4=new V3(),_cgN5=new V3(),_cgN6=new V3(),_cgNq1=new THREE.Quaternion(),_cgNq2=new THREE.Quaternion();
+// keep bone i's local turn within max of its rest (a cone-and-twist limit, as a quaternion angle)
+function cgLimitJ(I,i,max){ const b=I.P.B[i]; _cgNq1.copy(b.q).invert().multiply(I.q[i]); const w=Math.min(1,Math.abs(_cgNq1.w)), ang=2*Math.acos(w);
+  if(ang<=max) return; _cgNq2.identity().slerp(_cgNq1,max/ang); _cgNq1.copy(b.q).multiply(_cgNq2);
+  _cgNq2.multiplyQuaternions(I.qw[b.parent],_cgNq1); cgSetW(I,i,_cgNq2); }
+function cgNeckLimits(I){ const P=I.P; for(let m=0;m<4;m++){ const ji=m<3?P.neck[m]:P.I.head; if(m) cgFK(I,ji); cgLimitJ(I,ji,CG_NECKLIM[m]); } }
+// the bite: cyclic coordinate descent over head and neck (the method of three.js's CCDIKSolver, examples/jsm/animation
+// in r128: from the effector's parent outward, each step's turn capped, each joint then held in its limits) bringing the
+// model's jaws — not its skull's root — to where the game's bite lands (the rig's mouth), so the head pitches with the
+// neck instead of hinging down at its root
+function cgNeckReach(u,I,w){ const P=I.P, Ix=P.I, k=I.k, L=[Ix.head,P.neck[2],P.neck[1],P.neck[0]], lim=[CG_NECKLIM[3],CG_NECKLIM[2],CG_NECKLIM[1],CG_NECKLIM[0]];
+  _cgN1.copy(u.j.head).addScaledVector(u.cr.hd,.55*u.s);
+  for(let it=0;it<3;it++) for(let l=0;l<4;l++){ const ji=L[l];
+    cgDir(I,Ix.head,_cgN2); _cgN3.copy(I.pw[Ix.head]).addScaledVector(_cgN2,P.snout*.7*k);
+    _cgN4.subVectors(_cgN3,I.pw[ji]); _cgN5.subVectors(_cgN1,I.pw[ji]); if(_cgN4.lengthSq()<1e-6||_cgN5.lengthSq()<1e-6) continue;
+    _cgN4.normalize(); _cgN5.normalize(); const ang=Math.acos(clamp(_cgN4.dot(_cgN5),-1,1)); if(ang<1e-4) continue;
+    _cgN6.crossVectors(_cgN4,_cgN5); if(_cgN6.lengthSq()<1e-10) continue; _cgN6.normalize();
+    _cgNq1.setFromAxisAngle(_cgN6,Math.min(ang,.22)*w); _cgNq2.multiplyQuaternions(_cgNq1,I.qw[ji]); cgSetW(I,ji,_cgNq2); cgLimitJ(I,ji,lim[l]);
+    for(let q=4-l;q<3;q++) cgFK(I,P.neck[q]); if(l) cgFK(I,Ix.head); } }
 const CG_NECKS=[-.2,.03,.19];   // the S: the base pitched up, the top down (about the chest's right; - raises)
 const CG_NECKR=[26,19,15,12];   // how quickly each neck segment and the head follow (per second)
 function cgPoseWyvern(u){
@@ -333,7 +355,7 @@ function cgPoseWyvern(u){
   // straightens when it thrusts low or stretches out in flight); in flight the neck takes up the body's heave so the
   // head stays steadier than the body (as birds' do)
   const raise=alive?clamp(p.neck||0,-1,1):0; _cgc3.set(1,0,0).applyQuaternion(I.qw[Ix.chest]);
-  const fly=F?clamp(F.sp||0,0,1):0, Sc=alive?(1-.6*fly)*(1-.5*Math.max(0,-raise)):0, hv=alive&&fly>.02?wyBeat(F.ph/TAU-.14,F.dn||.58)*(F.amp||0)*fly*.1:0;
+  const fly=F?clamp(F.sp||0,0,1):0, Sc=alive?(1-.6*fly)*(1-.5*Math.max(0,-raise))*(1-.7*I.nr):0, hv=alive&&fly>.02?wyBeat(F.ph/TAU-.14,F.dn||.58)*(F.amp||0)*fly*.1:0;
   for(let m=0;m<3;m++){ _cgD4.slerpQuaternions(_cgD2,_cgD3,CG_NECKW[m]);
     const a=-raise*.22+Sc*CG_NECKS[m]+hv*(m===0?1:m===2?-1:0); if(a){ _cgq4.setFromAxisAngle(_cgc3,a); _cgD4.premultiply(_cgq4); } cgDelta(I,P.neck[m],_cgD4); }
   // the head lifts a little as the jaws open wide (a roar, a bite's gape)
@@ -342,11 +364,9 @@ function cgPoseWyvern(u){
   // during a strike (and a finisher) the neck reaches toward the rig's head, so a bite lands where the game aims it
   // (eased: a looping clip ends without a blend out)
   I.nr+=((alive?clamp((u.crAW||0)*(u.action&&!u.action.c.idle?1:0),0,1)*.75:0)-I.nr)*(1-Math.exp(-dt*12)); const reach=I.nr;
-  if(reach>.01){ for(let it=0;it<2;it++) for(let m=2;m>=0;m--){ const ji=P.neck[m];
-      _cgc4.subVectors(I.pw[Ix.head],I.pw[ji]); _cgc5.subVectors(j.head,I.pw[ji]); if(_cgc4.lengthSq()<1e-6||_cgc5.lengthSq()<1e-6) continue;
-      _cgq4.setFromUnitVectors(_cgc4.normalize(),_cgc5.normalize()); _cgq5.identity().slerp(_cgq4,reach*.5); _cgq4.multiplyQuaternions(_cgq5,I.qw[ji]); cgSetW(I,ji,_cgq4);
-      for(let q=m+1;q<3;q++) cgFK(I,P.neck[q]); cgFK(I,Ix.head); }
-    _cgq4.multiplyQuaternions(_cgD3,P.RQ[Ix.head]); cgSetW(I,Ix.head,_cgq4); }   // the head keeps its own aim
+  if(reach>.01) cgNeckReach(u,I,reach);
+  // every neck joint and the head within its range of motion (no joint folded at a right angle: the neck curves)
+  cgNeckLimits(I);
   // overlapping action: the neck's base turns first, each segment after it a little later, the head last (a heavy neck
   // has inertia); a strike tightens it so the bite still lands where the game aims it
   if(alive&&I.nqOK){ const tk=1+3*reach; for(let m=0;m<4;m++){ const ji=m<3?P.neck[m]:Ix.head;
@@ -426,7 +446,7 @@ function cgWyWings(u,I,p,alive,dt){
     if(W&&S>.001){ _cgW3.subVectors(W.el,W.sh).normalize(); _cgW4.subVectors(W.wr,W.el).normalize(); cgSlerpDir(_cgW1,_cgW1,_cgW3,S); cgSlerpDir(_cgW2,_cgW2,_cgW4,S); }
     cgHinge(_cgW5,_cgW1,_cgW2,st,sh,wr); const bent=true;
     cgAim(I,Wg.up,_cgW1,bent?Wg.hg.a:null,bent?_cgW5:null); cgFK(I,Wg.fo); cgAim(I,Wg.fo,_cgW2,bent?Wg.hg.b:null,bent?_cgW5:null);
-    cgRest(I,Wg.th);
+    cgRest(I,Wg.th); if(S<.98&&alive){ cgCarried(I,Wg.th,_cgW7); _cgW8.copy(u.fwdW).multiplyScalar(.5).addScaledVector(UP,-.85).normalize(); cgSlerpDir(_cgW7,_cgW7,_cgW8,(1-S)*.75); cgAim(I,Wg.th,_cgW7); }
     // fingers: fanned from the rig's leading finger to its trailing one, swept a little toward the membrane's root
     // (each as an angle behind the rig's own forearm, about the rig's wing normal, so the model's arm lagging or
     // differing from the rig's never swings a finger across: then the same angle behind the model's forearm)
@@ -437,7 +457,7 @@ function cgWyWings(u,I,p,alive,dt){
         const sn=_cgWE.length(); if(sn>1e-6){ _cgWA.copy(_cgWE).multiplyScalar(1/sn); if(_cgWA.dot(_cgW8)>0) cgSlerpDir(_cgW8,_cgW8,_cgWA,clamp(sn/.35,0,1)); }
         // behind the forearm: (-π, 0]; one ahead of it held along it, one past the fold at the fold
         let al=cgAngle(_cgW2,_cgW7,_cgW8); if(al>Math.PI/2) al=-Math.PI+.05; else if(al>0) al=0;
-        phi=(al-Wg.frest[f])*(.35+.65*Math.max(S,.5)); }
+        phi=al-Wg.frest[f]; }
       cgFinger(I,a,b,Wg.fax[f],phi); } }
   I.wrOK=true;
 }
