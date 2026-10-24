@@ -158,7 +158,7 @@ function cgMake(u){
   scene.add(root);
   const st=()=>({b:new V3(),ok:false});
   return {P,root,bones,skel,k:P.k*u.s/(u.T.s||u.s),q:P.B.map(b=>b.q.clone()),qw:P.B.map(()=>new THREE.Quaternion()),pw:P.B.map(()=>new V3()),
-    ik:{l:[st(),st()],w:[st(),st()]},kw:[0,0],curl:[.05,.05],rw:[0,0],armW:0,nr:0,wrT:[new V3(),new V3()],wrOK:false,cw:[new V3(0,0,1),new V3(0,0,1)],cwOK:false,dy:0,need:-1e9,fs:[0,1].map(()=>({p:new V3(),from:new V3(),to:new V3(),sw:new V3(),t:-1,own:false,swOn:false,init:false})),lp:null,tail:{d:P.tail.map(()=>new V3()),v:P.tail.map(()=>new V3()),init:false},t:-1,
+    ik:{l:[st(),st()],w:[st(),st()]},kw:[0,0],curl:[.05,.05],rw:[0,0],armW:0,nr:0,nq:[0,1,2,3].map(()=>new THREE.Quaternion()),nqOK:false,jaw:0,jv:0,wrT:[new V3(),new V3()],wrOK:false,cw:[new V3(0,0,1),new V3(0,0,1)],cwOK:false,dy:0,need:-1e9,fs:[0,1].map(()=>({p:new V3(),from:new V3(),to:new V3(),sw:new V3(),t:-1,own:false,swOn:false,init:false})),lp:null,tail:{d:P.tail.map(()=>new V3()),v:P.tail.map(()=>new V3()),init:false},t:-1,
     seat:new V3(),seatOK:false,head:new V3(),hd:new V3(0,0,1),mouth:new V3(),toeT:[new V3(),new V3()],hock:[new V3(),new V3()],handT:[new V3(),new V3()],posed:0,decap:false};
 }
 // a creature model replaces the procedural body: the gear groups of the old body go, the model joins the scene
@@ -170,7 +170,7 @@ function cgAttach(u){
   const G=u.G; if(G) for(const k in G){ if(/^c_|^bw[LR]$/.test(k)&&G[k]&&G[k].isObject3D){ dropRoot(G[k]); delete G[k]; } }
   return true;
 }
-function cgReset(I){ for(const st of I.ik.l.concat(I.ik.w)){ st.ok=false; st.n=null; } I.kw[0]=I.kw[1]=0; I.curl[0]=I.curl[1]=.05; I.rw[0]=I.rw[1]=0; I.armW=-1; I.cwOK=false; I.nr=0; I.wrOK=false; I.dy=0; I.need=-1e9; I.tail.init=false; for(const f of I.fs) f.init=false; }
+function cgReset(I){ for(const st of I.ik.l.concat(I.ik.w)){ st.ok=false; st.n=null; } I.kw[0]=I.kw[1]=0; I.curl[0]=I.curl[1]=.05; I.rw[0]=I.rw[1]=0; I.armW=-1; I.cwOK=false; I.nr=0; I.nqOK=false; I.wrOK=false; I.dy=0; I.need=-1e9; I.tail.init=false; for(const f of I.fs) f.init=false; }
 function cgDrop(u){ const I=u.cg; if(!I) return; CG.live.delete(I); scene.remove(I.root); I.skel.dispose(); u.cg=null; }
 
 /* ---------- bone helpers: world rotation (qw) and head position (pw) kept per bone as it is posed, parents first ---------- */
@@ -315,6 +315,8 @@ const _cgW1=new V3(),_cgW2=new V3(),_cgW3=new V3(),_cgW4=new V3(),_cgW5=new V3()
 
 /* ---------- the Wyvern: posed from the four-limbed rig (27-hellcrawler) and its wings (27f) ---------- */
 const CG_NECKW=[.3,.58,.84];
+const CG_NECKS=[-.2,.03,.19];   // the S: the base pitched up, the top down (about the chest's right; - raises)
+const CG_NECKR=[26,19,15,12];   // how quickly each neck segment and the head follow (per second)
 function cgPoseWyvern(u){
   const I=u.cg, P=I.P, cr=u.cr, j=u.j, F=u.wy, p=u.ps||{}, k=I.k, alive=u.alive, dt=cgDt(I), Ix=P.I;
   // body frames from the rig, carried onto the model's rest pose
@@ -327,8 +329,15 @@ function cgPoseWyvern(u){
   cgFrameZ(_cgD3,cr.hd,cr.hu).multiply(P.N.head);   // …the head with its head
   cgDelta(I,Ix.pelvis,_cgD1); _cgD4.slerpQuaternions(_cgD1,_cgD2,.5); cgDelta(I,Ix.spine,_cgD4); cgDelta(I,Ix.chest,_cgD2);
   // the neck spreads the head's turn over its three segments; the neck channel raises it (+) or thrusts it low (-)
+  // a living neck is an S: its base rises from the chest, its top curves forward and down to a level head (the curve
+  // straightens when it thrusts low or stretches out in flight); in flight the neck takes up the body's heave so the
+  // head stays steadier than the body (as birds' do)
   const raise=alive?clamp(p.neck||0,-1,1):0; _cgc3.set(1,0,0).applyQuaternion(I.qw[Ix.chest]);
-  for(let m=0;m<3;m++){ _cgD4.slerpQuaternions(_cgD2,_cgD3,CG_NECKW[m]); if(raise){ _cgq4.setFromAxisAngle(_cgc3,-raise*.22); _cgD4.premultiply(_cgq4); } cgDelta(I,P.neck[m],_cgD4); }
+  const fly=F?clamp(F.sp||0,0,1):0, Sc=alive?(1-.6*fly)*(1-.5*Math.max(0,-raise)):0, hv=alive&&fly>.02?wyBeat(F.ph/TAU-.14,F.dn||.58)*(F.amp||0)*fly*.1:0;
+  for(let m=0;m<3;m++){ _cgD4.slerpQuaternions(_cgD2,_cgD3,CG_NECKW[m]);
+    const a=-raise*.22+Sc*CG_NECKS[m]+hv*(m===0?1:m===2?-1:0); if(a){ _cgq4.setFromAxisAngle(_cgc3,a); _cgD4.premultiply(_cgq4); } cgDelta(I,P.neck[m],_cgD4); }
+  // the head lifts a little as the jaws open wide (a roar, a bite's gape)
+  const jo=alive?clamp(I.jaw,0,1):0; if(jo>.25){ _cgq4.setFromAxisAngle(_cgc3,-(jo-.25)*.2); _cgD3.premultiply(_cgq4); }
   cgDelta(I,Ix.head,_cgD3);
   // during a strike (and a finisher) the neck reaches toward the rig's head, so a bite lands where the game aims it
   // (eased: a looping clip ends without a blend out)
@@ -338,10 +347,22 @@ function cgPoseWyvern(u){
       _cgq4.setFromUnitVectors(_cgc4.normalize(),_cgc5.normalize()); _cgq5.identity().slerp(_cgq4,reach*.5); _cgq4.multiplyQuaternions(_cgq5,I.qw[ji]); cgSetW(I,ji,_cgq4);
       for(let q=m+1;q<3;q++) cgFK(I,P.neck[q]); cgFK(I,Ix.head); }
     _cgq4.multiplyQuaternions(_cgD3,P.RQ[Ix.head]); cgSetW(I,Ix.head,_cgq4); }   // the head keeps its own aim
+  // overlapping action: the neck's base turns first, each segment after it a little later, the head last (a heavy neck
+  // has inertia); a strike tightens it so the bite still lands where the game aims it
+  if(alive&&I.nqOK){ const tk=1+3*reach; for(let m=0;m<4;m++){ const ji=m<3?P.neck[m]:Ix.head;
+      _cgq4.copy(I.nq[m]).slerp(I.qw[ji],1-Math.exp(-dt*CG_NECKR[m]*tk)); cgSetW(I,ji,_cgq4); } }
+  for(let m=0;m<4;m++) I.nq[m].copy(I.qw[m<3?P.neck[m]:Ix.head]); I.nqOK=true;
   if(u.decapped&&!alive) I.decap=true;
-  cgJaw(I,.04+clamp(cr.jaw,0,1)*.62);
+  // the jaw: a muscle, not a switch — it opens with a little ease, snaps shut fast and the teeth clack (a small bounce),
+  // and a wide-open roar trembles
+  { const tgt=clamp(cr.jaw,0,1), opening=tgt>I.jaw, w=opening?16:34, z=opening?1:.55;
+    I.jv+=(w*w*(tgt-I.jaw)-2*z*w*I.jv)*dt; I.jaw+=I.jv*dt; if(I.jaw<-.06){ I.jaw=-.06; I.jv=-I.jv*.35; }
+    if(!alive){ I.jaw=tgt; I.jv=0; }
+    const tr=I.jaw>.55&&alive?Math.sin(game.time*41+u.id)*.03*(I.jaw-.55)/.45:0;
+    cgJaw(I,.04+clamp(I.jaw+tr,-.04,1.05)*.62); }
   const sp=clamp(u.spd/u.T.speed,0,1), sway=alive?Math.sin(game.time*2.1+u.id)*(.35+.25*(1-sp)):0;
-  cgTail(I,_cgc6,alive?clamp((p.tup||0)+(p.alt||0)*.45,-1.2,1.6):0,alive?clamp((p.tsw||0)-(p.twist||0)*.8,-1.5,1.5):0,sway,alive,dt,.22);
+  const tfl=alive&&fly>.02?fly*(-.25+.2*wyBeat(F.ph/TAU-.3,F.dn||.58)*(F.amp||0)):0;
+  cgTail(I,_cgc6,alive?clamp((p.tup||0)+(p.alt||0)*.45+tfl,-1.2,1.6):0,alive?clamp((p.tsw||0)-(p.twist||0)*.8,-1.5,1.5):0,sway,alive,dt,.22);
   // legs: the rig's planted (or tucked) toes; the metatarsal at the model's own angle unless a kick or the air tilts it
   const mt=clamp(dt*13,.12,.45)*3, air=alive&&!!(F&&F.air);
   const kk=alive?p.kick||0:0;

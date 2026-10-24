@@ -120,13 +120,16 @@ function wyTick(u,dt){
   const flying=F.mode!=='ground'; F.sp+=((flying?1:0)-F.sp)*(1-Math.exp(-dt*(flying?5:3)));
   if(flying){ const climb=F.mode==='up'||tgt-F.alt>1, desc=F.mode==='down', gl=!climb&&!desc&&u.spd>5.5?1:0;
     F.gl+=(gl-F.gl)*(1-Math.exp(-dt*1.6));
-    const amp=climb?1:desc?.75:.55-.42*F.gl; F.amp+=(amp-F.amp)*(1-Math.exp(-dt*4));
-    F.fq+=((climb?2.2:desc?1.9:1.45)-F.fq)*(1-Math.exp(-dt*3));
+    const amp=climb?1.1:desc?.7:.6-.46*F.gl; F.amp+=(amp-F.amp)*(1-Math.exp(-dt*4));
+    // a big flyer beats slowly and heavily; climbing it labours with a longer power stroke
+    F.fq+=((climb?1.7:desc?1.35:1.15)-F.fq)*(1-Math.exp(-dt*3));
+    F.dn=(F.dn||.58)+((climb?.64:.56)-(F.dn||.58))*(1-Math.exp(-dt*3));
     const pp=F.ph; F.ph+=TAU*F.fq*dt*(1-F.gl*.85);
     if(Math.floor(pp/TAU)!==Math.floor(F.ph/TAU)&&F.amp>.4&&u.crVis!==false) sfx('wyvernFlap',u.pos,.3+F.amp*.35,{rate:1+Math.random()*.15}); }
   else F.amp*=Math.exp(-dt*5);
   F.bank+=((flying?clamp(-(u.turnV||0)*.32,-.8,.8):0)-F.bank)*(1-Math.exp(-dt*5));
-  u.wyA=F.alt+(flying?Math.sin(F.ph)*F.amp*.16*u.s:0);
+  // each downstroke heaves the body up a little after it (lift lags the stroke); it sinks through the recovery
+  u.wyA=F.alt+(flying?-wyBeat(F.ph/TAU-.14,F.dn||.58)*F.amp*.13*u.s:0);
   if(F.br>0) F.br-=dt; if(F.glow>0) F.glow-=dt;
   if(!host) return;
   if(F.ab) wyAbTick(u,F,dt); else wyAuto(u,F,dt);
@@ -305,26 +308,39 @@ function wyPose(u,p){
   if(fl>.02){ const a=smooth(clamp(F.alt/2,0,1)); p.lean+=(.22+clamp(u.spd/12,0,.25))*a; p.crouch=lerp(p.crouch,.08,a); p.side+=F.bank*a; p.alt=(p.alt||0)+.55*a; if(F.alt>.4) p.jump=Math.max(p.jump,.05); }
   if(F.mode==='down'&&F.fastDown) p.lean+=.35;
 }
-const _wq1=new V3(),_wq2=new V3(),_wq3=new V3(),_wq4=new V3(),_wq5=new V3();
+// a wingbeat, as large flyers and bats beat (references: bat wingbeat kinematics, JEB 209:3887 — the downstroke takes
+// ~0.45–0.65 of the beat and the upstroke starts by flexing elbow and wrist; flight-animation practice — a broad
+// powerful downstroke, a tight quick upstroke, the wingtips trailing the arm, the body rising and falling with the beat
+// and the tail reacting last). c: the cycle (0 = wings at the top), d: the downstroke's share. +1 at the top, -1 at the
+// bottom of the stroke.
+function wyBeat(c,d){ c-=Math.floor(c); return c<d?Math.cos(Math.PI*c/d):-Math.cos(Math.PI*(c-d)/(1-d)); }
+// how flexed the wing is: elbow and wrist fold through the upstroke (least drag), open again for the downstroke
+function wyFoldUp(c,d){ c-=Math.floor(c); return c<d?0:Math.sin(Math.PI*(c-d)/(1-d)); }
+const _wq1=new V3(),_wq2=new V3(),_wq3=new V3(),_wq4=new V3(),_wq5=new V3(),_wq6=new V3(),_wq7=new V3();
 function wySkel(u,p){
-  const F=wyU(u), cr=u.cr, j=u.j, s=u.s, S=clamp(p.wing||0,0,1), flap=F.sp>.02?Math.sin(F.ph)*F.amp*F.sp:0;
-  const elev=(p.wup||0)*.7+flap*.95+F.gl*.08, sw=(p.wsw||0);
+  const F=wyU(u), cr=u.cr, j=u.j, s=u.s, S=clamp(p.wing||0,0,1), fw=F.sp>.02?F.amp*F.sp:0, c=F.ph/TAU, d=F.dn||.58;
+  // the arm leads, the forearm follows a beat-fraction later, the fingers (the wing's tip) later still: overlap
+  const eH=wyBeat(c,d)*fw, eF=wyBeat(c-.06,d)*fw, eT=wyBeat(c-.13,d)*fw, uf=wyFoldUp(c-.03,d)*fw*(1-F.gl);
+  const base=(p.wup||0)*.7+F.gl*.12, sw=(p.wsw||0), elev=base+eH*.95, elevF=base+eF*.95, elevT=base+eT*.95;
   for(const sd of [-1,1]){ const X=sd<0?'L':'R', W=F.W[X], R=cr.rc, U=cr.n, Fw=cr.d2;
-    // folded (the rig's knuckle-walking arm) and spread (out to the side, raised by `elev`)
+    // folded (the rig's knuckle-walking arm) and spread (out to the side, raised by the beat)
     const sh0=j['s'+X], el0=j['e'+X], wr0=j['h'+X];
     W.sh.copy(cr.C).addScaledVector(R,sd*.16*s).addScaledVector(U,.06*s).addScaledVector(Fw,.03*s).lerp(sh0,1-S);
-    const ce=Math.cos(elev), se=Math.sin(elev);
-    _wq1.copy(R).multiplyScalar(sd*ce).addScaledVector(U,se);   // out, raised
-    _wq2.copy(_wq1).multiplyScalar(Math.cos(.62+sw*.3)).addScaledVector(Fw,-Math.sin(.62+sw*.3)).normalize();   // humerus: out and back
-    _wq3.copy(_wq1).multiplyScalar(Math.cos(.35-sw*.35)).addScaledVector(Fw,Math.sin(.35-sw*.35)).normalize();   // forearm: out and forward
+    _wq1.copy(R).multiplyScalar(sd*Math.cos(elev)).addScaledVector(U,Math.sin(elev));   // the humerus' plane: out, raised
+    _wq6.copy(R).multiplyScalar(sd*Math.cos(elevF)).addScaledVector(U,Math.sin(elevF));   // the forearm's (lagging)
+    _wq7.copy(R).multiplyScalar(sd*Math.cos(elevT)).addScaledVector(U,Math.sin(elevT));   // the fingers' (lagging more)
+    const bh=.62+sw*.3+uf*.3, af=.35-sw*.35-uf*1.15;   // the upstroke draws the humerus back and folds the forearm back
+    _wq2.copy(_wq1).multiplyScalar(Math.cos(bh)).addScaledVector(Fw,-Math.sin(bh)).normalize();   // humerus: out and back
+    _wq3.copy(_wq6).multiplyScalar(Math.cos(af)).addScaledVector(Fw,Math.sin(af)).addScaledVector(U,-uf*.35).normalize();   // forearm: out and forward, folded on the upstroke
     _wq4.copy(W.sh).addScaledVector(_wq2,CRB.ua*s); W.el.copy(el0).lerp(_wq4,S);
     _wq5.subVectors(W.el,W.sh); W.el.copy(W.sh).addScaledVector(_wq5.normalize(),CRB.ua*s);
     _wq4.copy(W.el).addScaledVector(_wq3,CRB.fa*s); W.wr.copy(wr0).lerp(_wq4,S);
     _wq5.subVectors(W.wr,W.el); W.wr.copy(W.el).addScaledVector(_wq5.normalize(),CRB.fa*s);
     // the fingers fan back from the wrist; folded they lie back along the arm
     const fold=_wq5.subVectors(W.el,W.wr).normalize().multiplyScalar(.75).addScaledVector(U,.5).addScaledVector(R,sd*.12).normalize();
-    for(let i=0;i<3;i++){ const a=[-.05,.6,1.15][i]+sw*[.35,.45,.35][i], L=[1.5,1.32,1.02][i]*s*(.48+.52*S);
-      _wq4.copy(_wq1).multiplyScalar(Math.cos(a)).addScaledVector(Fw,-Math.sin(a)).addScaledVector(U,-flap*.22*(i+1)/3).normalize();
+    for(let i=0;i<3;i++){ const a=[-.05,.6,1.15][i]+sw*[.35,.45,.35][i]+uf*[.55,.6,.45][i], L=[1.5,1.32,1.02][i]*s*(.48+.52*S)*(1-uf*.22);
+      // the tips trail the arm: still low as it rises, still high as it falls, then follow through
+      _wq4.copy(_wq7).multiplyScalar(Math.cos(a)).addScaledVector(Fw,-Math.sin(a)).addScaledVector(U,(eT-eH)*.18*(i+1)/3).normalize();
       _wq4.lerp(fold,1-S).normalize(); W.t[i].copy(W.wr).addScaledVector(_wq4,L); }
     W.fb.copy(j['hip'+X]).addScaledVector(U,.06*s).addScaledVector(R,sd*.05*s);
     W.fm.copy(cr.M).addScaledVector(R,sd*.17*s).addScaledVector(U,.08*s);
