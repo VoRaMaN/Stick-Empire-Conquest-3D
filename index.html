@@ -730,6 +730,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .arm-trade .arm-row span{opacity:.8;min-width:70px}
 .arm-trade select{flex:1;min-width:0;padding:5px 8px;border-radius:8px;background:#2a2016;color:#f5ecd9;border:1px solid rgba(245,236,217,.25);font:inherit}
 .forms-card .pills button[aria-selected="true"]{background:#e2ae35;color:#1e160e}
+
+/* animation debug view (development mode only, 35b-animdebug.js) */
+#animDbg{position:fixed;inset:0;pointer-events:none;z-index:40;font:600 11px/1.25 ui-monospace,Menlo,Consolas,monospace}
+#animDbg .adbg-l{position:absolute;left:0;top:0;white-space:nowrap;color:#f4f4f4;background:rgba(10,12,16,.72);padding:2px 5px;border-radius:3px;border:1px solid rgba(255,255,255,.18)}
+#animDbg .adbg-key{position:absolute;left:8px;bottom:8px;max-width:min(560px,calc(100vw - 16px));color:#e8e8e8;background:rgba(10,12,16,.78);padding:6px 8px;border-radius:4px;white-space:normal}
 </style>
 </head>
 <body>
@@ -1119,7 +1124,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
     <div class="sl"><label for="sLean">Run lean</label><output id="oLean">1.00×</output><input id="sLean" type="range" min="0" max="1.8" step="0.01" value="1"><small>How hard units lean into a sprint.</small></div>
     <div class="sl"><label for="sSpring">Springiness</label><output id="oSpring">1.00×</output><input id="sSpring" type="range" min="0.4" max="2" step="0.01" value="1"><small>Lower is floppier: more overshoot on lean, head and hit reactions.</small></div>
     <div class="sl"><label for="sSpeed">Game speed</label><output id="oSpeed">1.00×</output><input id="sSpeed" type="range" min="0.1" max="1.5" step="0.01" value="1"></div>
-    <label class="tg" for="sDbg">Show IK targets <input id="sDbg" type="checkbox"></label>
+    <label class="tg" for="sDbg" id="sDbgRow" hidden>Animation debug (F9) <input id="sDbg" type="checkbox"></label>
   </div>
 
   <div id="toast" class="toast" hidden role="status"><span id="toastT"></span><button id="toastBtn" hidden></button></div>
@@ -1128,6 +1133,6 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 <script src="online-config.js"></script>
 <script src="vendor/supabase.46a3cc6618.js"></script>
 <script src="vendor/three.min.js"></script>
-<script src="game.4e2755bc84.js"></script>
+<script src="game.bd5cc34d21.js"></script>
 </body>
 </html>

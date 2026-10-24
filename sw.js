@@ -1,6 +1,6 @@
 // Offline cache for Stick Empire 3D. The build writes the version and file list in.
-const CACHE = 'se3d-0dd54c9123';
-const FILES = ["./","assets.de9e534c6b.json","fonts/barlow-semi-condensed-latin-500-normal.woff2","fonts/barlow-semi-condensed-latin-600-normal.woff2","fonts/fonts.css","fonts/teko-latin-500-normal.woff2","fonts/teko-latin-600-normal.woff2","game.4e2755bc84.js","icons/apple-touch-icon.png","icons/favicon-48.png","icons/icon-192.png","icons/icon-512.png","icons/maskable-512.png","manifest.webmanifest","online-config.js","vendor/supabase.46a3cc6618.js","vendor/three.min.js"];
+const CACHE = 'se3d-fc2f3e7965';
+const FILES = ["./","assets.de9e534c6b.json","fonts/barlow-semi-condensed-latin-500-normal.woff2","fonts/barlow-semi-condensed-latin-600-normal.woff2","fonts/fonts.css","fonts/teko-latin-500-normal.woff2","fonts/teko-latin-600-normal.woff2","game.bd5cc34d21.js","icons/apple-touch-icon.png","icons/favicon-48.png","icons/icon-192.png","icons/icon-512.png","icons/maskable-512.png","manifest.webmanifest","online-config.js","vendor/supabase.46a3cc6618.js","vendor/three.min.js"];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
