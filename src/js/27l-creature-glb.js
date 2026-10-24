@@ -158,7 +158,7 @@ function cgMake(u){
   scene.add(root);
   const st=()=>({b:new V3(),ok:false});
   return {P,root,bones,skel,k:P.k*u.s/(u.T.s||u.s),q:P.B.map(b=>b.q.clone()),qw:P.B.map(()=>new THREE.Quaternion()),pw:P.B.map(()=>new V3()),
-    ik:{l:[st(),st()],w:[st(),st()]},kw:[0,0],curl:[.05,.05],rw:[0,0],armW:0,nr:0,nq:[0,1,2,3].map(()=>new THREE.Quaternion()),nqOK:false,jaw:0,jv:0,bw:0,bt:new V3(),aw:0,wrT:[new V3(),new V3()],wrOK:false,cw:[new V3(0,0,1),new V3(0,0,1)],cwOK:false,dy:0,need:-1e9,fs:[0,1].map(()=>({p:new V3(),from:new V3(),to:new V3(),sw:new V3(),t:-1,own:false,swOn:false,init:false})),lp:null,tail:{d:P.tail.map(()=>new V3()),v:P.tail.map(()=>new V3()),init:false},t:-1,
+    ik:{l:[st(),st()],w:[st(),st()]},kw:[0,0],curl:[.05,.05],rw:[0,0],armW:0,nr:0,nq:[0,1,2,3].map(()=>new THREE.Quaternion()),nqOK:false,jaw:0,jv:0,bw:0,bt:new V3(),aw:0,gz:0,wrT:[new V3(),new V3()],wrOK:false,cw:[new V3(0,0,1),new V3(0,0,1)],cwOK:false,dy:0,need:-1e9,fs:[0,1].map(()=>({p:new V3(),from:new V3(),to:new V3(),sw:new V3(),t:-1,own:false,swOn:false,init:false})),lp:null,tail:{d:P.tail.map(()=>new V3()),v:P.tail.map(()=>new V3()),init:false},t:-1,
     seat:new V3(),seatOK:false,head:new V3(),hd:new V3(0,0,1),mouth:new V3(),toeT:[new V3(),new V3()],hock:[new V3(),new V3()],handT:[new V3(),new V3()],posed:0,decap:false};
 }
 // a creature model replaces the procedural body: the gear groups of the old body go, the model joins the scene
@@ -342,14 +342,14 @@ function cgNeckLimits(I){ const P=I.P; for(let m=0;m<4;m++){ const ji=m<3?P.neck
 // in r128: from the effector's parent outward, each step's turn capped, each joint then held in its limits) bringing the
 // model's jaws — not its skull's root — to where the game's bite lands (the rig's mouth), so the head pitches with the
 // neck instead of hinging down at its root
-function cgNeckReach(u,I,w,T){ const P=I.P, Ix=P.I, k=I.k, L=[Ix.head,P.neck[2],P.neck[1],P.neck[0]], lim=[CG_NECKLIM[3],CG_NECKLIM[2],CG_NECKLIM[1],CG_NECKLIM[0]];
+function cgNeckReach(u,I,w,T,iters,cap){ const P=I.P, Ix=P.I, k=I.k, L=[Ix.head,P.neck[2],P.neck[1],P.neck[0]], lim=[CG_NECKLIM[3],CG_NECKLIM[2],CG_NECKLIM[1],CG_NECKLIM[0]];
   if(T!==_cgN1) _cgN1.copy(T);
-  for(let it=0;it<3;it++) for(let l=0;l<4;l++){ const ji=L[l];
+  for(let it=0;it<(iters||3);it++) for(let l=0;l<4;l++){ const ji=L[l];
     cgDir(I,Ix.head,_cgN2); _cgN3.copy(I.pw[Ix.head]).addScaledVector(_cgN2,P.snout*.7*k);
     _cgN4.subVectors(_cgN3,I.pw[ji]); _cgN5.subVectors(_cgN1,I.pw[ji]); if(_cgN4.lengthSq()<1e-6||_cgN5.lengthSq()<1e-6) continue;
     _cgN4.normalize(); _cgN5.normalize(); const ang=Math.acos(clamp(_cgN4.dot(_cgN5),-1,1)); if(ang<1e-4) continue;
     _cgN6.crossVectors(_cgN4,_cgN5); if(_cgN6.lengthSq()<1e-10) continue; _cgN6.normalize();
-    _cgNq1.setFromAxisAngle(_cgN6,Math.min(ang,.22)*w); _cgNq2.multiplyQuaternions(_cgNq1,I.qw[ji]); cgSetW(I,ji,_cgNq2); cgLimitJ(I,ji,lim[l]);
+    _cgNq1.setFromAxisAngle(_cgN6,Math.min(ang,cap||.22)*w); _cgNq2.multiplyQuaternions(_cgNq1,I.qw[ji]); cgSetW(I,ji,_cgNq2); cgLimitJ(I,ji,lim[l]);
     for(let q=4-l;q<3;q++) cgFK(I,P.neck[q]); if(l) cgFK(I,Ix.head); } }
 const CG_NECKS=[-.2,.03,.19];   // the S: the base pitched up, the top down (about the chest's right; - raises)
 const CG_NECKR=[26,19,15,12];   // how quickly each neck segment and the head follow (per second)
@@ -369,7 +369,21 @@ function cgPoseWyvern(u){
   // straightens when it thrusts low or stretches out in flight); in flight the neck takes up the body's heave so the
   // head stays steadier than the body (as birds' do)
   const raise=alive?clamp(p.neck||0,-1,1):0; _cgc3.set(1,0,0).applyQuaternion(I.qw[Ix.chest]);
-  const fly=F?clamp(F.sp||0,0,1):0, Sc=alive?(1-.6*fly)*(1-.5*Math.max(0,-raise))*(1-.7*I.nr):0, hv=alive&&fly>.02?wyBeat(F.ph/TAU-.14,F.dn||.58)*(F.amp||0)*fly*.1:0;
+  const fly=F?clamp(F.sp||0,0,1):0;
+  // the head's carriage. Aloft it points straight ahead along the line of flight, a little down to watch the ground
+  // (a flyer's neck and head stretch out level, not raised); on the ground it is carried a touch low, and when not
+  // busy it follows the nearest threat with the eyes and head (a predator's gaze), with a small restless drift
+  if(alive){ const busy=u.action&&!u.action.c.idle;
+    if(fly>.02){ _cgN2.set(cr.f.x,0,cr.f.z); if(_cgN2.lengthSq()<1e-6) _cgN2.set(u.fwdW.x,0,u.fwdW.z); _cgN2.normalize().addScaledVector(UP,-.14).normalize();
+      _cgN3.copy(cr.d2).normalize(); cgSlerpDir(_cgN2,_cgN2,_cgN3,.3);
+      cgFrameZ(_cgNq1,_cgN2,cr.n).multiply(P.N.head); _cgD3.slerp(_cgNq1,fly*.9*(1-I.nr)); }
+    const tg=(u.target&&u.target.alive&&u.target.pos)?u.target:(u.atkTarget&&u.atkTarget.alive&&u.atkTarget.pos?u.atkTarget:null);
+    let ye=0; if(tg&&!busy){ const dx=tg.pos.x-u.pos.x, dz=tg.pos.z-u.pos.z, d=Math.hypot(dx,dz); if(d<26&&d>.5){ const hx=cr.hd.x, hz=cr.hd.z, hl=Math.hypot(hx,hz)||1; ye=Math.atan2((hx*dz-hz*dx)/hl*-1,(hx*dx+hz*dz)/hl)/1; } }
+    I.gz+=((tg&&!busy?clamp(ye,-.95,.95)*.7:0)-I.gz)*(1-Math.exp(-dt*3.5));
+    const drift=busy?0:(Math.sin(game.time*.73+u.id)*.05+Math.sin(game.time*1.91+u.id*2.3)*.022)*(1-fly*.6);
+    _cgNq1.setFromAxisAngle(UP,I.gz+drift); _cgD3.premultiply(_cgNq1);
+    const dn=(1-fly)*(1-I.nr)*.1+(busy?0:Math.sin(game.time*.53+u.id*1.7)*.03); if(dn){ _cgNq1.setFromAxisAngle(_cgc3,dn); _cgD3.premultiply(_cgNq1); } }
+  const Sc=alive?(1-.9*fly)*(1-.5*Math.max(0,-raise))*(1-.7*I.nr):0, hv=alive&&fly>.02?wyBeat(F.ph/TAU-.14,F.dn||.58)*(F.amp||0)*fly*.1:0;
   for(let m=0;m<3;m++){ _cgD4.slerpQuaternions(_cgD2,_cgD3,CG_NECKW[m]);
     const a=-raise*.22+Sc*CG_NECKS[m]+hv*(m===0?1:m===2?-1:0); if(a){ _cgq4.setFromAxisAngle(_cgc3,a); _cgD4.premultiply(_cgq4); } cgDelta(I,P.neck[m],_cgD4); }
   // the head lifts a little as the jaws open wide (a roar, a bite's gape)
@@ -382,14 +396,14 @@ function cgPoseWyvern(u){
   // blow has landed (or the victim is seized) the neck follows the game's choreography again
   const vt=cgBiteTarget(u,I); I.bw+=((vt?1:0)-I.bw)*(1-Math.exp(-dt*(vt?9:6)));
   _cgN1.copy(j.head).addScaledVector(cr.hd,.55*u.s); if(I.bw>.005) _cgN1.lerp(I.bt,I.bw);
-  if(reach>.01) cgNeckReach(u,I,reach,_cgN1);
+  const rwt=Math.max(reach,I.bw); if(rwt>.01) cgNeckReach(u,I,rwt,_cgN1,I.bw>.3?4:3,I.bw>.3?.32:.22);
   // breathing fire: the head turns its jaws to the stream's target
   I.aw+=((alive&&F&&F.br>0&&F.bT?1:0)-I.aw)*(1-Math.exp(-dt*8)); if(I.aw>.01) cgHeadAim(I,F.bT,I.aw);
   // every neck joint and the head within its range of motion (no joint folded at a right angle: the neck curves)
   cgNeckLimits(I);
   // overlapping action: the neck's base turns first, each segment after it a little later, the head last (a heavy neck
   // has inertia); a strike tightens it so the bite still lands where the game aims it
-  if(alive&&I.nqOK){ const tk=1+3*reach; for(let m=0;m<4;m++){ const ji=m<3?P.neck[m]:Ix.head;
+  if(alive&&I.nqOK){ const tk=1+3*reach+6*I.bw; for(let m=0;m<4;m++){ const ji=m<3?P.neck[m]:Ix.head;
       _cgq4.copy(I.nq[m]).slerp(I.qw[ji],1-Math.exp(-dt*CG_NECKR[m]*tk)); cgSetW(I,ji,_cgq4); } }
   for(let m=0;m<4;m++) I.nq[m].copy(I.qw[m<3?P.neck[m]:Ix.head]); I.nqOK=true;
   if(u.decapped&&!alive) I.decap=true;

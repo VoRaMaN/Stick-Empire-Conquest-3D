@@ -232,19 +232,29 @@ function wyAbTick(u,F,dt){
 function wyAI(u,F,dt){
   F.aiT=(F.aiT||rand(.5,1.5))-dt; if(F.aiT>0) return; F.aiT=rand(.8,1.4)*(u.team===myTeam()&&!game.demo?1:aiDiff().abilityCd);
   const r=u.reg; if(!r||F.ab||u.action&&!u.action.c.idle) return;
-  const ready=ab=>regAbReady(r,ab), cast=ab=>{ if(ready(ab)) regAbility(u.team,r,ab); };
-  const near=n=>wyFoes(u,n,o=>!isAir(o)).length, now=game.time;
-  if(u.hp<u.maxHp*.5&&near(4)>=2&&ready('shield')) return cast('shield');
-  if(near(3.6)&&ready('judge')) return cast('judge');
-  if(near(5)>=4&&ready('storm')) return cast('storm');
-  if(near(8)>=3&&ready('breath')) return cast('breath');
-  if(near(9)>=5&&ready('screech')) return cast('screech');
-  const c=wyCluster(u,26);
-  if(c&&c.n>=6&&ready('assault')) return cast('assault');
-  if(c&&c.n>=3&&Math.hypot(c.o.pos.x-u.pos.x,c.o.pos.z-u.pos.z)>8&&ready('dive')) return cast('dive');
-  if(c&&c.n>=3&&Math.hypot(c.o.pos.x-u.pos.x,c.o.pos.z-u.pos.z)>7&&ready('royal')) return cast('royal');
-  const p=wyBestPrey(u,22); if(p&&(p.T.ranged||CAV_PREY[p.type])&&p.hp<p.maxHp*.6&&ready('exec')) return cast('exec');
-  if(p&&p.T.ranged&&ready('pursuit')) return cast('pursuit');
+  // every ability that is ready and unlocked is scored for this moment and the best worth its cooldown is used
+  // (v0.35.4: was the first rule that matched — a breath into one soldier, a dive beside the real crowd)
+  const have=new Set(regAbilities(r).filter(ab=>regAbReady(r,ab))); if(!have.size) return;
+  const foes=wyFoes(u,28,o=>!isAir(o)), hx=Math.sin(u.face), hz=Math.cos(u.face), hpF=u.hp/u.maxHp;
+  let n36=0,n5=0,n9=0,cone=0,coneR=0,rangedNear=0,hitters=0;
+  for(const o of foes){ const dx=o.pos.x-u.pos.x, dz=o.pos.z-u.pos.z, d=Math.hypot(dx,dz)||1, ahead=(dx*hx+dz*hz)/d;
+    if(d<3.6) n36++; if(d<5) n5++; if(d<9) n9++;
+    if(d<(F.air?13:9)&&ahead>.8){ cone++; if(o.T.ranged) coneR++; }   // in the breath's cone
+    if(o.T.ranged&&d<26) rangedNear++; if(o.atkTarget===u||o.target===u) hitters++; }
+  const c=wyCluster(u,26), cd=c?Math.hypot(c.o.pos.x-u.pos.x,c.o.pos.z-u.pos.z):0, cR=c?wyFoes(c.o,4.5,o=>o.T.ranged).length:0;
+  const p=wyBestPrey(u,22), S={};
+  if(have.has('shield')) S.shield=(hpF<.6?2.5:0)+hitters*.5+rangedNear*.35-(hpF>.85?3:0);
+  if(have.has('judge')) S.judge=n36*1.4-.5;
+  if(have.has('storm')) S.storm=n5*1.1+(hpF<.5?1:0)-2.5;
+  if(have.has('breath')) S.breath=cone*1.3+coneR*.8-1.6;
+  if(have.has('screech')) S.screech=n9*.7+hitters*.3-3;
+  if(c&&have.has('assault')) S.assault=c.n*.9+cR*.6-4.5;
+  if(c&&have.has('dive')&&cd>8) S.dive=c.n*1.1+cR*.8-2.6;
+  if(c&&have.has('royal')&&cd>7) S.royal=c.n*.9-2.4;
+  if(p&&have.has('exec')) S.exec=(p.T.ranged||CAV_PREY[p.type]?1.5:0)+(1-p.hp/p.maxHp)*3-1.4;
+  if(p&&p.T.ranged&&have.has('pursuit')) S.pursuit=1.2+rangedNear*.3-1;
+  let best=null, bs=0; for(const ab in S) if(S[ab]>bs){ bs=S[ab]; best=ab; }
+  if(best) regAbility(u.team,r,best);
 }
 
 /* ---------- clip events (damage only on the host; the sights on every screen) ---------- */
@@ -423,4 +433,4 @@ TYPES.knight.pick=(u,t)=>{
     if(u.wy&&u.wy.ab) return true;   // an ability is steering him (27f)
     if(brain0(u,dt)) return true;
     return false; }; }
-RIDER.knight.legW=.15; RIDER.knight.rs=1.22;   // v0.32: a knight on a wyvern twice the size
+RIDER.knight.legW=.15; RIDER.knight.rs=1;   // v0.35.4: the rider at a swordsman's size (v0.32 made him 1.22)

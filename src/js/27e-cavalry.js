@@ -77,6 +77,10 @@ const RC={steel:new THREE.Color('#a9b0ba'),steelD:new THREE.Color('#6c737e'),woo
   cbody:new THREE.Color('#1a1012'),clance:new THREE.Color('#1b1716'),chead:new THREE.Color('#5a1a10'),gold:new THREE.Color('#e2ae35')};
 const lanceK=u=>u.lanceT>0?Math.sin(Math.PI*clamp(1-u.lanceT/LANCE_T,0,1)):0;
 function riderOf(u){ return u.T.horse?RIDER.knight:u.rider?RIDER[u.type]||RIDER.cerberus:null; }
+// whom the rider's blow is for: a finisher's victim, the mount's target, the lance charge's mark
+function riderTarget(u){ const v=u.fin&&u.fin.victim; if(v&&v.alive&&v.j) return v; const t=u.atkTarget||u.lanceTgt; return t&&t.alive&&t.j&&t.isUnit?t:null; }
+// the aim fades out for a target behind the rider or far beyond the lance's reach
+function riderAimW(u,t,rs){ const dx=t.pos.x-u.pos.x, dz=t.pos.z-u.pos.z, d=Math.hypot(dx,dz)||1; if((dx*u.fwdW.x+dz*u.fwdW.z)/d<-.3) return 0; return clamp(1-(d-4*rs-u.s*1.5)/(5*rs),0,1); }
 // pose the rider on the mount's back (world space, into RJ); returns the lance direction in _kvD
 function riderPose(u){
   const R=riderOf(u), cr=u.cr, j=u.j, s=u.s, rs=R.rs, k=lanceK(u), RM=u.T.wyvern?wyRiderMode(u):u.T.hadesRider?hxRiderMode(u):null, rw=RM?RM.w:0;
@@ -97,9 +101,14 @@ function riderPose(u){
   const loc=(v,out,o)=>out.copy(o||RJ.chest).addScaledVector(_raR,v[0]*rs).addScaledVector(_kvS,v[1]*rs).addScaledVector(_raF,v[2]*rs);
   // the weapon's direction, then both arms onto their targets by two-bone IK
   _kvD.set(0,0,0).addScaledVector(_raR,A.wd[0]).addScaledVector(_kvS,A.wd[1]).addScaledVector(_raF,A.wd[2]); if(_kvD.lengthSq()<1e-6) _kvD.copy(_kvF); _kvD.normalize();
-  const t=u.lanceTgt&&u.lanceTgt.alive&&k>0?u.lanceTgt:null;
-  if(t){ _kvT.subVectors(t.j.chest,RJ.hR); const l=_kvT.length(); if(l>.3){ _kvT.multiplyScalar(1/l); if(_kvT.dot(_kvF)>.3) _kvD.lerp(_kvT,k).normalize(); } }
-  loc(A.rh,_kvT); _kvP.copy(RJ.sR).addScaledVector(_kvS,-1*rs).addScaledVector(_raR,.5*rs).addScaledVector(_raF,-.4*rs);
+  // the blow aimed (IK): the lance's tip onto the victim's chest — the hand brought as near as the arm reaches along
+  // the line from the target, the lance laid along that line — around the move's strike, or through a lance charge
+  const t=riderTarget(u), aw=t?Math.max(A.sw||0,k)*riderAimW(u,t,rs):0;
+  loc(A.rh,_kvT);
+  if(aw>.01){ const T=t.j.chest, L=2.45*rs;
+    _kvA.subVectors(T,RJ.sR); const dT=_kvA.length(); _kvA.multiplyScalar(1/Math.max(1e-3,dT));
+    _kvP.copy(T).addScaledVector(_kvA,-L).sub(RJ.sR); const hl=_kvP.length(), reach=.6*rs; if(hl>reach) _kvP.multiplyScalar(reach/hl); _kvP.add(RJ.sR);
+    _kvT.lerp(_kvP,aw); _kvP.subVectors(T,_kvT).normalize(); cgSlerpDir(_kvD,_kvD,_kvP,aw); } _kvP.copy(RJ.sR).addScaledVector(_kvS,-1*rs).addScaledVector(_raR,.5*rs).addScaledVector(_raF,-.4*rs);
   ik2(RJ.sR,_kvT,.32*rs,.32*rs,_kvP,RJ.eR,RJ.hR);
   if(A.two) _kvT.copy(RJ.hR).addScaledVector(_kvD,-.17*rs); else loc(A.lh,_kvT);
   _kvP.copy(RJ.sL).addScaledVector(_kvS,-1*rs).addScaledVector(_raR,-.5*rs).addScaledVector(_raF,-.2*rs);

@@ -64,6 +64,7 @@ function rlBuildFords(K){ for(const F of RL_FORDS){ const x0=rlRiverX(F.z), W=rl
 // a soldier more than 75 m from his castle and 40 m from any zone his army holds is out of supply: his morale
 // slowly drains until he's back in reach (moraleTick reads u.noSupply)
 function supplyTick(){
+  if(settings.supply===false){ for(const u of units) u.noSupply=false; return; }   // Settings › Supply lines off: everyone supplied
   for(const u of units){ if(!u.alive||!u.isUnit||u.team>1||u.T.worker||u.inCastle) { u.noSupply=false; continue; }
     const cx=(u.team?1:-1)*RL_CF; let ok=Math.hypot(u.pos.x-cx,u.pos.z)<75;
     if(!ok) for(const Z of RL.zones) if(Z.owner===u.team&&Math.hypot(u.pos.x-Z.x,u.pos.z-Z.z)<40){ ok=true; break; }

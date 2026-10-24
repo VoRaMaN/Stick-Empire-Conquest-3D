@@ -75,5 +75,7 @@ function raTargets(u){
   const S=u.rS||(u.rS={rh:_raO.rh.slice(),lh:_raO.lh.slice(),wd:_raO.wd.slice(),lean:0,tw:0}), k=1-Math.exp(-dt*(A===RIDE_ANIMS.rest?8:18));
   for(let c=0;c<3;c++){ S.rh[c]+=(_raO.rh[c]-S.rh[c])*k; S.lh[c]+=(_raO.lh[c]-S.lh[c])*k; S.wd[c]+=(_raO.wd[c]-S.wd[c])*k; }
   S.lean+=(_raO.lean-S.lean)*k; S.tw+=(_raO.tw-S.tw)*k; S.two=_raO.two; S.n=A===RIDE_ANIMS.rest?'rest':R?R.n:'rest';
+  // how much this moment is the blow (its weapon aimed at the victim: 27e): around the move's strike, held while couched
+  S.sw=A.ap&&!A.loop?smooth(clamp(1-Math.abs(p-A.ap)/.32,0,1)):A===RIDE_ANIMS.couch?.6:0;
   return S;
 }

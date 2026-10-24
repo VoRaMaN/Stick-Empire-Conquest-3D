@@ -251,8 +251,8 @@ function applyAccess(){
 function accessUI(){
   const sc=$('#sUiScale'), so=$('#oUiScale'); if(sc){ sc.value=settings.uiScale||1; if(so) so.textContent=Math.round((settings.uiScale||1)*100)+'%';
     sc.oninput=()=>{ settings.uiScale=+sc.value; if(so) so.textContent=Math.round(settings.uiScale*100)+'%'; applyAccess(); saveSettings(); }; }
-  for(const [id,key] of [['#sBigText','bigText'],['#sCblind','cblind'],['#sCalm','calm'],['#sHeroes','heroes'],['#sTheme','themeMusic'],['#sWyAuto','wyAuto']]){ const el=$(id); if(!el) continue;
-    el.checked=key==='heroes'||key==='themeMusic'||key==='wyAuto'?settings[key]!==false:!!settings[key]; el.onchange=()=>{ settings[key]=el.checked; saveSettings(); applyAccess(); }; }
+  for(const [id,key] of [['#sBigText','bigText'],['#sCblind','cblind'],['#sCalm','calm'],['#sHeroes','heroes'],['#sTheme','themeMusic'],['#sWyAuto','wyAuto'],['#sSupply','supply']]){ const el=$(id); if(!el) continue;
+    el.checked=key==='heroes'||key==='themeMusic'||key==='wyAuto'||key==='supply'?settings[key]!==false:!!settings[key]; el.onchange=()=>{ settings[key]=el.checked; saveSettings(); applyAccess(); }; }
 }
 
 /* ---------- the end-of-battle report: two charts over time and the regiment of the battle ---------- */
